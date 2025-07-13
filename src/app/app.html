@@ -1,0 +1,22 @@
+<header class="main-nav" [class.nav-open]="mobileMenuOpen">
+  <nav class="nav-container">
+    <a routerLink="/" class="brand">tribecaconcepts</a>
+    <ul class="nav-links" [class.nav-open]="mobileMenuOpen">
+      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">HOME</a></li>
+      <li><a routerLink="/art" routerLinkActive="active" (click)="closeMobileMenu()">ART</a></li>
+      <li><a routerLink="/about" routerLinkActive="active" (click)="closeMobileMenu()">ABOUT</a></li>
+      <li><a routerLink="/contact" routerLinkActive="active" (click)="closeMobileMenu()">CONTACT</a></li>
+      <li><a routerLink="/design" routerLinkActive="active" (click)="closeMobileMenu()">DESIGN</a></li>
+      <li><a routerLink="/admin" routerLinkActive="active" (click)="closeMobileMenu()">ADMIN</a></li>
+    </ul>
+    <button class="nav-toggle" (click)="toggleMobileMenu()" [class.nav-open]="mobileMenuOpen">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+</header>
+
+<main class="main-content">
+  <router-outlet />
+</main>
