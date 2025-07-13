@@ -239,8 +239,8 @@ export class PortfolioEditDialogComponent implements OnInit {
     });
     
     // Set images
-    this.currentFeaturedImage = item.image || null;
-    this.galleryImages = item.gallery ? [...item.gallery] : [];
+    this.currentFeaturedImage = item.featuredImage || null;
+    this.galleryImages = item.galleries?.[0]?.pictures?.map(p => p.imageUrl) || [];
     
     // Ensure at least one gallery slot
     if (this.galleryImages.length === 0) {
@@ -298,10 +298,22 @@ export class PortfolioEditDialogComponent implements OnInit {
       title: formValue.title,
       description: formValue.description,
       category: formValue.category,
-      image: this.currentFeaturedImage || '',
+      featuredImage: this.currentFeaturedImage || '',
       order: formValue.order,
       published: formValue.published,
-      gallery: gallery
+      galleries: gallery.length > 0 ? [{
+        id: Date.now().toString(),
+        title: 'Gallery',
+        description: '',
+        order: 0,
+        pictures: gallery.map((url, index) => ({
+          id: Date.now().toString() + index,
+          imageUrl: url,
+          description: '',
+          alt: '',
+          order: index
+        }))
+      }] : []
     };
 
     console.log('Saving portfolio item:', portfolioItem);

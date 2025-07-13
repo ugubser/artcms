@@ -17,6 +17,7 @@ import { AboutService } from '../services/about.service';
 import { ContactService } from '../services/contact.service';
 import { SettingsService } from '../services/settings.service';
 import { PortfolioEditDialogComponent } from './dialogs/portfolio-edit-dialog.component';
+import { PortfolioEditAdvancedDialogComponent } from './dialogs/portfolio-edit-advanced-dialog.component';
 import { AboutEditDialogComponent } from './dialogs/about-edit-dialog.component';
 import { ContactEditDialogComponent } from './dialogs/contact-edit-dialog.component';
 import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.component';
@@ -64,11 +65,13 @@ import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.comp
                   <mat-card-title>{{ item.title }}</mat-card-title>
                   <mat-card-subtitle>{{ item.category }}</mat-card-subtitle>
                 </mat-card-header>
-                <img mat-card-image [src]="item.image" [alt]="item.title" *ngIf="item.image">
+                <img mat-card-image [src]="item.featuredImage" [alt]="item.title" *ngIf="item.featuredImage">
                 <mat-card-content>
                   <p>{{ item.description }}</p>
                   <p><strong>Status:</strong> {{ item.published ? 'Published' : 'Draft' }}</p>
                   <p><strong>Order:</strong> {{ item.order }}</p>
+                  <p><strong>Galleries:</strong> {{ item.galleries?.length || 0 }}</p>
+                  <p><strong>Total Pictures:</strong> {{ getTotalPicturesCount(item) }}</p>
                 </mat-card-content>
                 <mat-card-actions>
                   <button mat-button (click)="editPortfolioItem(item)">
@@ -203,7 +206,7 @@ import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.comp
                 <p><strong>Contact Email:</strong> {{ siteSettings.contactEmail }}</p>
                 <p><strong>Keywords:</strong> {{ siteSettings.siteKeywords?.join(', ') || 'None set' }}</p>
                 <p><strong>Analytics:</strong> {{ siteSettings.enableAnalytics ? 'Enabled' : 'Disabled' }}</p>
-                <p><strong>Last Updated:</strong> {{ siteSettings.updatedAt | date:'medium' }}</p>
+                <p><strong>Last Updated:</strong> {{ siteSettings.updatedAt ? (siteSettings.updatedAt | date:'medium') : 'Never' }}</p>
               </mat-card-content>
               <mat-card-actions>
                 <button mat-button (click)="editSiteSettings()">
@@ -457,10 +460,19 @@ export class CMSComponent implements OnInit {
     return item.id || index;
   }
 
+  getTotalPicturesCount(item: any): number {
+    if (!item.galleries) return 0;
+    return item.galleries.reduce((total: number, gallery: any) => {
+      return total + (gallery.pictures ? gallery.pictures.length : 0);
+    }, 0);
+  }
+
   // Portfolio methods
   addNewPortfolioItem() {
-    const dialogRef = this.dialog.open(PortfolioEditDialogComponent, {
-      width: '600px',
+    const dialogRef = this.dialog.open(PortfolioEditAdvancedDialogComponent, {
+      width: '1000px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { item: null }
     });
 
@@ -473,8 +485,10 @@ export class CMSComponent implements OnInit {
   }
 
   editPortfolioItem(item: any) {
-    const dialogRef = this.dialog.open(PortfolioEditDialogComponent, {
-      width: '600px',
+    const dialogRef = this.dialog.open(PortfolioEditAdvancedDialogComponent, {
+      width: '1000px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { item: item }
     });
 

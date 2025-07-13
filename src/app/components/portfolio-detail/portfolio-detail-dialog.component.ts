@@ -25,8 +25,8 @@ import { PortfolioItem } from '../../services/portfolio.service';
       
       <mat-dialog-content class="portfolio-content">
         <!-- Featured Image -->
-        <div class="featured-image" *ngIf="data.image">
-          <img [src]="data.image" [alt]="data.title" (click)="openImageViewer(data.image, 0)">
+        <div class="featured-image" *ngIf="data.featuredImage">
+          <img [src]="data.featuredImage" [alt]="data.title" (click)="openImageViewer(data.featuredImage, 0)">
         </div>
 
         <!-- Portfolio Info -->
@@ -35,16 +35,19 @@ import { PortfolioItem } from '../../services/portfolio.service';
           <p class="description" *ngIf="data.description">{{ data.description }}</p>
         </div>
 
-        <!-- Gallery -->
-        <div class="gallery-section" *ngIf="data.gallery && data.gallery.length > 0">
-          <h3>Gallery</h3>
-          <div class="gallery-grid">
-            <div *ngFor="let image of data.gallery; let i = index" 
-                 class="gallery-item"
-                 (click)="openImageViewer(image, i + 1)">
-              <img [src]="image" [alt]="data.title + ' - Image ' + (i + 1)">
-              <div class="gallery-overlay">
-                <mat-icon>zoom_in</mat-icon>
+        <!-- Galleries -->
+        <div class="galleries-section" *ngIf="data.galleries && data.galleries.length > 0">
+          <div *ngFor="let gallery of data.galleries; let galleryIndex = index" class="gallery-section">
+            <h3>{{ gallery.title || 'Gallery ' + (galleryIndex + 1) }}</h3>
+            <p *ngIf="gallery.description" class="gallery-description">{{ gallery.description }}</p>
+            <div class="gallery-grid" *ngIf="gallery.pictures && gallery.pictures.length > 0">
+              <div *ngFor="let picture of gallery.pictures; let i = index" 
+                   class="gallery-item"
+                   (click)="openImageViewer(picture.imageUrl, galleryIndex * 100 + i + 1)">
+                <img [src]="picture.imageUrl" [alt]="picture.alt || data.title + ' - Image ' + (i + 1)">
+                <div class="gallery-overlay">
+                  <mat-icon>zoom_in</mat-icon>
+                </div>
               </div>
             </div>
           </div>
@@ -324,13 +327,17 @@ export class PortfolioDetailDialogComponent {
     private dialogRef: MatDialogRef<PortfolioDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: PortfolioItem
   ) {
-    // Combine featured image and gallery for viewer
+    // Combine featured image and all gallery pictures for viewer
     this.allImages = [];
-    if (data.image) {
-      this.allImages.push(data.image);
+    if (data.featuredImage) {
+      this.allImages.push(data.featuredImage);
     }
-    if (data.gallery) {
-      this.allImages.push(...data.gallery);
+    if (data.galleries) {
+      data.galleries.forEach(gallery => {
+        if (gallery.pictures) {
+          this.allImages.push(...gallery.pictures.map(p => p.imageUrl));
+        }
+      });
     }
     this.totalImages = this.allImages.length;
   }

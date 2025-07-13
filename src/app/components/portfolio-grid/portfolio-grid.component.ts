@@ -18,7 +18,7 @@ import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-de
         (click)="selectItem(item)"
       >
         <div class="portfolio-image">
-          <img [src]="item.image" [alt]="item.title" />
+          <img [src]="item.featuredImage" [alt]="item.title" />
           <div class="portfolio-overlay">
             <h3>{{ item.title }}</h3>
             <p>{{ item.description }}</p>
