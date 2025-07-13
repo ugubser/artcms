@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   useEmulators: true,
+  emulatorHost: '192.168.0.22', // Change this to your machine's IP address
   firebase: {
     apiKey: "demo-api-key",
     authDomain: "tribecaconcepts-9c.firebaseapp.com",

@@ -19,7 +19,7 @@ export const appConfig: ApplicationConfig = {
       const firestore = getFirestore();
       if (environment.useEmulators) {
         try {
-          connectFirestoreEmulator(firestore, 'localhost', 8080);
+          connectFirestoreEmulator(firestore, environment.emulatorHost || 'localhost', 8080);
         } catch (error) {
           // Emulator already connected
         }
@@ -30,7 +30,7 @@ export const appConfig: ApplicationConfig = {
       const storage = getStorage();
       if (environment.useEmulators) {
         try {
-          connectStorageEmulator(storage, 'localhost', 9199);
+          connectStorageEmulator(storage, environment.emulatorHost || 'localhost', 9199);
         } catch (error) {
           // Emulator already connected
         }
@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
       const auth = getAuth();
       if (environment.useEmulators) {
         try {
-          connectAuthEmulator(auth, 'http://localhost:9099');
+          connectAuthEmulator(auth, `http://${environment.emulatorHost || 'localhost'}:9099`);
         } catch (error) {
           // Emulator already connected
         }

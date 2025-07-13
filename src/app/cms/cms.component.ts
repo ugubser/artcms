@@ -15,9 +15,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PortfolioService } from '../services/portfolio.service';
 import { AboutService } from '../services/about.service';
 import { ContactService } from '../services/contact.service';
+import { SettingsService } from '../services/settings.service';
 import { PortfolioEditDialogComponent } from './dialogs/portfolio-edit-dialog.component';
 import { AboutEditDialogComponent } from './dialogs/about-edit-dialog.component';
 import { ContactEditDialogComponent } from './dialogs/contact-edit-dialog.component';
+import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.component';
 
 @Component({
   selector: 'app-cms',
@@ -191,14 +193,17 @@ import { ContactEditDialogComponent } from './dialogs/contact-edit-dialog.compon
               </button>
             </div>
             
-            <mat-card class="settings-card">
+            <mat-card class="settings-card" *ngIf="siteSettings">
               <mat-card-header>
                 <mat-card-title>Site Configuration</mat-card-title>
               </mat-card-header>
               <mat-card-content>
-                <p><strong>Site Name:</strong> Tribeca Concepts</p>
-                <p><strong>Description:</strong> Swiss-American-Japanese graphic design portfolio</p>
-                <p><strong>Status:</strong> Active</p>
+                <p><strong>Site Name:</strong> {{ siteSettings.siteName }}</p>
+                <p><strong>Description:</strong> {{ siteSettings.siteDescription }}</p>
+                <p><strong>Contact Email:</strong> {{ siteSettings.contactEmail }}</p>
+                <p><strong>Keywords:</strong> {{ siteSettings.siteKeywords?.join(', ') || 'None set' }}</p>
+                <p><strong>Analytics:</strong> {{ siteSettings.enableAnalytics ? 'Enabled' : 'Disabled' }}</p>
+                <p><strong>Last Updated:</strong> {{ siteSettings.updatedAt | date:'medium' }}</p>
               </mat-card-content>
               <mat-card-actions>
                 <button mat-button (click)="editSiteSettings()">
@@ -207,6 +212,15 @@ import { ContactEditDialogComponent } from './dialogs/contact-edit-dialog.compon
                 </button>
               </mat-card-actions>
             </mat-card>
+            
+            <div class="empty-state" *ngIf="!siteSettings">
+              <mat-icon>settings</mat-icon>
+              <h3>No site settings configured</h3>
+              <p>Configure your site settings to customize branding and SEO</p>
+              <button mat-raised-button color="primary" (click)="editSiteSettings()">
+                Configure Settings
+              </button>
+            </div>
           </div>
         </mat-tab>
       </mat-tab-group>
@@ -358,11 +372,13 @@ export class CMSComponent implements OnInit {
   portfolioItems: any[] = [];
   aboutSections: any[] = [];
   contactInfo: any = null;
+  siteSettings: any = null;
   
   constructor(
     private portfolioService: PortfolioService,
     private aboutService: AboutService,
     private contactService: ContactService,
+    private settingsService: SettingsService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -418,6 +434,17 @@ export class CMSComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading contact info:', error);
+      }
+    });
+    
+    // Load site settings
+    this.settingsService.getSiteSettings().subscribe({
+      next: (settings) => {
+        console.log('Loaded site settings:', settings);
+        this.siteSettings = settings;
+      },
+      error: (error) => {
+        console.error('Error loading site settings:', error);
       }
     });
   }
@@ -528,6 +555,16 @@ export class CMSComponent implements OnInit {
 
   // Settings methods
   editSiteSettings() {
-    this.snackBar.open('Site settings editor coming soon!', 'Close', { duration: 3000 });
+    const dialogRef = this.dialog.open(SettingsEditDialogComponent, {
+      width: '800px',
+      data: { settings: this.siteSettings }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadData(); // Reload data after successful save
+        this.snackBar.open('Site settings updated successfully', 'Close', { duration: 3000 });
+      }
+    });
   }
 }
