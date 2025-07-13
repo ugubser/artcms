@@ -35,7 +35,7 @@ import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-de
             (click)="selectItem(item)"
           >
             <div class="featured-image">
-              <img [src]="item.image" [alt]="item.title" />
+              <img [src]="item.featuredImage" [alt]="item.title" />
               <div class="featured-overlay">
                 <h3>{{ item.title }}</h3>
                 <span class="category-badge">{{ getCategoryLabel(item.category) }}</span>

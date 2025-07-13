@@ -4,13 +4,29 @@ import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angula
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+export interface Picture {
+  id?: string;
+  imageUrl: string;
+  description: string; // Markdown formatted
+  alt: string;
+  order: number;
+}
+
+export interface GalleryEntry {
+  id?: string;
+  title: string;
+  description: string; // Markdown formatted
+  pictures: Picture[];
+  order: number;
+}
+
 export interface PortfolioItem {
   id?: string;
   title: string;
-  description: string;
+  description: string; // Markdown formatted - main project description
   category: 'graphic-design' | 'art' | 'branding' | 'web-design';
-  image: string;
-  gallery: string[];
+  featuredImage: string; // Main portfolio image
+  galleries: GalleryEntry[]; // Multiple gallery entries
   published: boolean;
   order: number;
   createdAt: Date;
@@ -77,8 +93,8 @@ export class PortfolioService {
       title: item.title || '',
       description: item.description || '',
       category: item.category || 'graphic-design',
-      image: item.image || '',
-      gallery: item.gallery || [],
+      featuredImage: item.featuredImage || '',
+      galleries: item.galleries || [],
       published: item.published || false,
       order: item.order || 0,
       createdAt: item.createdAt || new Date()
@@ -106,6 +122,35 @@ export class PortfolioService {
   async deletePortfolioItem(id: string): Promise<void> {
     const docRef = doc(this.firestore, 'portfolio', id);
     await deleteDoc(docRef);
+  }
+
+  // Utility methods for managing nested galleries and pictures
+  generateGalleryId(): string {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  generatePictureId(): string {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  createEmptyGallery(): GalleryEntry {
+    return {
+      id: this.generateGalleryId(),
+      title: '',
+      description: '',
+      pictures: [],
+      order: 0
+    };
+  }
+
+  createEmptyPicture(): Picture {
+    return {
+      id: this.generatePictureId(),
+      imageUrl: '',
+      description: '',
+      alt: '',
+      order: 0
+    };
   }
 
   // Upload image to Firebase Storage
@@ -139,10 +184,30 @@ export class PortfolioService {
         title: 'Swiss Typography Poster',
         description: 'A minimalist poster design showcasing Swiss typography principles with clean lines and geometric compositions.',
         category: 'graphic-design',
-        image: 'https://via.placeholder.com/400x300/000000/FFFFFF?text=Swiss+Typography',
-        gallery: [
-          'https://via.placeholder.com/800x600/000000/FFFFFF?text=Detail+1',
-          'https://via.placeholder.com/800x600/000000/FFFFFF?text=Detail+2'
+        featuredImage: 'https://via.placeholder.com/400x300/000000/FFFFFF?text=Swiss+Typography',
+        galleries: [
+          {
+            id: 'gallery-1',
+            title: 'Design Process',
+            description: 'The evolution of the typography poster from sketch to final design.',
+            order: 0,
+            pictures: [
+              {
+                id: 'pic-1',
+                imageUrl: 'https://via.placeholder.com/800x600/000000/FFFFFF?text=Detail+1',
+                description: 'Initial sketch concepts',
+                alt: 'Typography poster initial sketches',
+                order: 0
+              },
+              {
+                id: 'pic-2',
+                imageUrl: 'https://via.placeholder.com/800x600/000000/FFFFFF?text=Detail+2',
+                description: 'Final design details',
+                alt: 'Typography poster final design',
+                order: 1
+              }
+            ]
+          }
         ],
         published: true,
         order: 1,
@@ -153,11 +218,37 @@ export class PortfolioService {
         title: 'Abstract Art Series',
         description: 'Contemporary abstract art pieces inspired by Japanese minimalism and Swiss precision.',
         category: 'art',
-        image: 'https://via.placeholder.com/400x300/333333/FFFFFF?text=Abstract+Art',
-        gallery: [
-          'https://via.placeholder.com/800x600/333333/FFFFFF?text=Art+Piece+1',
-          'https://via.placeholder.com/800x600/333333/FFFFFF?text=Art+Piece+2',
-          'https://via.placeholder.com/800x600/333333/FFFFFF?text=Art+Piece+3'
+        featuredImage: 'https://via.placeholder.com/400x300/333333/FFFFFF?text=Abstract+Art',
+        galleries: [
+          {
+            id: 'gallery-2',
+            title: 'Art Collection',
+            description: 'A series of abstract pieces exploring form and space.',
+            order: 0,
+            pictures: [
+              {
+                id: 'pic-3',
+                imageUrl: 'https://via.placeholder.com/800x600/333333/FFFFFF?text=Art+Piece+1',
+                description: 'First piece in the series - exploring geometric forms',
+                alt: 'Abstract art piece one',
+                order: 0
+              },
+              {
+                id: 'pic-4',
+                imageUrl: 'https://via.placeholder.com/800x600/333333/FFFFFF?text=Art+Piece+2',
+                description: 'Second piece - minimalist composition',
+                alt: 'Abstract art piece two',
+                order: 1
+              },
+              {
+                id: 'pic-5',
+                imageUrl: 'https://via.placeholder.com/800x600/333333/FFFFFF?text=Art+Piece+3',
+                description: 'Final piece - synthesis of concepts',
+                alt: 'Abstract art piece three',
+                order: 2
+              }
+            ]
+          }
         ],
         published: true,
         order: 2,
@@ -168,11 +259,37 @@ export class PortfolioService {
         title: 'Corporate Identity Package',
         description: 'Complete branding solution for a Zurich-based technology company featuring clean, professional design elements.',
         category: 'branding',
-        image: 'https://via.placeholder.com/400x300/666666/FFFFFF?text=Corporate+Identity',
-        gallery: [
-          'https://via.placeholder.com/800x600/666666/FFFFFF?text=Logo+Design',
-          'https://via.placeholder.com/800x600/666666/FFFFFF?text=Business+Cards',
-          'https://via.placeholder.com/800x600/666666/FFFFFF?text=Letterhead'
+        featuredImage: 'https://via.placeholder.com/400x300/666666/FFFFFF?text=Corporate+Identity',
+        galleries: [
+          {
+            id: 'gallery-3',
+            title: 'Brand Elements',
+            description: 'Core visual identity components',
+            order: 0,
+            pictures: [
+              {
+                id: 'pic-6',
+                imageUrl: 'https://via.placeholder.com/800x600/666666/FFFFFF?text=Logo+Design',
+                description: 'Primary logo design with grid system',
+                alt: 'Corporate logo design',
+                order: 0
+              },
+              {
+                id: 'pic-7',
+                imageUrl: 'https://via.placeholder.com/800x600/666666/FFFFFF?text=Business+Cards',
+                description: 'Business card design system',
+                alt: 'Business card designs',
+                order: 1
+              },
+              {
+                id: 'pic-8',
+                imageUrl: 'https://via.placeholder.com/800x600/666666/FFFFFF?text=Letterhead',
+                description: 'Letterhead and stationary design',
+                alt: 'Corporate letterhead',
+                order: 2
+              }
+            ]
+          }
         ],
         published: true,
         order: 3,
