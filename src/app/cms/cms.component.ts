@@ -372,22 +372,53 @@ export class CMSComponent implements OnInit {
   }
   
   private loadData() {
+    console.log('Loading CMS data...');
     this.loading = true;
     
-    // Load portfolio items
-    this.portfolioService.getPublishedPortfolio().subscribe(items => {
-      this.portfolioItems = items;
-      this.loading = false;
+    // Load ALL portfolio items (not just published ones) for admin interface
+    this.portfolioService.getAllPortfolio().subscribe({
+      next: (items) => {
+        console.log('Loaded portfolio items count:', items.length);
+        console.log('Portfolio items detail:', items);
+        items.forEach((item, index) => {
+          console.log(`Item ${index}:`, {
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            category: item.category,
+            published: item.published
+          });
+        });
+        this.portfolioItems = items;
+        console.log('CMS portfolioItems array updated:', this.portfolioItems);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading portfolio items:', error);
+        this.loading = false;
+      }
     });
     
     // Load about sections
-    this.aboutService.getAboutSections().subscribe(sections => {
-      this.aboutSections = sections;
+    this.aboutService.getAboutSections().subscribe({
+      next: (sections) => {
+        console.log('Loaded about sections:', sections);
+        this.aboutSections = sections;
+      },
+      error: (error) => {
+        console.error('Error loading about sections:', error);
+      }
     });
     
     // Load contact info
-    this.contactService.getContactInfo().subscribe(contactArray => {
-      this.contactInfo = contactArray.length > 0 ? contactArray[0] : null;
+    this.contactService.getContactInfo().subscribe({
+      next: (contactArray) => {
+        console.log('Loaded contact info:', contactArray);
+        this.contactInfo = contactArray.length > 0 ? contactArray[0] : null;
+      },
+      error: (error) => {
+        console.error('Error loading contact info:', error);
+      }
     });
   }
 
