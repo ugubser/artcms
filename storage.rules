@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // DEVELOPMENT RULES - Allow all access for emulator testing
+    // In production, these should be restricted to authenticated users
+    
+    // Portfolio images - public read, open write for development
+    match /portfolio/{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+    
+    // Portfolio featured images - public read, open write for development  
+    match /portfolio/featured/{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+    
+    // Portfolio gallery images - public read, open write for development
+    match /portfolio/gallery/{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+    
+    // About page images - public read, open write for development
+    match /about/{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+    
+    // General uploads - open for development
+    match /uploads/{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+    
+    // Temporary uploads for CMS - open for development
+    match /temp/{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+    
+    // Fallback rule for any other paths
+    match /{allPaths=**} {
+      allow read, write: if true; // Open for development
+    }
+  }
+}

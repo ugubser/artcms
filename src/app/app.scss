@@ -1,0 +1,229 @@
+// Tribeca Concepts Main Layout Styles - Swiss Design Inspired
+:host {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  color: #000;
+  background-color: #fff;
+}
+
+.main-nav {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  position: relative;
+}
+
+.brand {
+  font-size: 1.5rem;
+  font-weight: 300;
+  text-decoration: none;
+  color: #000;
+  letter-spacing: 0.5px;
+  z-index: 102;
+  
+  &:hover {
+    color: #333;
+  }
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+  transition: all 0.3s ease;
+  
+  li {
+    position: relative;
+  }
+
+  a {
+    text-decoration: none;
+    color: #000;
+    font-weight: 400;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 0.5rem 0;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background-color: #000;
+      transition: width 0.3s ease;
+    }
+    
+    &:hover {
+      color: #333;
+      
+      &::after {
+        width: 100%;
+      }
+    }
+    
+    &.active {
+      color: #000;
+      font-weight: 500;
+      
+      &::after {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Mobile navigation toggle button
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 102;
+  width: 30px;
+  height: 30px;
+  
+  span {
+    width: 25px;
+    height: 2px;
+    background: #000;
+    transition: all 0.3s ease;
+    margin: 3px 0;
+    transform-origin: center;
+    
+    &:first-child {
+      transform: translateY(0);
+    }
+    
+    &:nth-child(2) {
+      opacity: 1;
+    }
+    
+    &:last-child {
+      transform: translateY(0);
+    }
+  }
+  
+  &.nav-open span {
+    &:first-child {
+      transform: translateY(8px) rotate(45deg);
+    }
+    
+    &:nth-child(2) {
+      opacity: 0;
+    }
+    
+    &:last-child {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+  }
+}
+
+.main-content {
+  min-height: calc(100vh - 80px);
+  padding: 0;
+}
+
+// Mobile responsive design
+@media screen and (max-width: 768px) {
+  .nav-container {
+    padding: 0 1rem;
+    height: 60px;
+  }
+  
+  .brand {
+    font-size: 1.2rem;
+  }
+  
+  .nav-toggle {
+    display: flex;
+  }
+  
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    flex-direction: column;
+    gap: 0;
+    padding: 1rem 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #eee;
+    
+    &.nav-open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    li {
+      padding: 0 2rem;
+    }
+    
+    a {
+      display: block;
+      padding: 1rem 0;
+      font-size: 1rem;
+      border-bottom: 1px solid #f5f5f5;
+      
+      &::after {
+        display: none;
+      }
+      
+      &:hover {
+        background: #f9f9f9;
+        padding-left: 1rem;
+      }
+    }
+  }
+  
+  .main-content {
+    min-height: calc(100vh - 60px);
+  }
+  
+  // Prevent scrolling when mobile menu is open
+  .main-nav.nav-open ~ .main-content {
+    overflow: hidden;
+  }
+}
+
+// Tablet responsive design
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .nav-container {
+    padding: 0 1.5rem;
+  }
+  
+  .nav-links {
+    gap: 1.5rem;
+    
+    a {
+      font-size: 0.85rem;
+    }
+  }
+}

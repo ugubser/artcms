@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read/write their own content
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Portfolio content - allow all operations for development
+    match /portfolio/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // About content - allow all operations for development
+    match /about/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Contact content - allow all operations for development
+    match /contact/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Site settings - allow all operations for development
+    match /settings/{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
