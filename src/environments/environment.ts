@@ -3,9 +3,9 @@ export const environment = {
   useEmulators: true,
   firebase: {
     apiKey: "demo-api-key",
-    authDomain: "demo-project.firebaseapp.com",
-    projectId: "demo-project",
-    storageBucket: "demo-project.appspot.com",
+    authDomain: "tribecaconcepts-9c.firebaseapp.com",
+    projectId: "tribecaconcepts-9c",
+    storageBucket: "tribecaconcepts-9c.appspot.com",
     messagingSenderId: "123456789",
     appId: "demo-app-id"
   }

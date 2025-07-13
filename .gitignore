@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /bazel-out
+/emulator_data
 
 # Node
 /node_modules
