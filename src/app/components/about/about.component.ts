@@ -11,7 +11,7 @@ import { AboutService, AboutSection } from '../../services/about.service';
     <div class="about-container">
       <header class="about-header">
         <h1>About</h1>
-        <p class="about-subtitle">Swiss-American-Japanese graphic design studio based in Zurich, Switzerland</p>
+        <p class="about-subtitle"></p>
       </header>
       
       <main class="about-content">
