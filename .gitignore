@@ -66,6 +66,10 @@ pnpm-lock.yaml
 .env.production.local
 .env.production
 
+# Environment configuration files (generated at build time)
+src/environments/environment.ts
+src/environments/environment.prod.ts
+
 # Firebase configuration files (production)
 .firebaserc.production
 firebase-config.json
