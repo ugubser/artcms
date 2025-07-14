@@ -1,8 +1,5 @@
     <div class="contact-container">
-      <header class="contact-header">
-        <h1>Contact</h1>
-        <p class="contact-subtitle"></p>
-      </header>
+      <app-page-header></app-page-header>
       
       <main class="contact-content">
         <div *ngFor="let contact of contactInfo$ | async; trackBy: trackByFn" class="contact-info">

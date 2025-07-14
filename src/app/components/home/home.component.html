@@ -1,47 +1,23 @@
     <div class="home-container">
-      <header class="hero-section">
-        <h1>{{ siteName() }}</h1>
-        <p class="hero-subtitle">{{ siteDescription() }}</p>
-        <p class="hero-description">
-          Welcome to {{ siteName() }}
-        </p>
-      </header>
+      <app-page-header></app-page-header>
       
       <section class="featured-work">
-        <div class="section-header">
-          <h2>Featured Work</h2>
-          <a routerLink="/art" class="view-all-link">View All Portfolio →</a>
-        </div>
-        
-        <div class="featured-grid">
-          <div 
-            *ngFor="let item of featuredPortfolio$ | async; trackBy: trackByFn" 
-            class="featured-item"
-            [class]="'category-' + item.category"
-            (click)="selectItem(item)"
-          >
-            <div class="featured-image">
-              <img [src]="item.featuredImage" [alt]="item.title" />
-              <div class="featured-overlay">
-                <h3>{{ item.title }}</h3>
-                <span class="category-badge">{{ getCategoryLabel(item.category) }}</span>
-              </div>
-            </div>
+        <div 
+          *ngFor="let item of featuredPortfolio$ | async; trackBy: trackByFn" 
+          class="featured-item"
+          (click)="selectItem(item)"
+        >
+          <div class="featured-image">
+            <img [src]="item.featuredImage" [alt]="item.title" />
           </div>
         </div>
       </section>
-      <!-- 
-      <section class="studio-intro">
-        <div class="intro-content">
-          <h2></h2>
-          <p>
-            
-          </p>
-          <div class="intro-actions">
-            <a routerLink="/about" class="cta-button"></a>
-            <a routerLink="/contact" class="cta-button secondary"></a>
-          </div>
+      
+      <footer class="home-footer">
+        <div class="footer-content">
+          <h3>{{ siteName() }}</h3>
+          <p>{{ siteDescription() }}</p>
+          <p class="copyright">© 2024 by {{ siteName() }}</p>
         </div>
-      </section>
-      -->
+      </footer>
     </div>

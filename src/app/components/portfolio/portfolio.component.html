@@ -1,8 +1,12 @@
     <div class="portfolio-container">
-      <header class="portfolio-header">
-        <h1>{{ getPageTitle() }}</h1>
-        <p class="portfolio-subtitle">{{ getPageSubtitle() }}</p>
-      </header>
+      <app-page-header></app-page-header>
       
-      <app-portfolio-grid [category]="category"></app-portfolio-grid>
+      <section class="portfolio-content">
+        <div class="portfolio-header">
+          <h2>{{ getPageTitle() }}</h2>
+          <p class="portfolio-subtitle">{{ getPageSubtitle() }}</p>
+        </div>
+        
+        <app-portfolio-grid [category]="category"></app-portfolio-grid>
+      </section>
     </div>
