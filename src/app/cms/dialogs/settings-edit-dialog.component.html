@@ -1,0 +1,188 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title>Site Settings</h2>
+  
+  <mat-dialog-content>
+    <mat-tab-group class="settings-tabs">
+      <mat-tab label="General">
+        <div class="tab-content">
+          <form [formGroup]="settingsForm" class="settings-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Site Name</mat-label>
+              <input matInput formControlName="siteName" placeholder="Tribeca Concepts">
+              <mat-error *ngIf="settingsForm.get('siteName')?.hasError('required')">
+                Site name is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Site Description</mat-label>
+              <textarea matInput formControlName="siteDescription" rows="3" 
+                       placeholder="A brief description of your site"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Contact Email</mat-label>
+              <input matInput type="email" formControlName="contactEmail" 
+                     placeholder="info@example.com">
+              <mat-error *ngIf="settingsForm.get('contactEmail')?.hasError('email')">
+                Please enter a valid email
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Footer Text</mat-label>
+              <input matInput formControlName="footerText" 
+                     placeholder="© 2024 by TribecaConcepts">
+            </mat-form-field>
+          </form>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="SEO & Keywords">
+        <div class="tab-content">
+          <form [formGroup]="settingsForm" class="settings-form">
+            <div class="keywords-section">
+              <h3>SEO Keywords</h3>
+              <div class="keywords-input">
+                <mat-form-field appearance="outline" class="keyword-input">
+                  <mat-label>Add Keyword</mat-label>
+                  <input matInput [(ngModel)]="newKeyword" [ngModelOptions]="{standalone: true}"
+                         (keyup.enter)="addKeyword()" placeholder="Enter keyword">
+                </mat-form-field>
+                <button mat-raised-button type="button" (click)="addKeyword()" 
+                        [disabled]="!newKeyword || !newKeyword.trim()">
+                  <mat-icon>add</mat-icon>
+                  Add
+                </button>
+              </div>
+              
+              <div class="keywords-chips" *ngIf="keywords.length > 0">
+                <mat-chip-set>
+                  <mat-chip *ngFor="let keyword of keywords; let i = index" 
+                           (removed)="removeKeyword(i)">
+                    {{ keyword }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </div>
+
+            <div class="analytics-section">
+              <h3>Analytics</h3>
+              <div class="checkbox-field">
+                <mat-checkbox formControlName="enableAnalytics">
+                  Enable Google Analytics
+                </mat-checkbox>
+              </div>
+              
+              <mat-form-field appearance="outline" class="full-width" 
+                             *ngIf="settingsForm.get('enableAnalytics')?.value">
+                <mat-label>Analytics ID</mat-label>
+                <input matInput formControlName="analyticsId" 
+                       placeholder="G-XXXXXXXXXX">
+                <mat-hint>Your Google Analytics tracking ID</mat-hint>
+              </mat-form-field>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Branding">
+        <div class="tab-content">
+          <div class="branding-section">
+            <h3>Logo</h3>
+            <app-image-upload
+              [currentImageUrl]="currentLogoUrl"
+              [storagePath]="'branding/logo'"
+              [alt]="'Site logo'"
+              [maxSizeMB]="2"
+              [recommendedSize]="'200x60px'"
+              [allowUrlInput]="true"
+              (imageUploaded)="onLogoUploaded($event)"
+              (imageRemoved)="onLogoRemoved()">
+            </app-image-upload>
+          </div>
+
+          <div class="branding-section">
+            <h3>Favicon</h3>
+            <app-image-upload
+              [currentImageUrl]="currentFaviconUrl"
+              [storagePath]="'branding/favicon'"
+              [alt]="'Site favicon'"
+              [maxSizeMB]="1"
+              [recommendedSize]="'32x32px'"
+              [allowUrlInput]="true"
+              (imageUploaded)="onFaviconUploaded($event)"
+              (imageRemoved)="onFaviconRemoved()">
+            </app-image-upload>
+          </div>
+
+          <form [formGroup]="settingsForm" class="settings-form">
+            <div class="color-section">
+              <h3>Brand Colors</h3>
+              <div class="color-inputs">
+                <mat-form-field appearance="outline">
+                  <mat-label>Primary Color</mat-label>
+                  <input matInput type="color" formControlName="primaryColor">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Secondary Color</mat-label>
+                  <input matInput type="color" formControlName="secondaryColor">
+                </mat-form-field>
+              </div>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Social Media">
+        <div class="tab-content">
+          <form [formGroup]="settingsForm" class="settings-form">
+            <div formGroupName="socialMedia">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Facebook URL</mat-label>
+                <input matInput formControlName="facebook" 
+                       placeholder="https://facebook.com/yourpage">
+                <mat-icon matPrefix>link</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Twitter URL</mat-label>
+                <input matInput formControlName="twitter" 
+                       placeholder="https://twitter.com/youraccount">
+                <mat-icon matPrefix>link</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Instagram URL</mat-label>
+                <input matInput formControlName="instagram" 
+                       placeholder="https://instagram.com/youraccount">
+                <mat-icon matPrefix>link</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>LinkedIn URL</mat-label>
+                <input matInput formControlName="linkedin" 
+                       placeholder="https://linkedin.com/in/yourprofile">
+                <mat-icon matPrefix>link</mat-icon>
+              </mat-form-field>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" 
+            (click)="onSave()" 
+            [disabled]="settingsForm.invalid || saving">
+      <mat-icon *ngIf="saving">hourglass_empty</mat-icon>
+      {{ saving ? 'Saving...' : 'Save Settings' }}
+    </button>
+  </mat-dialog-actions>
+</div>
