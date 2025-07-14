@@ -68,6 +68,28 @@ read -p "Storage Bucket: " STORAGE_BUCKET
 read -p "Messaging Sender ID: " SENDER_ID
 read -p "App ID: " APP_ID
 
+# Get admin emails
+echo ""
+echo -e "${BLUE}📧 Admin Email Configuration${NC}"
+echo "Enter admin email addresses (press Enter with empty line to finish):"
+
+ADMIN_EMAILS_ARRAY=()
+while true; do
+    read -p "Admin email: " EMAIL
+    if [ -z "$EMAIL" ]; then
+        break
+    fi
+    ADMIN_EMAILS_ARRAY+=("$EMAIL")
+done
+
+# Join admin emails with commas
+ADMIN_EMAILS=$(IFS=','; echo "${ADMIN_EMAILS_ARRAY[*]}")
+
+if [ -z "$ADMIN_EMAILS" ]; then
+    echo -e "${RED}❌ At least one admin email is required${NC}"
+    exit 1
+fi
+
 # Create production environment file
 echo -e "${BLUE}📝 Creating .env.production file...${NC}"
 cat > .env.production << EOF
@@ -80,6 +102,9 @@ FIREBASE_PROJECT_ID=$PROJECT_ID
 FIREBASE_STORAGE_BUCKET=$STORAGE_BUCKET
 FIREBASE_MESSAGING_SENDER_ID=$SENDER_ID
 FIREBASE_APP_ID=$APP_ID
+
+# Admin Email Configuration
+ADMIN_EMAILS=$ADMIN_EMAILS
 EOF
 
 echo -e "${GREEN}✅ Created .env.production${NC}"
@@ -89,46 +114,16 @@ cp .env.production .env.local
 echo -e "${GREEN}✅ Created .env.local for local testing${NC}"
 
 echo ""
+echo -e "${GREEN}✅ Admin emails configured:${NC}"
+for email in "${ADMIN_EMAILS_ARRAY[@]}"; do
+    echo "   - $email"
+done
+
+echo ""
 echo -e "${YELLOW}🔐 Security Configuration Required:${NC}"
 echo "Before deployment, you need to:"
 echo "1. Enable Google Authentication in Firebase Console"
-echo "2. Add admin email addresses to the whitelist in:"
-echo "   - src/app/services/auth.service.ts (line 14-18)"
-echo "   - firestore.rules (line 7-11)"
-echo "   - storage.rules (line 7-11)"
-echo ""
-
-# Ask about admin email setup
-read -p "Do you want to add admin emails now? (y/n): " ADD_EMAILS
-
-if [ "$ADD_EMAILS" = "y" ] || [ "$ADD_EMAILS" = "Y" ]; then
-    echo ""
-    echo -e "${BLUE}📧 Admin Email Configuration${NC}"
-    echo "Enter admin email addresses (press Enter with empty line to finish):"
-    
-    ADMIN_EMAILS=()
-    while true; do
-        read -p "Admin email: " EMAIL
-        if [ -z "$EMAIL" ]; then
-            break
-        fi
-        ADMIN_EMAILS+=("$EMAIL")
-    done
-    
-    if [ ${#ADMIN_EMAILS[@]} -gt 0 ]; then
-        echo ""
-        echo -e "${GREEN}✅ Admin emails to configure:${NC}"
-        for email in "${ADMIN_EMAILS[@]}"; do
-            echo "   - $email"
-        done
-        
-        echo ""
-        echo -e "${YELLOW}⚠️  Remember to manually add these emails to:${NC}"
-        echo "   - src/app/services/auth.service.ts (adminEmails array)"
-        echo "   - firestore.rules (isAdmin function)"
-        echo "   - storage.rules (isAdmin function)"
-    fi
-fi
+echo "2. Admin emails will be automatically injected during deployment"
 
 echo ""
 echo -e "${GREEN}🎉 Firebase setup complete!${NC}"

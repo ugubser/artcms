@@ -2,11 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Helper function to check if user is admin
+    // Admin emails will be injected during deployment via scripts/generate-rules.js
     function isAdmin() {
       return request.auth != null && 
              request.auth.token.email in [
-               // Add your admin email addresses here before deployment
-               'your-admin-email@example.com' // Replace with your actual admin email
+               // Admin emails will be injected here during build
+               'placeholder@example.com'
              ];
     }
     

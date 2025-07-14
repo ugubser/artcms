@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,11 +11,15 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
   private googleProvider = new GoogleAuthProvider();
 
-  // Admin users whitelist - these email addresses are authorized for admin access
-  private readonly adminEmails: string[] = [
-    // Add your admin email addresses here before deployment
-    'your-admin-email@example.com' // Replace with your actual admin email
-  ];
+  // Admin users whitelist - injected from environment variables
+  private readonly adminEmails: string[] = this.getAdminEmails();
+
+  private getAdminEmails(): string[] {
+    if (environment.adminEmails) {
+      return environment.adminEmails.split(',').map((email: string) => email.trim());
+    }
+    return [];
+  }
 
   constructor(private auth: Auth) {
     // Monitor auth state changes

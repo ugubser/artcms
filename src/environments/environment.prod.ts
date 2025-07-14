@@ -1,5 +1,5 @@
 // Production environment configuration
-// Firebase credentials will be injected during build via environment variables
+// Firebase credentials and admin emails will be injected during build via environment variables
 // See .env.example for required environment variables
 
 declare const process: any;
@@ -14,5 +14,6 @@ export const environment = {
     storageBucket: process.env['FIREBASE_STORAGE_BUCKET'] || '',
     messagingSenderId: process.env['FIREBASE_MESSAGING_SENDER_ID'] || '',
     appId: process.env['FIREBASE_APP_ID'] || ''
-  }
+  },
+  adminEmails: process.env['ADMIN_EMAILS'] || ''
 };
