@@ -1,0 +1,48 @@
+    <div class="home-container">
+      <header class="hero-section">
+        <h1>{{ siteName() }}</h1>
+        <p class="hero-subtitle">{{ siteDescription() }}</p>
+        <p class="hero-description">
+          Swiss-American-Japanese graphic design studio combining precision, innovation, and minimalism.
+        </p>
+      </header>
+      
+      <section class="featured-work">
+        <div class="section-header">
+          <h2>Featured Work</h2>
+          <a routerLink="/art" class="view-all-link">View All Portfolio →</a>
+        </div>
+        
+        <div class="featured-grid">
+          <div 
+            *ngFor="let item of featuredPortfolio$ | async; trackBy: trackByFn" 
+            class="featured-item"
+            [class]="'category-' + item.category"
+            (click)="selectItem(item)"
+          >
+            <div class="featured-image">
+              <img [src]="item.featuredImage" [alt]="item.title" />
+              <div class="featured-overlay">
+                <h3>{{ item.title }}</h3>
+                <span class="category-badge">{{ getCategoryLabel(item.category) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="studio-intro">
+        <div class="intro-content">
+          <h2>Swiss Design Principles</h2>
+          <p>
+            Our approach is rooted in the International Typographic Style, emphasizing clean lines, 
+            systematic grids, and thoughtful use of white space. Every project is crafted with 
+            meticulous attention to detail and a deep understanding of both form and function.
+          </p>
+          <div class="intro-actions">
+            <a routerLink="/about" class="cta-button">Learn More About Us</a>
+            <a routerLink="/contact" class="cta-button secondary">Get In Touch</a>
+          </div>
+        </div>
+      </section>
+    </div>

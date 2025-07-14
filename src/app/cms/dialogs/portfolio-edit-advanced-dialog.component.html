@@ -1,0 +1,203 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title>{{ isEdit ? 'Edit' : 'Add' }} Portfolio Item</h2>
+  
+  <mat-dialog-content>
+    <mat-tab-group class="portfolio-tabs">
+      <!-- Basic Info Tab -->
+      <mat-tab label="Basic Info">
+        <div class="tab-content">
+          <form [formGroup]="portfolioForm" class="portfolio-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="title" placeholder="Enter portfolio title">
+              <mat-error *ngIf="portfolioForm.get('title')?.hasError('required')">
+                Title is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description (Markdown)</mat-label>
+              <textarea matInput formControlName="description" rows="6" 
+                       placeholder="Enter main project description (supports markdown)"></textarea>
+              <mat-hint>Supports markdown formatting: **bold**, *italic*, # headers, etc.</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="category">
+                <mat-option value="art">Art</mat-option>
+                <mat-option value="graphic-design">Graphic Design</mat-option>
+                <mat-option value="branding">Branding</mat-option>
+                <mat-option value="web-design">Web Design</mat-option>
+              </mat-select>
+              <mat-error *ngIf="portfolioForm.get('category')?.hasError('required')">
+                Category is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Display Order</mat-label>
+              <input matInput type="number" formControlName="order" placeholder="0">
+              <mat-hint>Lower numbers appear first</mat-hint>
+            </mat-form-field>
+
+            <div class="checkbox-field">
+              <mat-checkbox formControlName="published">
+                Published (visible on website)
+              </mat-checkbox>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <!-- Featured Image Tab -->
+      <mat-tab label="Featured Image">
+        <div class="tab-content">
+          <h3>Featured Image</h3>
+          <p>This image represents the portfolio item in listings and previews.</p>
+          <app-image-upload
+            [currentImageUrl]="currentFeaturedImage"
+            [storagePath]="'portfolio/featured'"
+            [alt]="portfolioForm.get('title')?.value || 'Portfolio item'"
+            [maxSizeMB]="5"
+            [recommendedSize]="'800x600px'"
+            [allowUrlInput]="true"
+            (imageUploaded)="onFeaturedImageUploaded($event)"
+            (imageRemoved)="onFeaturedImageRemoved()">
+          </app-image-upload>
+        </div>
+      </mat-tab>
+
+      <!-- Galleries Tab -->
+      <mat-tab label="Galleries">
+        <div class="tab-content">
+          <div class="galleries-header">
+            <h3>Gallery Collections</h3>
+            <button mat-raised-button color="primary" (click)="addGallery()">
+              <mat-icon>add</mat-icon>
+              Add Gallery
+            </button>
+          </div>
+
+          <div class="galleries-container" *ngIf="galleries.length > 0">
+            <mat-expansion-panel *ngFor="let gallery of galleries; let galleryIndex = index" 
+                               class="gallery-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  {{ gallery.title || 'Gallery ' + (galleryIndex + 1) }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ gallery.pictures.length }} pictures
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="gallery-content">
+                <!-- Gallery Info -->
+                <div class="gallery-info">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Gallery Title</mat-label>
+                    <input matInput [(ngModel)]="gallery.title" 
+                           placeholder="Enter gallery title">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Gallery Description (Markdown)</mat-label>
+                    <textarea matInput [(ngModel)]="gallery.description" rows="3"
+                             placeholder="Describe this gallery section"></textarea>
+                    <mat-hint>Supports markdown formatting</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="order-field">
+                    <mat-label>Gallery Order</mat-label>
+                    <input matInput type="number" [(ngModel)]="gallery.order" placeholder="0">
+                  </mat-form-field>
+
+                  <button mat-button color="warn" (click)="removeGallery(galleryIndex)">
+                    <mat-icon>delete</mat-icon>
+                    Remove Gallery
+                  </button>
+                </div>
+
+                <!-- Pictures in Gallery -->
+                <div class="pictures-section">
+                  <div class="pictures-header">
+                    <h4>Pictures in this Gallery</h4>
+                    <button mat-button color="accent" (click)="addPictureToGallery(galleryIndex)">
+                      <mat-icon>add_photo_alternate</mat-icon>
+                      Add Picture
+                    </button>
+                  </div>
+
+                  <div class="pictures-grid" *ngIf="gallery.pictures.length > 0">
+                    <mat-card *ngFor="let picture of gallery.pictures; let pictureIndex = index" 
+                             class="picture-card">
+                      <div class="picture-image">
+                        <app-image-upload
+                          [currentImageUrl]="picture.imageUrl"
+                          [storagePath]="'portfolio/gallery-' + galleryIndex"
+                          [alt]="picture.alt || 'Gallery picture'"
+                          [maxSizeMB]="5"
+                          [recommendedSize]="'800x600px'"
+                          [allowUrlInput]="true"
+                          (imageUploaded)="onPictureImageUploaded($event, galleryIndex, pictureIndex)"
+                          (imageRemoved)="onPictureImageRemoved(galleryIndex, pictureIndex)">
+                        </app-image-upload>
+                      </div>
+
+                      <div class="picture-details">
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Picture Description (Markdown)</mat-label>
+                          <textarea matInput [(ngModel)]="picture.description" rows="3"
+                                   placeholder="Describe this picture"></textarea>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Alt Text</mat-label>
+                          <input matInput [(ngModel)]="picture.alt" 
+                                 placeholder="Alt text for accessibility">
+                        </mat-form-field>
+
+                        <div class="picture-actions">
+                          <mat-form-field appearance="outline" class="order-field">
+                            <mat-label>Order</mat-label>
+                            <input matInput type="number" [(ngModel)]="picture.order" placeholder="0">
+                          </mat-form-field>
+
+                          <button mat-button color="warn" 
+                                 (click)="removePictureFromGallery(galleryIndex, pictureIndex)">
+                            <mat-icon>delete</mat-icon>
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </mat-card>
+                  </div>
+
+                  <div class="empty-pictures" *ngIf="gallery.pictures.length === 0">
+                    <p>No pictures in this gallery yet. Add your first picture!</p>
+                  </div>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </div>
+
+          <div class="empty-galleries" *ngIf="galleries.length === 0">
+            <mat-icon>photo_library</mat-icon>
+            <h4>No galleries yet</h4>
+            <p>Create your first gallery collection to organize your portfolio images.</p>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" 
+            (click)="onSave()" 
+            [disabled]="portfolioForm.invalid || saving">
+      <mat-icon *ngIf="saving">hourglass_empty</mat-icon>
+      {{ saving ? 'Saving...' : (isEdit ? 'Update' : 'Create') }}
+    </button>
+  </mat-dialog-actions>
+</div>
