@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "tribecaconcepts-9c"
+    "default": "tribecaconcepts-9c",
+    "dev": "tribecaconcepts-9c"
   }
 }

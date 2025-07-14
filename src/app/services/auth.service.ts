@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
 
 @Injectable({
@@ -8,6 +8,13 @@ import { Observable, BehaviorSubject } from 'rxjs';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private googleProvider = new GoogleAuthProvider();
+
+  // Admin users whitelist - these email addresses are authorized for admin access
+  private readonly adminEmails: string[] = [
+    // Add your admin email addresses here before deployment
+    'your-admin-email@example.com' // Replace with your actual admin email
+  ];
 
   constructor(private auth: Auth) {
     // Monitor auth state changes
@@ -21,6 +28,22 @@ export class AuthService {
       await signInWithEmailAndPassword(this.auth, email, password);
     } catch (error) {
       console.error('Sign in error:', error);
+      throw error;
+    }
+  }
+
+  async signInWithGoogle(): Promise<void> {
+    try {
+      const result = await signInWithPopup(this.auth, this.googleProvider);
+      const user = result.user;
+      
+      // Check if user is authorized admin
+      if (!this.isAdminUser(user)) {
+        await this.signOut();
+        throw new Error('Unauthorized: Admin access required');
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
       throw error;
     }
   }
@@ -40,5 +63,16 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return this.currentUserSubject.value !== null;
+  }
+
+  isAdminUser(user: User | null = null): boolean {
+    const currentUser = user || this.getCurrentUser();
+    if (!currentUser?.email) return false;
+    
+    return this.adminEmails.includes(currentUser.email as string);
+  }
+
+  isAuthenticatedAdmin(): boolean {
+    return this.isAuthenticated() && this.isAdminUser();
   }
 }
