@@ -1,42 +1,64 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // DEVELOPMENT RULES - Allow all access for emulator testing
-    // In production, these should be restricted to authenticated users
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email in [
+               // Add your admin email addresses here before deployment
+               'your-admin-email@example.com' // Replace with your actual admin email
+             ];
+    }
     
-    // Portfolio images - public read, open write for development
+    // Helper function to check for valid image types
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper function to check file size (max 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Portfolio images - public read, admin write with validation
     match /portfolio/{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
-    // Portfolio featured images - public read, open write for development  
+    // Portfolio featured images - public read, admin write with validation
     match /portfolio/featured/{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
-    // Portfolio gallery images - public read, open write for development
+    // Portfolio gallery images - public read, admin write with validation
     match /portfolio/gallery/{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
-    // About page images - public read, open write for development
+    // About page images - public read, admin write with validation
     match /about/{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
-    // General uploads - open for development
+    // General uploads - admin only with validation
     match /uploads/{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
-    // Temporary uploads for CMS - open for development
+    // Temporary uploads for CMS - admin only with validation
     match /temp/{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
-    // Fallback rule for any other paths
+    // Deny all other paths by default
     match /{allPaths=**} {
-      allow read, write: if true; // Open for development
+      allow read, write: if false;
     }
   }
 }

@@ -9,6 +9,7 @@ export const routes: Routes = [
   { path: 'design', loadComponent: () => import('./components/portfolio/portfolio.component').then(m => m.PortfolioComponent), data: { category: 'graphic-design' } },
   { path: 'about', loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent) },
   { path: 'contact', loadComponent: () => import('./components/contact/contact.component').then(m => m.ContactComponent) },
+  { path: 'admin/login', loadComponent: () => import('./components/admin-login/admin-login.component').then(m => m.AdminLoginComponent) },
   { path: 'admin', component: CMSComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/home' }
 ];

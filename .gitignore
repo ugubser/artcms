@@ -64,6 +64,11 @@ pnpm-lock.yaml
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+
+# Firebase configuration files (production)
+.firebaserc.production
+firebase-config.json
 
 # Backup files
 *.backup
