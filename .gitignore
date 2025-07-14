@@ -70,6 +70,10 @@ pnpm-lock.yaml
 src/environments/environment.ts
 src/environments/environment.prod.ts
 
+# Firebase rules files (generated at build time)
+firestore.rules
+storage.rules
+
 # Firebase configuration files (production)
 .firebaserc.production
 firebase-config.json
