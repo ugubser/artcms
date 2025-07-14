@@ -4,11 +4,12 @@ import { Observable } from 'rxjs';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 import { MetaService } from '../../services/meta.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PageHeaderComponent],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })

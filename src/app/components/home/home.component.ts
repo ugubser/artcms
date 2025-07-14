@@ -1,6 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -8,11 +7,12 @@ import { PortfolioService, PortfolioItem } from '../../services/portfolio.servic
 import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-detail-dialog.component';
 import { MetaService } from '../../services/meta.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatDialogModule],
+  imports: [CommonModule, MatDialogModule, PageHeaderComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -31,9 +31,9 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Get first 3 portfolio items for featured section
+    // Get first portfolio item for featured section
     this.featuredPortfolio$ = this.portfolioService.getPublishedPortfolio().pipe(
-      map(items => items.slice(0, 3))
+      map(items => items.slice(0, 1))
     );
 
     // Load site settings for dynamic content

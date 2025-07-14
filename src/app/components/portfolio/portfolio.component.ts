@@ -5,11 +5,12 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { PortfolioGridComponent } from '../portfolio-grid/portfolio-grid.component';
 import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 import { MetaService } from '../../services/meta.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, PortfolioGridComponent],
+  imports: [CommonModule, MatDialogModule, PortfolioGridComponent, PageHeaderComponent],
   templateUrl: './portfolio.component.html',
   styleUrl: './portfolio.component.scss'
 })

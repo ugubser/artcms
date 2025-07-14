@@ -2,17 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { AboutService, AboutSection } from '../../services/about.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PageHeaderComponent],
   template: `
     <div class="about-container">
-      <header class="about-header">
-        <h1>About</h1>
-        <p class="about-subtitle"></p>
-      </header>
+      <app-page-header></app-page-header>
       
       <main class="about-content">
         <section 
