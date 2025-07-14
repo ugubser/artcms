@@ -23,6 +23,8 @@ export class PortfolioDetailDialogComponent {
   currentImageIndex = 0;
   totalImages = 0;
   allImages: string[] = [];
+  allImageData: { url: string; description?: string; alt?: string }[] = [];
+  currentImageData: { url: string; description?: string; alt?: string } | null = null;
 
   constructor(
     private dialogRef: MatDialogRef<PortfolioDetailDialogComponent>,
@@ -30,16 +32,32 @@ export class PortfolioDetailDialogComponent {
   ) {
     // Combine featured image and all gallery pictures for viewer
     this.allImages = [];
+    this.allImageData = [];
+    
     if (data.featuredImage) {
       this.allImages.push(data.featuredImage);
+      this.allImageData.push({ 
+        url: data.featuredImage, 
+        description: undefined, 
+        alt: data.title 
+      });
     }
+    
     if (data.galleries) {
       data.galleries.forEach(gallery => {
         if (gallery.pictures) {
-          this.allImages.push(...gallery.pictures.map(p => p.imageUrl));
+          gallery.pictures.forEach(picture => {
+            this.allImages.push(picture.imageUrl);
+            this.allImageData.push({
+              url: picture.imageUrl,
+              description: picture.description,
+              alt: picture.alt || data.title
+            });
+          });
         }
       });
     }
+    
     this.totalImages = this.allImages.length;
   }
 
@@ -60,16 +78,19 @@ export class PortfolioDetailDialogComponent {
   openImageViewer(imageUrl: string, index: number) {
     this.selectedImageUrl = imageUrl;
     this.currentImageIndex = index;
+    this.currentImageData = this.allImageData[index] || null;
   }
 
   closeImageViewer() {
     this.selectedImageUrl = null;
+    this.currentImageData = null;
   }
 
   previousImage() {
     if (this.currentImageIndex > 0) {
       this.currentImageIndex--;
       this.selectedImageUrl = this.allImages[this.currentImageIndex];
+      this.currentImageData = this.allImageData[this.currentImageIndex] || null;
     }
   }
 
@@ -77,6 +98,7 @@ export class PortfolioDetailDialogComponent {
     if (this.currentImageIndex < this.totalImages - 1) {
       this.currentImageIndex++;
       this.selectedImageUrl = this.allImages[this.currentImageIndex];
+      this.currentImageData = this.allImageData[this.currentImageIndex] || null;
     }
   }
 }

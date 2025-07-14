@@ -31,6 +31,9 @@
             <div class="gallery-overlay">
               <mat-icon>zoom_in</mat-icon>
             </div>
+            <div class="image-description-overlay" *ngIf="picture.description">
+              {{ picture.description }}
+            </div>
           </div>
         </div>
       </div>
@@ -53,7 +56,10 @@
         </button>
         
         <div class="image-container">
-          <img [src]="selectedImageUrl" [alt]="data.title">
+          <img [src]="selectedImageUrl" [alt]="currentImageData?.alt || data.title">
+          <div class="image-description" *ngIf="currentImageData?.description">
+            {{ currentImageData?.description }}
+          </div>
         </div>
         
         <button mat-icon-button (click)="nextImage()" [disabled]="currentImageIndex >= totalImages - 1">
