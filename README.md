@@ -1,6 +1,18 @@
 # Tribeca Concepts Portfolio Website
 
-A Swiss design-inspired portfolio website built with Angular and powered by FireCMS for seamless content management. This project clones the aesthetic and functionality of the original Tribeca Concepts website while providing a modern, scalable CMS solution.
+A Swiss design-inspired portfolio website built with Angular and powered by Firebase for seamless content management. This project demonstrates modern web development practices with secure deployment, real-time content management, and elegant Swiss design principles.
+
+## 🎯 Perfect For
+
+- **Portfolio Websites**: Showcase creative work with elegant galleries
+- **Small Business Sites**: Professional presence with easy content management  
+- **Design Studios**: Swiss design aesthetic with modern functionality
+- **Learning Project**: Modern Angular + Firebase development patterns
+- **Template Base**: Customizable foundation for similar projects
+
+## 🔥 Live Demo
+
+> **Note**: This is a template repository. Set up your own Firebase project to see it in action following the setup guide below.
 
 ## Architecture Overview
 
@@ -88,31 +100,56 @@ const newsCollection = buildCollection({
 
 1. **Clone and Install**
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/tribeca-concepts-clone.git
 cd tribeca-concepts-clone
 npm install
 ```
 
-2. **Firebase Setup**
+2. **Firebase Project Setup**
 ```bash
-# Configure Firebase (replace with your project)
-firebase login
-firebase use --add your-project-id
+# Install Firebase CLI if not already installed
+npm install -g firebase-tools
 
-# Start emulators for local development
-firebase emulators:start
+# Login to Firebase
+firebase login
+
+# Create a new Firebase project or use existing one
+firebase projects:create your-project-id
+
+# Configure the project
+firebase use --add your-project-id
 ```
 
-3. **Development Server**
+3. **Environment Configuration**
 ```bash
+# Run the setup script to configure Firebase credentials
+./scripts/setup-firebase.sh
+```
+
+This script will:
+- Prompt for your Firebase project credentials
+- Ask for admin email addresses
+- Generate `.env.production` file with your configuration
+- Update `.firebaserc` with your project ID
+
+4. **Start Development Environment**
+```bash
+# Start Firebase emulators
+firebase emulators:start
+
+# In another terminal, start the development server
 ng serve
 ```
-Navigate to `http://localhost:4200/`
 
-4. **Admin Access**
-- Visit `http://localhost:4200/admin`
-- Sign in with Firebase Auth credentials
-- Start managing content immediately
+5. **Access the Application**
+- **Public Site**: `http://localhost:4200/`
+- **Admin Panel**: `http://localhost:4200/admin`
+- **Firebase Emulator UI**: `http://localhost:4000/`
+
+6. **Initial Admin Setup**
+- Go to `http://localhost:4200/admin/login`
+- Sign in with Google using one of your configured admin emails
+- Start managing content through the CMS interface
 
 ### Firebase Emulator Configuration
 - **Firestore**: localhost:8080
@@ -162,26 +199,31 @@ ng build --configuration production
 firebase deploy
 ```
 
-## Development Benefits of FireCMS Approach
+## Features & Benefits
 
-### For Developers
-- **Reduced Boilerplate**: Schema-driven development eliminates repetitive CRUD code
-- **Type Safety**: Auto-generated TypeScript interfaces prevent runtime errors
-- **Real-Time Development**: Instant content updates during development
-- **Scalable Architecture**: Firebase handles scaling without infrastructure management
+### 🔐 Security First
+- **Template-Based Configuration**: No sensitive data in git repository
+- **Environment Variable Injection**: Secure deployment with automated credential handling
+- **Role-Based Access Control**: Admin-only content management with email whitelisting
+- **Firebase Security Rules**: Comprehensive database and storage protection
 
-### For Content Managers
-- **Immediate Publishing**: Changes go live instantly without technical intervention
-- **Media Management**: Drag-and-drop image uploads with automatic optimization
-- **Collaborative Editing**: Multiple users can edit content simultaneously
-- **Version Control**: Firebase's real-time sync provides natural versioning
+### 🚀 Developer Experience
+- **Rapid Setup**: One-command deployment with automated environment configuration
+- **Real-Time Development**: Live content updates during development
+- **Type Safety**: Full TypeScript support with auto-generated interfaces
+- **Modern Stack**: Angular 20+ with Firebase integration
 
-### For Maintenance
-- **Security**: Firebase handles authentication, authorization, and data security
-- **Environment Safety**: Template-based configuration prevents sensitive data commits
-- **Performance**: CDN-delivered assets and optimized queries out of the box  
-- **Monitoring**: Built-in Firebase console for usage analytics and error tracking
-- **Backup**: Automatic data backup and point-in-time recovery
+### 📝 Content Management
+- **Intuitive Admin Interface**: Clean, Swiss design-inspired CMS
+- **Rich Content Editing**: Markdown support with live preview
+- **Image Management**: Drag-and-drop uploads with automatic optimization
+- **Portfolio System**: Multi-gallery support with category management
+
+### 🎨 Design System
+- **Swiss Design Principles**: Mathematical precision in typography and layout
+- **Responsive Architecture**: Mobile-first design with systematic grid
+- **Performance Optimized**: CDN delivery and optimized asset loading
+- **SEO Ready**: Meta tag management and semantic HTML structure
 
 ## Swiss Design Implementation
 
@@ -204,9 +246,45 @@ ng test
 ng e2e
 ```
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development Guidelines
+
+1. **Security**: Never commit sensitive data (API keys, credentials, personal emails)
+2. **Templates**: Use the template system for any configuration files
+3. **Documentation**: Update relevant documentation for new features
+4. **Testing**: Ensure tests pass before submitting PRs
+5. **Code Style**: Follow existing code patterns and conventions
+
+### Security Note
+
+This project uses a template-based configuration system to prevent sensitive data from being committed to the repository. All credentials are injected during deployment. Please maintain this security standard in contributions.
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## Acknowledgments
+
+- **Swiss Design Movement**: For the timeless design principles
+- **Angular Team**: For the excellent framework
+- **Firebase**: For the powerful backend-as-a-service platform
+- **Open Source Community**: For the tools and libraries that make this possible
+
+## Support
+
+If you find this project helpful, please consider:
+- ⭐ Starring the repository
+- 🍴 Forking for your own projects
+- 🐛 Reporting issues
+- 📝 Contributing improvements
+
 ## Additional Resources
 
 - [Angular CLI Documentation](https://angular.dev/tools/cli)
-- [FireCMS Documentation](https://firecms.co/docs)
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [Swiss Design Principles](https://www.smashingmagazine.com/2009/07/lessons-from-swiss-style-graphic-design/)
+- [Angular Material Design](https://material.angular.io/)
+- [Firebase Security Rules](https://firebase.google.com/docs/rules)
