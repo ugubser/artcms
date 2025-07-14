@@ -1,6 +1,6 @@
 <header class="main-nav" [class.nav-open]="mobileMenuOpen">
   <nav class="nav-container">
-    <a routerLink="/" class="brand">tribecaconcepts</a>
+    <a routerLink="/" class="brand">{{ siteName() }}</a>
     <ul class="nav-links" [class.nav-open]="mobileMenuOpen">
       <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">HOME</a></li>
       <li><a routerLink="/art" routerLinkActive="active" (click)="closeMobileMenu()">ART</a></li>
