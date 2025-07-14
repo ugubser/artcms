@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { ContactService, ContactInfo } from '../../services/contact.service';
+import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { MetaService } from '../../services/meta.service';
 
 @Component({
   selector: 'app-contact',
@@ -23,6 +25,13 @@ import { ContactService, ContactInfo } from '../../services/contact.service';
                 <a [href]="'mailto:' + contact.email" class="contact-link">
                   {{ contact.email }}
                 </a>
+                <div *ngIf="settingsContactEmail() && settingsContactEmail() !== contact.email" class="settings-email">
+                  <p class="additional-email">General inquiries: 
+                    <a [href]="'mailto:' + settingsContactEmail()" class="contact-link">
+                      {{ settingsContactEmail() }}
+                    </a>
+                  </p>
+                </div>
               </div>
               
               <div *ngIf="contact.phone" class="contact-item">
@@ -266,18 +275,38 @@ import { ContactService, ContactInfo } from '../../services/contact.service';
         background: #333;
       }
     }
+
+    .additional-email {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: #666;
+    }
   `]
 })
 export class ContactComponent implements OnInit {
   contactInfo$: Observable<ContactInfo[]>;
   isLoading = true;
+  settingsContactEmail = signal<string>('');
 
-  constructor(private contactService: ContactService) {
+  constructor(
+    private contactService: ContactService,
+    private settingsService: SettingsService,
+    private metaService: MetaService
+  ) {
     this.contactInfo$ = new Observable<ContactInfo[]>();
   }
 
   ngOnInit() {
     this.loadContactInfo();
+    
+    // Load site settings for contact email
+    this.settingsService.getSiteSettings().subscribe(settings => {
+      if (settings) {
+        this.settingsContactEmail.set(settings.contactEmail);
+      }
+    });
+    
+    this.metaService.setPageTitle('Contact');
   }
 
   private loadContactInfo() {

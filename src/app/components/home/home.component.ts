@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -6,6 +6,8 @@ import { map } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-detail-dialog.component';
+import { MetaService } from '../../services/meta.service';
+import { SettingsService, SiteSettings } from '../../services/settings.service';
 
 @Component({
   selector: 'app-home',
@@ -14,8 +16,8 @@ import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-de
   template: `
     <div class="home-container">
       <header class="hero-section">
-        <h1>tribeca concepts</h1>
-        <p class="hero-subtitle">Design and Art in Zurich, Switzerland</p>
+        <h1>{{ siteName() }}</h1>
+        <p class="hero-subtitle">{{ siteDescription() }}</p>
         <p class="hero-description">
           Swiss-American-Japanese graphic design studio combining precision, innovation, and minimalism.
         </p>
@@ -304,10 +306,14 @@ import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-de
 })
 export class HomeComponent implements OnInit {
   featuredPortfolio$: Observable<PortfolioItem[]>;
+  siteName = signal<string>('tribeca concepts');
+  siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
 
   constructor(
     private portfolioService: PortfolioService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private metaService: MetaService,
+    private settingsService: SettingsService
   ) {
     this.featuredPortfolio$ = new Observable<PortfolioItem[]>();
   }
@@ -317,6 +323,15 @@ export class HomeComponent implements OnInit {
     this.featuredPortfolio$ = this.portfolioService.getPublishedPortfolio().pipe(
       map(items => items.slice(0, 3))
     );
+
+    // Load site settings for dynamic content
+    this.settingsService.getSiteSettings().subscribe(settings => {
+      if (settings) {
+        this.siteName.set(settings.siteName);
+        this.siteDescription.set(settings.siteDescription);
+        this.metaService.setPageTitle('Home');
+      }
+    });
   }
 
   selectItem(item: PortfolioItem) {
