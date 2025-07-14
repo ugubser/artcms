@@ -98,6 +98,12 @@ echo -e "${BLUE}🔧 Generating Firebase rules with admin emails...${NC}"
 node scripts/generate-rules.js
 
 echo ""
+echo -e "${BLUE}🔧 Injecting environment variables...${NC}"
+
+# Inject environment variables into environment.prod.ts
+node scripts/inject-env.js
+
+echo ""
 echo -e "${BLUE}🏗️  Building for production...${NC}"
 
 # Build with production configuration

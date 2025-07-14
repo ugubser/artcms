@@ -1,12 +1,12 @@
 export const environment = {
   production: false,
   useEmulators: true,
-  emulatorHost: '192.168.0.22', // Change this to your machine's IP address
+  emulatorHost: 'localhost', // Default to localhost for development
   firebase: {
     apiKey: "demo-api-key",
-    authDomain: "tribecaconcepts-9c.firebaseapp.com",
-    projectId: "tribecaconcepts-9c",
-    storageBucket: "tribecaconcepts-9c.appspot.com",
+    authDomain: "{{FIREBASE_AUTH_DOMAIN}}",
+    projectId: "{{FIREBASE_PROJECT_ID}}",
+    storageBucket: "{{FIREBASE_STORAGE_BUCKET}}",
     messagingSenderId: "123456789",
     appId: "demo-app-id"
   },
