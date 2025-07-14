@@ -25,5 +25,10 @@ service cloud.firestore {
     match /settings/{document=**} {
       allow read, write: if true;
     }
+    
+    // Portfolio pages settings - allow all operations for development
+    match /portfolio-pages/{document=**} {
+      allow read, write: if true;
+    }
   }
 }

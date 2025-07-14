@@ -16,11 +16,13 @@ import { PortfolioService } from '../services/portfolio.service';
 import { AboutService } from '../services/about.service';
 import { ContactService } from '../services/contact.service';
 import { SettingsService } from '../services/settings.service';
+import { PortfolioPagesService } from '../services/portfolio-pages.service';
 import { PortfolioEditDialogComponent } from './dialogs/portfolio-edit-dialog.component';
 import { PortfolioEditAdvancedDialogComponent } from './dialogs/portfolio-edit-advanced-dialog.component';
 import { AboutEditDialogComponent } from './dialogs/about-edit-dialog.component';
 import { ContactEditDialogComponent } from './dialogs/contact-edit-dialog.component';
 import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.component';
+import { PortfolioPagesEditDialogComponent } from './dialogs/portfolio-pages-edit-dialog.component';
 
 @Component({
   selector: 'app-cms',
@@ -92,6 +94,53 @@ import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.comp
               <p>Create your first portfolio item to get started</p>
               <button mat-raised-button color="primary" (click)="addNewPortfolioItem()">
                 Add Portfolio Item
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Portfolio Pages">
+          <div class="tab-content">
+            <div class="tab-header">
+              <h2>Portfolio Pages Management</h2>
+              <button mat-raised-button color="primary" (click)="addNewPortfolioPage()">
+                <mat-icon>add</mat-icon>
+                Add New Portfolio Page
+              </button>
+            </div>
+            
+            <div class="portfolio-pages-grid" *ngIf="portfolioPages.length > 0">
+              <mat-card *ngFor="let page of portfolioPages; trackBy: trackByFn" class="portfolio-page-card">
+                <mat-card-header>
+                  <mat-card-title>{{ page.title }}</mat-card-title>
+                  <mat-card-subtitle>{{ page.slug }}</mat-card-subtitle>
+                </mat-card-header>
+                <img mat-card-image [src]="page.featuredImage" [alt]="page.title" *ngIf="page.featuredImage">
+                <mat-card-content>
+                  <p>{{ page.excerpt }}</p>
+                  <p><strong>Status:</strong> {{ page.published ? 'Published' : 'Draft' }}</p>
+                  <p><strong>Order:</strong> {{ page.order }}</p>
+                  <p><strong>Last Updated:</strong> {{ page.updatedAt ? (page.updatedAt | date:'medium') : 'Never' }}</p>
+                </mat-card-content>
+                <mat-card-actions>
+                  <button mat-button (click)="editPortfolioPage(page)">
+                    <mat-icon>edit</mat-icon>
+                    Edit
+                  </button>
+                  <button mat-button color="warn" (click)="deletePortfolioPage(page.id!)">
+                    <mat-icon>delete</mat-icon>
+                    Delete
+                  </button>
+                </mat-card-actions>
+              </mat-card>
+            </div>
+            
+            <div class="empty-state" *ngIf="portfolioPages.length === 0">
+              <mat-icon>web</mat-icon>
+              <h3>No portfolio pages yet</h3>
+              <p>Create your first portfolio page to get started</p>
+              <button mat-raised-button color="primary" (click)="addNewPortfolioPage()">
+                Add Portfolio Page
               </button>
             </div>
           </div>
@@ -286,19 +335,19 @@ import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.comp
       color: #333;
     }
     
-    .portfolio-grid, .about-sections {
+    .portfolio-grid, .about-sections, .portfolio-pages-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 1.5rem;
       margin-top: 1rem;
     }
     
-    .portfolio-card, .about-card, .contact-card, .settings-card {
+    .portfolio-card, .about-card, .contact-card, .settings-card, .portfolio-page-card {
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       transition: transform 0.3s ease;
     }
     
-    .portfolio-card:hover, .about-card:hover {
+    .portfolio-card:hover, .about-card:hover, .portfolio-page-card:hover {
       transform: translateY(-2px);
     }
     
@@ -356,7 +405,7 @@ import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.comp
         gap: 1rem;
       }
       
-      .portfolio-grid, .about-sections {
+      .portfolio-grid, .about-sections, .portfolio-pages-grid {
         grid-template-columns: 1fr;
       }
       
@@ -376,12 +425,14 @@ export class CMSComponent implements OnInit {
   aboutSections: any[] = [];
   contactInfo: any = null;
   siteSettings: any = null;
+  portfolioPages: any[] = [];
   
   constructor(
     private portfolioService: PortfolioService,
     private aboutService: AboutService,
     private contactService: ContactService,
     private settingsService: SettingsService,
+    private portfolioPagesService: PortfolioPagesService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -448,6 +499,17 @@ export class CMSComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading site settings:', error);
+      }
+    });
+    
+    // Load portfolio pages
+    this.portfolioPagesService.getPortfolioPages().subscribe({
+      next: (pages) => {
+        console.log('Loaded portfolio pages:', pages);
+        this.portfolioPages = pages;
+      },
+      error: (error) => {
+        console.error('Error loading portfolio pages:', error);
       }
     });
   }
@@ -565,6 +627,51 @@ export class CMSComponent implements OnInit {
         this.loadData(); // Reload data after successful save
       }
     });
+  }
+
+  // Portfolio Pages methods
+  addNewPortfolioPage() {
+    const dialogRef = this.dialog.open(PortfolioPagesEditDialogComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: { page: null }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadData(); // Reload data after successful save
+        this.snackBar.open('Portfolio page created successfully', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  editPortfolioPage(page: any) {
+    const dialogRef = this.dialog.open(PortfolioPagesEditDialogComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: { page: page }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadData(); // Reload data after successful save
+      }
+    });
+  }
+
+  async deletePortfolioPage(id: string) {
+    if (confirm('Are you sure you want to delete this portfolio page?')) {
+      try {
+        await this.portfolioPagesService.deletePortfolioPage(id);
+        this.loadData(); // Reload data after deletion
+        this.snackBar.open('Portfolio page deleted successfully', 'Close', { duration: 3000 });
+      } catch (error) {
+        console.error('Error deleting portfolio page:', error);
+        this.snackBar.open('Error deleting portfolio page', 'Close', { duration: 5000 });
+      }
+    }
   }
 
   // Settings methods

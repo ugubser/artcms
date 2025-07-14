@@ -1,0 +1,60 @@
+    <div class="dialog-container">
+      <h2 mat-dialog-title>Portfolio Page Settings</h2>
+      
+      <mat-dialog-content>
+        <p class="dialog-description">
+          Configure the titles and descriptions for each portfolio page section.
+        </p>
+        
+        <form [formGroup]="portfolioPagesForm" class="portfolio-pages-form">
+          <div formArrayName="pages" class="pages-container">
+            <div *ngFor="let pageGroup of pagesArray.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="page-section">
+              
+              <h3>{{ getCategoryLabel(pageGroup.get('category')?.value) }}</h3>
+              
+              <div class="page-form">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Page Title</mat-label>
+                  <input matInput formControlName="title" placeholder="e.g., Art">
+                  <mat-error *ngIf="pageGroup.get('title')?.hasError('required')">
+                    Title is required
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Page Subtitle</mat-label>
+                  <textarea matInput 
+                           formControlName="subtitle" 
+                           rows="3"
+                           placeholder="Brief description of this portfolio section">
+                  </textarea>
+                  <mat-error *ngIf="pageGroup.get('subtitle')?.hasError('required')">
+                    Subtitle is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </form>
+        
+        <!-- Loading state -->
+        <div *ngIf="isLoading" class="loading-state">
+          <p>Loading portfolio page settings...</p>
+        </div>
+      </mat-dialog-content>
+
+      <mat-dialog-actions align="end">
+        <button mat-button (click)="onCancel()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button mat-raised-button 
+                color="primary" 
+                (click)="onSave()" 
+                [disabled]="isLoading || portfolioPagesForm.invalid">
+          <mat-icon>save</mat-icon>
+          Save Settings
+        </button>
+      </mat-dialog-actions>
+    </div>
