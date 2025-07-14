@@ -1,0 +1,31 @@
+<div class="portfolio-grid">
+  <div 
+    *ngFor="let item of portfolio$ | async; trackBy: trackByFn" 
+    class="portfolio-item"
+    [class]="'category-' + item.category"
+    (click)="selectItem(item)"
+  >
+    <div class="portfolio-image">
+      <img [src]="item.featuredImage" [alt]="item.title" />
+      <div class="portfolio-overlay">
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.description }}</p>
+        <span class="category-badge">{{ getCategoryLabel(item.category) }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="isLoading" class="loading-state">
+  <p>Loading portfolio...</p>
+</div>
+
+<!-- Empty state -->
+<div *ngIf="(portfolio$ | async)?.length === 0 && !isLoading" class="empty-state">
+  <h3>No portfolio items found</h3>
+  <p>Portfolio items will appear here once they are added to the database.</p>
+  <button (click)="initializeSampleData()" class="sample-data-btn">
+    Load Sample Data
+  </button>
+</div>

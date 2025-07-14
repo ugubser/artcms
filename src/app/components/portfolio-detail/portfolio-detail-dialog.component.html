@@ -1,0 +1,69 @@
+<div class="portfolio-detail-container">
+  <div class="portfolio-header">
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <button mat-icon-button (click)="onClose()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  
+  <mat-dialog-content class="portfolio-content">
+    <!-- Featured Image -->
+    <div class="featured-image" *ngIf="data.featuredImage">
+      <img [src]="data.featuredImage" [alt]="data.title" (click)="openImageViewer(data.featuredImage, 0)">
+    </div>
+
+    <!-- Portfolio Info -->
+    <div class="portfolio-info">
+      <div class="category-badge">{{ getCategoryLabel(data.category) }}</div>
+      <p class="description" *ngIf="data.description">{{ data.description }}</p>
+    </div>
+
+    <!-- Galleries -->
+    <div class="galleries-section" *ngIf="data.galleries && data.galleries.length > 0">
+      <div *ngFor="let gallery of data.galleries; let galleryIndex = index" class="gallery-section">
+        <h3>{{ gallery.title || 'Gallery ' + (galleryIndex + 1) }}</h3>
+        <p *ngIf="gallery.description" class="gallery-description">{{ gallery.description }}</p>
+        <div class="gallery-grid" *ngIf="gallery.pictures && gallery.pictures.length > 0">
+          <div *ngFor="let picture of gallery.pictures; let i = index" 
+               class="gallery-item"
+               (click)="openImageViewer(picture.imageUrl, galleryIndex * 100 + i + 1)">
+            <img [src]="picture.imageUrl" [alt]="picture.alt || data.title + ' - Image ' + (i + 1)">
+            <div class="gallery-overlay">
+              <mat-icon>zoom_in</mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <!-- Image Viewer Modal -->
+  <div class="image-viewer" 
+       *ngIf="selectedImageUrl" 
+       (click)="closeImageViewer()"
+       [@fadeInOut]>
+    <div class="image-viewer-content" (click)="$event.stopPropagation()">
+      <button mat-icon-button (click)="closeImageViewer()" class="viewer-close">
+        <mat-icon>close</mat-icon>
+      </button>
+      
+      <div class="image-navigation">
+        <button mat-icon-button (click)="previousImage()" [disabled]="currentImageIndex <= 0">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        
+        <div class="image-container">
+          <img [src]="selectedImageUrl" [alt]="data.title">
+        </div>
+        
+        <button mat-icon-button (click)="nextImage()" [disabled]="currentImageIndex >= totalImages - 1">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+      
+      <div class="image-counter">
+        {{ currentImageIndex + 1 }} / {{ totalImages }}
+      </div>
+    </div>
+  </div>
+</div>

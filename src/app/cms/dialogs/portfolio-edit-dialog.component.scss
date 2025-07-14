@@ -1,0 +1,54 @@
+.dialog-container {
+  width: 700px;
+  max-width: 90vw;
+  max-height: 80vh;
+}
+
+.portfolio-tabs {
+  min-height: 400px;
+}
+
+.tab-content {
+  padding: 1rem;
+}
+
+.portfolio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.checkbox-field {
+  margin: 1rem 0;
+}
+
+.gallery-uploads {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gallery-item {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.add-gallery-btn {
+  align-self: flex-start;
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+mat-dialog-actions {
+  padding: 1rem 0 0 0;
+}
