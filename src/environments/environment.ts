@@ -9,5 +9,6 @@ export const environment = {
     storageBucket: "tribecaconcepts-9c.appspot.com",
     messagingSenderId: "123456789",
     appId: "demo-app-id"
-  }
+  },
+  adminEmails: '' // Empty for development - emulator allows all access
 };

@@ -71,106 +71,108 @@ This guide walks you through deploying the Tribeca Concepts portfolio website to
 5. You'll see your Google account listed
 6. Add your email to the whitelists in code (see below)
 
-### 3. Code Configuration
+### 3. Environment Configuration
 
-#### Add Admin Email Addresses
-You need to add admin email addresses to three locations:
+#### Admin Email Configuration
+Admin emails are now automatically injected via environment variables. No manual code editing required!
 
-1. **AuthService** (`src/app/services/auth.service.ts`)
-   ```typescript
-   private readonly adminEmails = [
-     'admin@tribecaconcepts.com',
-     'your-google-account@gmail.com'
-   ];
+1. **Environment File** (`.env.production`)
+   ```bash
+   FIREBASE_API_KEY=your-api-key
+   FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   FIREBASE_PROJECT_ID=your-project-id
+   FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   FIREBASE_APP_ID=your-app-id
+   
+   # Admin emails (comma-separated)
+   ADMIN_EMAILS=admin@tribecaconcepts.com,your-google-account@gmail.com
    ```
 
-2. **Firestore Rules** (`firestore.rules`)
-   ```javascript
-   function isAdmin() {
-     return request.auth != null && 
-            request.auth.token.email in [
-              'admin@tribecaconcepts.com',
-              'your-google-account@gmail.com'
-            ];
+2. **Automatic Injection During Deployment**
+   - **AuthService**: Loads admin emails from `environment.adminEmails`
+   - **Firebase Rules**: Generated automatically with injected admin emails
+   - **Consistent Configuration**: Same emails used across all security layers
+
+### 4. Automated Setup Process
+
+#### Using Setup Script (Recommended)
+```bash
+./scripts/setup-firebase.sh
+```
+
+This script will:
+- Collect your Firebase project credentials
+- Prompt for admin email addresses
+- Generate `.env.production` with all configuration
+- Update `.firebaserc` with your project ID
+
+#### Manual Configuration (Alternative)
+If you prefer manual setup:
+
+1. **Create `.env.production`**:
+   ```bash
+   FIREBASE_API_KEY=your-api-key
+   FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   FIREBASE_PROJECT_ID=your-project-id
+   FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   FIREBASE_APP_ID=your-app-id
+   ADMIN_EMAILS=admin@example.com,another-admin@example.com
+   ```
+
+2. **Update `.firebaserc`**:
+   ```json
+   {
+     "projects": {
+       "default": "your-production-project-id",
+       "dev": "tribecaconcepts-9c"
+     }
    }
    ```
 
-3. **Storage Rules** (`storage.rules`)
-   ```javascript
-   function isAdmin() {
-     return request.auth != null && 
-            request.auth.token.email in [
-              'admin@tribecaconcepts.com',
-              'your-google-account@gmail.com'
-            ];
-   }
-   ```
+### 5. Security Rules (Automatic)
 
-### 4. Environment Configuration
-
-#### Create Production Environment File
-Create `.env.production` with your Firebase config:
-```env
-FIREBASE_API_KEY=your-api-key
-FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-FIREBASE_APP_ID=your-app-id
-```
-
-#### Update Firebase Project Configuration
-Update `.firebaserc`:
-```json
-{
-  "projects": {
-    "default": "your-production-project-id",
-    "dev": "tribecaconcepts-9c"
-  }
-}
-```
-
-### 5. Security Rules
-
-The deployment includes secure Firestore and Storage rules:
+The deployment automatically generates secure Firestore and Storage rules:
 
 - **Public content**: Portfolio, About, Contact, Settings (read-only)
 - **Admin operations**: Creating, updating, deleting content (admin-only)
 - **File uploads**: Image uploads restricted to admin users with size/type validation
 - **Authentication**: Google Sign-in with email whitelist
+- **Auto-generated**: Rules are created with your admin emails during deployment
 
 ### 6. Deployment Process
 
-#### Manual Deployment Steps
-1. **Build the application**
-   ```bash
-   ng build --configuration production
-   ```
-
-2. **Deploy Firebase rules**
-   ```bash
-   firebase deploy --only firestore:rules
-   firebase deploy --only storage
-   ```
-
-3. **Deploy the application**
-   ```bash
-   firebase deploy --only hosting
-   ```
-
-#### Automated Deployment
-Use the deployment script:
+#### Automated Deployment (Recommended)
 ```bash
 ./scripts/deploy.sh
 ```
 
-The script will:
-- Run linting and tests
-- Build for production
-- Deploy Firestore rules and indexes
-- Deploy Storage rules
-- Deploy hosting
-- Validate deployment
+The script automatically:
+1. **Loads Environment**: Sources `.env.production` for configuration
+2. **Validates Setup**: Checks for required environment variables
+3. **Generates Rules**: Creates Firebase rules with your admin emails
+4. **Builds Application**: Compiles Angular with injected environment variables
+5. **Deploys Everything**: Firestore rules, Storage rules, and hosting
+6. **Validates Deployment**: Ensures all components deployed successfully
+
+#### Manual Deployment Steps (Alternative)
+1. **Generate Rules**:
+   ```bash
+   export $(grep -v '^#' .env.production | xargs)
+   node scripts/generate-rules.js
+   ```
+
+2. **Build Application**:
+   ```bash
+   export $(grep -v '^#' .env.production | xargs)
+   ng build --configuration production
+   ```
+
+3. **Deploy to Firebase**:
+   ```bash
+   firebase deploy
+   ```
 
 ## Post-Deployment
 

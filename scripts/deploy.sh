@@ -43,41 +43,32 @@ if [ ! -f ".env.production" ]; then
     exit 1
 fi
 
+# Load environment variables from .env.production first
+if [ ! -f ".env.production" ]; then
+    echo -e "${RED}❌ .env.production file not found${NC}"
+    echo "Please run ./scripts/setup-firebase.sh first"
+    exit 1
+fi
+
+echo -e "${BLUE}📋 Loading environment variables...${NC}"
+set -a
+source .env.production
+set +a
+
 echo -e "${BLUE}📋 Current Firebase project:${NC}"
 firebase projects:list | grep -E "(default|Project ID)"
 
 echo ""
 echo -e "${YELLOW}🔧 Pre-deployment checks...${NC}"
 
-# Check if admin emails are configured
-if grep -q "// Add admin email addresses here" src/app/services/auth.service.ts; then
-    echo -e "${YELLOW}⚠️  Admin emails not configured in AuthService${NC}"
-    echo "Please add admin emails to src/app/services/auth.service.ts"
-    read -p "Continue anyway? (y/n): " CONTINUE
-    if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
-        exit 1
-    fi
+# Check if ADMIN_EMAILS environment variable is set
+if [ -z "$ADMIN_EMAILS" ]; then
+    echo -e "${RED}❌ ADMIN_EMAILS environment variable not found${NC}"
+    echo "Please ensure .env.production contains ADMIN_EMAILS=your-email@example.com"
+    exit 1
 fi
 
-# Check if Firestore rules have admin emails
-if grep -q "// Add admin emails here" firestore.rules; then
-    echo -e "${YELLOW}⚠️  Admin emails not configured in Firestore rules${NC}"
-    echo "Please add admin emails to firestore.rules"
-    read -p "Continue anyway? (y/n): " CONTINUE
-    if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
-        exit 1
-    fi
-fi
-
-# Check if Storage rules have admin emails
-if grep -q "// Add admin emails here" storage.rules; then
-    echo -e "${YELLOW}⚠️  Admin emails not configured in Storage rules${NC}"
-    echo "Please add admin emails to storage.rules"
-    read -p "Continue anyway? (y/n): " CONTINUE
-    if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
-        exit 1
-    fi
-fi
+echo -e "${GREEN}✅ Admin emails found: $ADMIN_EMAILS${NC}"
 
 echo ""
 echo -e "${BLUE}🧹 Cleaning previous builds...${NC}"
@@ -101,12 +92,13 @@ echo -e "${YELLOW}⚠️  Skipping tests for faster deployment...${NC}"
 echo -e "${BLUE}💡 Run 'npm test' manually if you want to test before deployment${NC}"
 
 echo ""
-echo -e "${BLUE}🏗️  Building for production...${NC}"
+echo -e "${BLUE}🔧 Generating Firebase rules with admin emails...${NC}"
 
-# Export environment variables from .env.production
-set -a
-source .env.production
-set +a
+# Generate Firebase rules with injected admin emails (environment already loaded)
+node scripts/generate-rules.js
+
+echo ""
+echo -e "${BLUE}🏗️  Building for production...${NC}"
 
 # Build with production configuration
 ng build --configuration production
