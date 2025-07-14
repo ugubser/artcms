@@ -90,9 +90,11 @@ Admin emails are now automatically injected via environment variables. No manual
    ```
 
 2. **Automatic Injection During Deployment**
+   - **Template System**: Environment files generated from `.template` files during deployment
    - **AuthService**: Loads admin emails from `environment.adminEmails`
    - **Firebase Rules**: Generated automatically with injected admin emails
    - **Consistent Configuration**: Same emails used across all security layers
+   - **Security**: Sensitive data never committed to git repository
 
 ### 4. Automated Setup Process
 
@@ -152,9 +154,10 @@ The script automatically:
 1. **Loads Environment**: Sources `.env.production` for configuration
 2. **Validates Setup**: Checks for required environment variables
 3. **Generates Rules**: Creates Firebase rules with your admin emails
-4. **Builds Application**: Compiles Angular with injected environment variables
-5. **Deploys Everything**: Firestore rules, Storage rules, and hosting
-6. **Validates Deployment**: Ensures all components deployed successfully
+4. **Injects Environment**: Generates environment files from templates with real values
+5. **Builds Application**: Compiles Angular with injected environment variables
+6. **Deploys Everything**: Firestore rules, Storage rules, and hosting
+7. **Validates Deployment**: Ensures all components deployed successfully
 
 #### Manual Deployment Steps (Alternative)
 1. **Generate Rules**:
@@ -163,13 +166,17 @@ The script automatically:
    node scripts/generate-rules.js
    ```
 
-2. **Build Application**:
+2. **Inject Environment Variables**:
    ```bash
-   export $(grep -v '^#' .env.production | xargs)
+   node scripts/inject-env.js
+   ```
+
+3. **Build Application**:
+   ```bash
    ng build --configuration production
    ```
 
-3. **Deploy to Firebase**:
+4. **Deploy to Firebase**:
    ```bash
    firebase deploy
    ```
@@ -215,7 +222,8 @@ The script automatically:
 ### Environment Variables
 - Production credentials are environment-based
 - Sensitive data excluded from version control
-- Environment variables injected at build time
+- Environment variables injected at build time from templates
+- Template system prevents accidental commits of sensitive data
 
 ## Monitoring and Maintenance
 

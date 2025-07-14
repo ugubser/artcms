@@ -141,13 +141,24 @@ src/
 
 ## Deployment
 
-### Production Build
+### Automated Production Deployment
 ```bash
-ng build --configuration production
+# Setup Firebase project and environment
+./scripts/setup-firebase.sh
+
+# Deploy to production with secure environment injection
+./scripts/deploy.sh
 ```
 
-### Firebase Hosting
+### Manual Production Build
 ```bash
+# Inject environment variables from templates
+node scripts/inject-env.js
+
+# Build for production
+ng build --configuration production
+
+# Deploy to Firebase
 firebase deploy
 ```
 
@@ -167,6 +178,7 @@ firebase deploy
 
 ### For Maintenance
 - **Security**: Firebase handles authentication, authorization, and data security
+- **Environment Safety**: Template-based configuration prevents sensitive data commits
 - **Performance**: CDN-delivered assets and optimized queries out of the box  
 - **Monitoring**: Built-in Firebase console for usage analytics and error tracking
 - **Backup**: Automatic data backup and point-in-time recovery

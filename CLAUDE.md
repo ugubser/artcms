@@ -72,6 +72,8 @@ ng lint
 - `firebase.json` - Firebase project configuration
 - `firestore.rules` - Firestore security rules
 - `storage.rules` - Firebase Storage security rules
+- `scripts/inject-env.js` - Environment variable injection script
+- `src/environments/*.template` - Environment configuration templates
 
 ## Content Management System
 
@@ -100,6 +102,7 @@ ng lint
 - Admin email addresses configured in code
 
 ### Security Features
+- **Environment Templating**: Template-based environment configuration prevents sensitive data commits
 - **Environment Separation**: Clear separation between development and production
 - **Firebase Rules**: Secure database and storage rules
 - **Admin Authorization**: Email-based admin user whitelist
@@ -108,7 +111,7 @@ ng lint
 
 ### Deployment Process
 1. **Setup**: Run `./scripts/setup-firebase.sh` to configure Firebase project
-2. **Configure**: Add admin email addresses to auth service and Firebase rules
+2. **Environment Injection**: `./scripts/deploy.sh` automatically injects environment variables from templates
 3. **Deploy**: Run `./scripts/deploy.sh` for automated deployment
 4. **Test**: Access admin panel and verify authentication works
 
@@ -116,6 +119,9 @@ ng lint
 - `.env.example` - Template for environment variables
 - `.env.production` - Production Firebase credentials (git-ignored)
 - `.env.local` - Local testing credentials (git-ignored)
+- `src/environments/*.template` - Environment configuration templates (git-tracked)
+- `src/environments/environment.ts` - Generated development config (git-ignored)
+- `src/environments/environment.prod.ts` - Generated production config (git-ignored)
 
 ## Technology Stack
 - **Frontend**: Angular 20.1.0 + Angular Material UI
@@ -126,8 +132,9 @@ ng lint
 
 ## Development Notes
 - Uses Firebase emulators for local development
-- Environment configuration in `src/environments/`
+- Environment configuration via template system in `src/environments/`
 - Swiss design principles guide the visual implementation
 - Real-time content updates through Firestore
 - Custom Angular admin interface with Material Design
-- Secure production deployment with proper authentication
+- Secure production deployment with environment variable injection
+- Template-based configuration prevents sensitive data commits
