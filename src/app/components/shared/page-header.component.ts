@@ -36,7 +36,7 @@ import { SettingsService } from '../../services/settings.service';
     
     .hero-section h1 {
       font-family: var(--font-display);
-      font-size: 1.5rem;
+      font-size: 1.375rem;
       font-weight: var(--fw-regular);
       margin-bottom: 0.5rem;
       color: #000;
@@ -44,21 +44,21 @@ import { SettingsService } from '../../services/settings.service';
       text-transform: uppercase;
       
       @media (max-width: 768px) {
-        font-size: 2rem;
+        font-size: 1.1rem;
         letter-spacing: 2px;
       }
     }
     
     .hero-subtitle {
       font-family: var(--font-display);
-      font-size: 0.8 rem;
-      color: #666;
+      font-size: 0.66rem;
+      color: #000;
       margin-bottom: 2rem;
       font-weight: var(--fw-light);
       letter-spacing: 5px;
       
       @media (max-width: 768px) {
-        font-size: 1rem;
+        font-size: 0.55rem;
       }
     }
     
@@ -90,8 +90,8 @@ import { SettingsService } from '../../services/settings.service';
       color: #000;
       text-decoration: none;
       font-weight: var(--fw-light);
-      font-size: 0.5 rem;
-      letter-spacing: 1px;
+      font-size: 0.55rem;
+      letter-spacing: 3px;
       text-transform: uppercase;
       transition: color 0.3s ease;
       
