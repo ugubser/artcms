@@ -7,11 +7,10 @@
   >
     <div class="portfolio-image">
       <img [src]="item.featuredImage" [alt]="item.title" />
-      <div class="portfolio-overlay">
-        <h3>{{ item.title }}</h3>
-        <p>{{ item.description }}</p>
-        <span class="category-badge">{{ getCategoryLabel(item.category) }}</span>
-      </div>
+    </div>
+    <div class="portfolio-info">
+      <h3>{{ item.title }}</h3>
+      <button class="discover-button" (click)="selectItem(item); $event.stopPropagation()">DISCOVER</button>
     </div>
   </div>
 </div>
