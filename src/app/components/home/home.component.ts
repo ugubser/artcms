@@ -1,10 +1,9 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
-import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-detail-dialog.component';
 import { MetaService } from '../../services/meta.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 import { ContactService, ContactInfo } from '../../services/contact.service';
@@ -13,7 +12,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, PageHeaderComponent],
+  imports: [CommonModule, PageHeaderComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -25,7 +24,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private portfolioService: PortfolioService,
-    private dialog: MatDialog,
+    private router: Router,
     private metaService: MetaService,
     private settingsService: SettingsService,
     private contactService: ContactService
@@ -54,17 +53,8 @@ export class HomeComponent implements OnInit {
   }
 
   selectItem(item: PortfolioItem) {
-    // Open portfolio detail dialog
-    const dialogRef = this.dialog.open(PortfolioDetailDialogComponent, {
-      data: item,
-      maxWidth: '95vw',
-      maxHeight: '95vh',
-      panelClass: 'portfolio-detail-dialog'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('Portfolio detail dialog closed');
-    });
+    // Navigate to portfolio detail page
+    this.router.navigate(['/portfolio', item.id]);
   }
 
   trackByFn(index: number, item: PortfolioItem): string {
