@@ -23,9 +23,16 @@
 -->
           <p><span class="hero-subtitle"> {{ siteDescription() }}</span>|&nbsp; Design and Art in Zurich, Switzerland</p>
           <p class="copyright">© 2024 by {{ siteName() }}</p>
-          <p class="footer-links">
-            <a href="https://www.instagram.com/tribecaconcepts_art/" target="_blank"><img src="assets/images/insta.png" alt="Instagram"></a>
-          </p>
+          <div *ngFor="let contact of contactInfo$ | async; trackBy: trackByContactFn" class="footer-links">
+            <a 
+              *ngIf="contact.socialMedia.instagram" 
+              [href]="contact.socialMedia.instagram" 
+              target="_blank"
+              rel="noopener"
+            >
+              <img src="assets/images/insta.png" alt="Instagram">
+            </a>
+          </div>
         </div>
       </footer>
     </div>
