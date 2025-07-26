@@ -2,7 +2,7 @@
   <app-page-header></app-page-header>
   
   <div class="portfolio-detail-container">
-    <!-- Left side - Portfolio Info -->
+    <!-- Column 1 - Portfolio Info -->
     <div class="portfolio-info-section">
       <button mat-button (click)="goBack()" class="back-button">
         <mat-icon>arrow_back</mat-icon>
@@ -18,14 +18,10 @@
       </div>
     </div>
 
-    <!-- Right side - Gallery -->
+    <!-- Columns 2 & 3 - Gallery Images -->
     <div class="portfolio-gallery-section">
-      <!-- Galleries -->
-      <div class="galleries-section" *ngIf="portfolioItem.galleries && portfolioItem.galleries.length > 0">
+      <div class="gallery-images-container" *ngIf="portfolioItem.galleries && portfolioItem.galleries.length > 0">
         <div *ngFor="let gallery of portfolioItem.galleries; let galleryIndex = index" class="gallery-section">
-          <h3 *ngIf="gallery.title" class="gallery-title">{{ gallery.title }}</h3>
-          <p *ngIf="gallery.description" class="gallery-description">{{ gallery.description }}</p>
-          
           <div class="gallery-grid" *ngIf="gallery.pictures && gallery.pictures.length > 0">
             <div *ngFor="let picture of gallery.pictures; let i = index" 
                  class="gallery-item"
