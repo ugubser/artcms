@@ -25,7 +25,7 @@
           <div class="gallery-grid" *ngIf="gallery.pictures && gallery.pictures.length > 0">
             <div *ngFor="let picture of gallery.pictures; let i = index" 
                  class="gallery-item"
-                 (click)="openImageViewer(picture.imageUrl, galleryIndex * 100 + i)">
+                 (click)="openImageViewer(picture.imageUrl, getImageIndex(galleryIndex, i))">
               <img [src]="picture.imageUrl" [alt]="picture.alt || portfolioItem.title + ' - Image ' + (i + 1)" class="gallery-image">
               <div class="image-overlay">
                 <div class="image-content">
