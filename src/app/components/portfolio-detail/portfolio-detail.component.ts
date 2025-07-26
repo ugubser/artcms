@@ -130,4 +130,22 @@ export class PortfolioDetailComponent implements OnInit {
   goBack() {
     window.history.back();
   }
+
+  getImageIndex(galleryIndex: number, imageIndex: number): number {
+    let totalIndex = 0;
+    
+    if (this.portfolioItem?.galleries) {
+      // Count images in all previous galleries
+      for (let i = 0; i < galleryIndex; i++) {
+        const gallery = this.portfolioItem.galleries[i];
+        if (gallery.pictures) {
+          totalIndex += gallery.pictures.length;
+        }
+      }
+      // Add the current image index within the current gallery
+      totalIndex += imageIndex;
+    }
+    
+    return totalIndex;
+  }
 }
