@@ -7,6 +7,7 @@ import { PortfolioService, PortfolioItem } from '../../services/portfolio.servic
 import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-detail-dialog.component';
 import { MetaService } from '../../services/meta.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { ContactService, ContactInfo } from '../../services/contact.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 @Component({
@@ -18,6 +19,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
 })
 export class HomeComponent implements OnInit {
   featuredPortfolio$: Observable<PortfolioItem[]>;
+  contactInfo$: Observable<ContactInfo[]>;
   siteName = signal<string>('tribeca concepts');
   siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
 
@@ -25,9 +27,11 @@ export class HomeComponent implements OnInit {
     private portfolioService: PortfolioService,
     private dialog: MatDialog,
     private metaService: MetaService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private contactService: ContactService
   ) {
     this.featuredPortfolio$ = new Observable<PortfolioItem[]>();
+    this.contactInfo$ = new Observable<ContactInfo[]>();
   }
 
   ngOnInit() {
@@ -35,6 +39,9 @@ export class HomeComponent implements OnInit {
     this.featuredPortfolio$ = this.portfolioService.getPublishedPortfolio().pipe(
       map(items => items.slice(0, 1))
     );
+
+    // Load contact info for social media links
+    this.contactInfo$ = this.contactService.getContactInfo();
 
     // Load site settings for dynamic content
     this.settingsService.getSiteSettings().subscribe(settings => {
@@ -61,6 +68,10 @@ export class HomeComponent implements OnInit {
   }
 
   trackByFn(index: number, item: PortfolioItem): string {
+    return item.id || index.toString();
+  }
+
+  trackByContactFn(index: number, item: ContactInfo): string {
     return item.id || index.toString();
   }
 
