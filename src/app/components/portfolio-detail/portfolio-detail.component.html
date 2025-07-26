@@ -1,0 +1,101 @@
+<div class="portfolio-detail-page" *ngIf="!isLoading && portfolioItem">
+  <app-page-header></app-page-header>
+  
+  <div class="portfolio-detail-container">
+    <!-- Left side - Portfolio Info -->
+    <div class="portfolio-info-section">
+      <button mat-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+        Back
+      </button>
+      
+      <div class="portfolio-info">
+        <div class="category-badge">{{ getCategoryLabel(portfolioItem.category) }}</div>
+        <h1 class="portfolio-title">{{ portfolioItem.title }}</h1>
+        <p class="portfolio-description" *ngIf="portfolioItem.description">
+          {{ portfolioItem.description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Right side - Gallery -->
+    <div class="portfolio-gallery-section">
+      <!-- Galleries -->
+      <div class="galleries-section" *ngIf="portfolioItem.galleries && portfolioItem.galleries.length > 0">
+        <div *ngFor="let gallery of portfolioItem.galleries; let galleryIndex = index" class="gallery-section">
+          <h3 *ngIf="gallery.title" class="gallery-title">{{ gallery.title }}</h3>
+          <p *ngIf="gallery.description" class="gallery-description">{{ gallery.description }}</p>
+          
+          <div class="gallery-grid" *ngIf="gallery.pictures && gallery.pictures.length > 0">
+            <div *ngFor="let picture of gallery.pictures; let i = index" 
+                 class="gallery-item"
+                 (click)="openImageViewer(picture.imageUrl, galleryIndex * 100 + i)">
+              <img [src]="picture.imageUrl" [alt]="picture.alt || portfolioItem.title + ' - Image ' + (i + 1)" class="gallery-image">
+              <div class="image-overlay">
+                <div class="image-content">
+                  <h4 class="image-title" *ngIf="gallery.title">{{ gallery.title }}</h4>
+                  <p class="image-description" *ngIf="gallery.description">{{ gallery.description }}</p>
+                </div>
+                <div class="zoom-icon">
+                  <mat-icon>zoom_in</mat-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="isLoading" class="loading-state">
+  <p>Loading portfolio...</p>
+</div>
+
+<!-- Full Viewport Image Viewer -->
+<div class="image-viewer-overlay" 
+     *ngIf="selectedImageUrl" 
+     (click)="closeImageViewer()">
+  <div class="image-viewer-container" (click)="$event.stopPropagation()">
+    <button mat-icon-button (click)="closeImageViewer()" class="viewer-close">
+      <mat-icon>close</mat-icon>
+    </button>
+    
+    <div class="viewer-content">
+      <!-- Left side - Image info -->
+      <div class="viewer-info-section">
+        <div class="viewer-info">
+          <h2 class="viewer-title" *ngIf="currentImageData?.galleryTitle">{{ currentImageData?.galleryTitle }}</h2>
+          <div class="viewer-counter">{{ currentImageIndex + 1 }} / {{ totalImages }}</div>
+          <p class="viewer-description" *ngIf="currentImageData?.galleryDescription">
+            {{ currentImageData?.galleryDescription }}
+          </p>
+        </div>
+      </div>
+      
+      <!-- Right side - Image with navigation -->
+      <div class="viewer-image-section">
+        <div class="image-navigation">
+          <button mat-icon-button 
+                  (click)="previousImage()" 
+                  [disabled]="currentImageIndex <= 0"
+                  class="nav-button nav-prev">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          
+          <div class="image-container">
+            <img [src]="selectedImageUrl" [alt]="currentImageData?.alt || portfolioItem?.title">
+          </div>
+          
+          <button mat-icon-button 
+                  (click)="nextImage()" 
+                  [disabled]="currentImageIndex >= totalImages - 1"
+                  class="nav-button nav-next">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

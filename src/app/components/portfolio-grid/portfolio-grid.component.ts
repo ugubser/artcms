@@ -1,9 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
-import { PortfolioDetailDialogComponent } from '../portfolio-detail/portfolio-detail-dialog.component';
 
 @Component({
   selector: 'app-portfolio-grid',
@@ -20,7 +19,7 @@ export class PortfolioGridComponent implements OnInit {
 
   constructor(
     private portfolioService: PortfolioService,
-    private dialog: MatDialog
+    private router: Router
   ) {
     this.portfolio$ = new Observable<PortfolioItem[]>();
   }
@@ -47,17 +46,8 @@ export class PortfolioGridComponent implements OnInit {
   selectItem(item: PortfolioItem) {
     console.log('Selected portfolio item:', item);
     
-    // Open portfolio detail dialog
-    const dialogRef = this.dialog.open(PortfolioDetailDialogComponent, {
-      data: item,
-      maxWidth: '95vw',
-      maxHeight: '95vh',
-      panelClass: 'portfolio-detail-dialog'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('Portfolio detail dialog closed');
-    });
+    // Navigate to portfolio detail page
+    this.router.navigate(['/portfolio', item.id]);
   }
 
   trackByFn(index: number, item: PortfolioItem): string {
