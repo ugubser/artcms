@@ -116,3 +116,35 @@
       font-size: 0.9rem;
       color: #999;
     }
+
+    .footer-links {
+      margin-top: 1rem;
+    }
+
+    .footer-links a {
+      display: inline-block;
+      transition: opacity 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      opacity: 0.7;
+    }
+
+    .footer-links img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-display);
+      font-size: 0.66rem;
+      color: #000;
+      margin-bottom: 2rem;
+      font-weight: var(--fw-light);
+      letter-spacing: 5px;
+      
+      @media (max-width: 768px) {
+        font-size: 0.55rem;
+      }
+    }
