@@ -8,14 +8,14 @@ Tribeca Concepts Portfolio Website - A Swiss design-inspired portfolio website b
 ### Development Server
 ```bash
 cd tribeca-concepts-clone
-ng serve
+npm run emulator
 ```
-Server runs at `http://localhost:4200/`
+Server runs at `http://localhost:5050/`
 
 ### Firebase Emulators
 ```bash
 cd tribeca-concepts-clone
-firebase emulators:start
+npm run emulator
 ```
 - Firestore: localhost:8080
 - Storage: localhost:9199  
@@ -24,13 +24,8 @@ firebase emulators:start
 ### Build Commands
 ```bash
 # Development build
-ng build
+npm run build
 
-# Production build
-ng build --configuration production
-
-# Deploy to Firebase
-firebase deploy
 ```
 
 ### Production Deployment
