@@ -1,15 +1,17 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 import { MetaService } from '../../services/meta.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
+import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
@@ -17,22 +19,37 @@ export class ContactComponent implements OnInit {
   contactInfo$: Observable<ContactInfo[]>;
   isLoading = true;
   settingsContactEmail = signal<string>('');
+  siteName = signal<string>('');
+  contactForm: FormGroup;
+  isSubmitting = false;
+  submitMessage = '';
+  submitSuccess = false;
 
   constructor(
     private contactService: ContactService,
     private settingsService: SettingsService,
-    private metaService: MetaService
+    private metaService: MetaService,
+    private fb: FormBuilder,
+    private firestore: Firestore
   ) {
     this.contactInfo$ = new Observable<ContactInfo[]>();
+    
+    // Initialize reactive form
+    this.contactForm = this.fb.group({
+      name: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      message: ['', [Validators.required]]
+    });
   }
 
   ngOnInit() {
     this.loadContactInfo();
     
-    // Load site settings for contact email
+    // Load site settings for contact email and site name
     this.settingsService.getSiteSettings().subscribe(settings => {
       if (settings) {
         this.settingsContactEmail.set(settings.contactEmail);
+        this.siteName.set(settings.siteName);
       }
     });
     
@@ -59,6 +76,43 @@ export class ContactComponent implements OnInit {
       this.loadContactInfo();
     } catch (error) {
       console.error('Error initializing sample data:', error);
+    }
+  }
+
+  async onSubmit() {
+    if (this.contactForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      this.submitMessage = '';
+      
+      try {
+        const formData = this.contactForm.value;
+        const contactEmail = this.settingsContactEmail() || 'admin@example.com';
+        
+        // Save to Firestore /mail collection
+        await addDoc(collection(this.firestore, 'mail'), {
+          to: contactEmail,
+          message: {
+            subject: `${this.siteName()} message from ${formData.name}`,
+            html: `Name: ${formData.name}<br>E-Mail: ${formData.email}<br>Message: ${formData.message}`
+          }
+        });
+        
+        this.submitSuccess = true;
+        this.submitMessage = 'Thank you! Your message has been sent successfully.';
+        this.contactForm.reset();
+        
+      } catch (error) {
+        console.error('Error sending message:', error);
+        this.submitSuccess = false;
+        this.submitMessage = 'Sorry, there was an error sending your message. Please try again.';
+      } finally {
+        this.isSubmitting = false;
+        
+        // Clear message after 5 seconds
+        setTimeout(() => {
+          this.submitMessage = '';
+        }, 5000);
+      }
     }
   }
 }

@@ -5,19 +5,6 @@
         <div *ngFor="let contact of contactInfo$ | async; trackBy: trackByFn" class="contact-info">
           <div class="contact-grid">
             <div class="contact-details">
-              <div class="contact-item">
-                <h3>Email</h3>
-                <a [href]="'mailto:' + contact.email" class="contact-link">
-                  {{ contact.email }}
-                </a>
-                <div *ngIf="settingsContactEmail() && settingsContactEmail() !== contact.email" class="settings-email">
-                  <p class="additional-email">General inquiries: 
-                    <a [href]="'mailto:' + settingsContactEmail()" class="contact-link">
-                      {{ settingsContactEmail() }}
-                    </a>
-                  </p>
-                </div>
-              </div>
               
               <div *ngIf="contact.phone" class="contact-item">
                 <h3>Phone</h3>
@@ -82,6 +69,64 @@
                 </a>
               </div>
             </div>
+          </div>
+          
+          <!-- Contact Form -->
+          <div class="contact-form-section">
+            <h3>Send us a message</h3>
+            <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+              <div class="form-group">
+                <label for="name">Name *</label>
+                <input 
+                  type="text" 
+                  id="name" 
+                  formControlName="name" 
+                  class="form-control"
+                  [class.error]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched"
+                >
+                <div *ngIf="contactForm.get('name')?.invalid && contactForm.get('name')?.touched" class="error-message">
+                  Name is required
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="email">E-Mail *</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email" 
+                  class="form-control"
+                  [class.error]="contactForm.get('email')?.invalid && contactForm.get('email')?.touched"
+                >
+                <div *ngIf="contactForm.get('email')?.invalid && contactForm.get('email')?.touched" class="error-message">
+                  <span *ngIf="contactForm.get('email')?.errors?.['required']">Email is required</span>
+                  <span *ngIf="contactForm.get('email')?.errors?.['email']">Please enter a valid email address</span>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea 
+                  id="message" 
+                  formControlName="message" 
+                  class="form-control"
+                  rows="5"
+                  [class.error]="contactForm.get('message')?.invalid && contactForm.get('message')?.touched"
+                ></textarea>
+                <div *ngIf="contactForm.get('message')?.invalid && contactForm.get('message')?.touched" class="error-message">
+                  Message is required
+                </div>
+              </div>
+              
+              <button type="submit" [disabled]="contactForm.invalid || isSubmitting" class="submit-btn">
+                <span *ngIf="!isSubmitting">Send Message</span>
+                <span *ngIf="isSubmitting">Sending...</span>
+              </button>
+              
+              <div *ngIf="submitMessage" class="submit-message" [class.success]="submitSuccess" [class.error]="!submitSuccess">
+                {{ submitMessage }}
+              </div>
+            </form>
           </div>
         </div>
         
