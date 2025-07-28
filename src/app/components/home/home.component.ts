@@ -21,6 +21,7 @@ export class HomeComponent implements OnInit {
   contactInfo$: Observable<ContactInfo[]>;
   siteName = signal<string>('tribeca concepts');
   siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
+  footerText = signal<string>('© 2025 by tribeca concepts');
 
   constructor(
     private portfolioService: PortfolioService,
@@ -47,6 +48,7 @@ export class HomeComponent implements OnInit {
       if (settings) {
         this.siteName.set(settings.siteName);
         this.siteDescription.set(settings.siteDescription);
+        this.footerText.set(settings.footerText);
         this.metaService.setPageTitle('Home');
       }
     });
