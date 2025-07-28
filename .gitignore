@@ -54,7 +54,8 @@ functions/lib/
 firebase-export-*
 .firebase-export-*
 
-# Package manager lock files (keeping package-lock.json for consistency)
+# Package manager lock files
+package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
@@ -69,6 +70,9 @@ pnpm-lock.yaml
 # Environment configuration files (generated at build time)
 src/environments/environment.ts
 src/environments/environment.prod.ts
+
+# Generated HTML files (created from templates at build time)
+src/index.html
 
 # Firebase rules files (generated at build time)
 firestore.rules
