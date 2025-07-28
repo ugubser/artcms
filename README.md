@@ -89,6 +89,21 @@ const newsCollection = buildCollection({
 - Branding assets (logos, favicons)
 - Global site configuration
 
+### CMS Configuration Details
+
+The CMS is configured through `src/app/cms/cms.config.ts` which defines:
+
+- **Portfolio Collection**: Manage portfolio items with categories and image galleries
+- **About Collection**: Edit about page content with markdown support
+- **Contact Collection**: Manage contact information and social media links
+- **Settings Collection**: Control site-wide settings like SEO metadata
+
+Each collection supports:
+- **Custom Validation**: Field-level validation rules
+- **Image Uploads**: Direct integration with Firebase Storage
+- **Rich Text Editing**: Markdown support for content fields
+- **Publishing Workflow**: Draft/published status for content
+
 ## Development Setup
 
 ### Prerequisites
@@ -153,28 +168,136 @@ ng serve
 
 ### Firebase Emulator Configuration
 - **Firestore**: localhost:8080
-- **Storage**: localhost:9199  
+- **Storage**: localhost:9199
 - **Authentication**: localhost:9099
+
+### Development Workflow with Emulators
+
+The development workflow uses Firebase emulators for local testing:
+
+- **Data Persistence**: Emulator data is persisted in `emulator_data/` directory
+- **Easy Reset**: Delete `emulator_data/` to start with a clean slate
+- **Realistic Testing**: Emulators closely match production Firebase behavior
+- **Offline Development**: Work without internet connectivity
+- **Security Testing**: Test Firebase rules locally before deployment
+
+### Environment Variable Injection
+
+The project uses a template-based configuration system to securely manage environment variables:
+
+- **Template Files**: Configuration templates are stored in `src/environments/*.template` and are tracked in version control
+- **Environment Files**: Actual configuration files (`.env.production`, `.env.local`) contain sensitive data and are git-ignored
+- **Injection Process**: During deployment, scripts inject real values from environment files into templates
+- **Security**: Sensitive data never committed to the repository
+
+### Meta Data Injection
+
+Site metadata (title, description, keywords) is automatically injected from Firestore settings:
+
+- **Template**: `src/index.html.template` contains placeholders for metadata
+- **Injection**: `scripts/inject-meta.js` fetches settings from Firestore and generates `src/index.html`
+- **Dynamic Updates**: Site metadata can be updated through the CMS without code changes
+
+### Firebase Rules Generation
+
+Firebase security rules are automatically generated with admin email whitelisting:
+
+- **Templates**: `firestore.rules.template` and `storage.rules.template` contain placeholders
+- **Generation**: `scripts/generate-rules.js` creates actual rules with injected admin emails
+- **Consistency**: Same admin emails used across all security layers
+
+### Admin Email Whitelisting
+
+Admin access is controlled through email whitelisting for enhanced security:
+
+- **Configuration**: Admin emails are configured during setup via `./scripts/setup-firebase.sh`
+- **Injection**: Emails are automatically injected into Firebase rules and Angular environment files
+- **Authentication**: Only whitelisted Google accounts can access the admin panel
+- **Authorization**: Route protection and Firebase rules enforce admin-only access
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── cms/                    # FireCMS configuration & admin interface
-│   │   ├── cms.config.ts       # Content schema definitions
-│   │   └── cms.component.ts    # Custom admin interface
-│   ├── components/             # Public-facing components
-│   │   ├── home/              # Landing page
-│   │   ├── portfolio-grid/    # Portfolio display
-│   │   └── navigation/        # Site navigation
-│   ├── services/              # Firebase integration services
-│   │   ├── portfolio.service.ts
-│   │   ├── auth.service.ts
-│   │   └── firebase.service.ts
-│   └── guards/                # Route protection
-└── environments/              # Firebase configuration
+│   ├── cms/                           # FireCMS configuration & admin interface
+│   │   ├── cms.config.ts              # Content schema definitions
+│   │   ├── cms.component.ts           # Custom admin interface component
+│   │   ├── components/                # CMS custom components
+│   │   └── dialogs/                   # CMS edit dialogs
+│   ├── components/                    # Public-facing components
+│   │   ├── about/                     # About page component
+│   │   ├── admin-login/               # Admin authentication component
+│   │   ├── contact/                   # Contact page component
+│   │   ├── home/                      # Landing page component
+│   │   ├── portfolio/                 # Portfolio category pages
+│   │   ├── portfolio-detail/          # Portfolio item detail pages
+│   │   ├── portfolio-grid/            # Portfolio grid display component
+│   │   └── shared/                    # Shared UI components
+│   ├── guards/                        # Route protection guards
+│   │   └── auth.guard.ts              # Admin route protection
+│   ├── services/                      # Firebase integration services
+│   │   ├── about.service.ts           # About content management
+│   │   ├── analytics.service.ts       # Analytics integration
+│   │   ├── auth.service.ts            # Authentication service
+│   │   ├── contact.service.ts         # Contact content management
+│   │   ├── firebase.service.ts        # Firebase utilities
+│   │   ├── meta.service.ts            # Meta tag management
+│   │   ├── portfolio-pages.service.ts # Portfolio page settings
+│   │   ├── portfolio.service.ts       # Portfolio content management
+│   │   └── settings.service.ts       # Site settings management
+│   ├── app.config.ts                 # Angular application configuration
+│   ├── app.routes.ts                 # Application routing configuration
+│   └── app.ts                        # Main application component
+├── assets/                           # Static assets
+│   ├── fonts/                        # Custom fonts
+│   └── images/                       # Static images
+├── environments/                      # Environment configuration
+│   ├── environment.prod.ts.template  # Production environment template
+│   └── environment.ts.template       # Development environment template
+├── styles.scss                       # Global styles
+└── index.html.template               # HTML template with metadata placeholders
+
+scripts/                              # Deployment and setup scripts
+├── deploy.sh                         # Production deployment script
+├── generate-rules.js                 # Firebase rules generation
+├── inject-env.js                     # Environment variable injection
+├── inject-meta.js                    # Metadata injection from Firestore
+└── setup-firebase.sh                 # Firebase project setup
 ```
+
+### Deployment Process Details
+
+The deployment process automates several important steps:
+
+1. **Environment Validation**: Checks for required environment variables
+2. **Rule Generation**: Creates Firebase rules with admin email injection
+3. **Environment Injection**: Generates environment files from templates
+4. **Meta Data Injection**: Fetches site settings from Firestore
+5. **Build Process**: Compiles Angular application for production
+6. **Validation**: Ensures build output meets requirements
+7. **Deployment**: Deploys Firestore rules, Storage rules, and hosting
+8. **Cleanup**: Removes sensitive environment variables from memory
+
+### Angular Application Structure
+
+The application follows a modular structure with clear separation of concerns:
+
+- **Standalone Components**: Modern Angular approach using standalone components
+- **Lazy Loading**: Routes are lazy-loaded for improved performance
+- **Services**: Firebase integration is encapsulated in dedicated services
+- **Guards**: Route protection using Angular guards
+- **CMS Integration**: Custom FireCMS implementation for content management
+
+### Authentication and Authorization System
+
+The application implements a robust authentication and authorization system:
+
+- **Google OAuth**: Authentication using Google accounts for security
+- **Email Whitelisting**: Admin access restricted to pre-configured email addresses
+- **Route Protection**: AuthGuard prevents unauthorized access to admin routes
+- **Service-Level Authorization**: Services check admin status before operations
+- **Development Mode**: Relaxed security in emulator mode for testing
 
 ## Deployment
 
@@ -206,6 +329,9 @@ firebase deploy
 - **Environment Variable Injection**: Secure deployment with automated credential handling
 - **Role-Based Access Control**: Admin-only content management with email whitelisting
 - **Firebase Security Rules**: Comprehensive database and storage protection
+- **HTTPS Enforcement**: Production deployment uses secure connections only
+- **Data Validation**: Strict validation in both frontend and backend
+- **Input Sanitization**: Protection against malicious content
 
 ### 🚀 Developer Experience
 - **Rapid Setup**: One-command deployment with automated environment configuration
@@ -236,15 +362,84 @@ This project faithfully recreates Swiss design principles:
 
 ## Testing
 
-### Unit Tests
+### Unit Testing with Jasmine and Karma
+
+This project uses Jasmine as the testing framework and Karma as the test runner. Jasmine provides behavior-driven development (BDD) capabilities, while Karma runs tests in real browsers.
+
+**Running Unit Tests**
 ```bash
+# Run tests once
 ng test
+
+# Run tests in watch mode (re-runs on file changes)
+ng test --watch
+
+# Run tests with code coverage
+ng test --code-coverage
 ```
 
-### End-to-End Testing  
+**Test Configuration**
+- **Karma**: Configured through Angular CLI in `angular.json` (test section)
+- **Jasmine**: Specified in `tsconfig.spec.json` as the testing framework
+- **Test Files**: All files with `.spec.ts` extension are automatically recognized as test files
+- **Test Environment**: Runs in Chrome browser by default with headless option available
+
+**Example Test Structure**
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { App } from './app';
+
+describe('App Component', () => {
+  beforeEach(async () => {
+    // Configure testing module before each test
+    await TestBed.configureTestingModule({
+      imports: [App],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    // Test individual functionality
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+});
+```
+
+**Key Testing Features**
+- **Component Testing**: Test Angular components in isolation or with their templates
+- **Service Testing**: Mock dependencies and test business logic
+- **Asynchronous Testing**: Handle promises, observables, and HTTP requests
+- **DOM Testing**: Verify component rendering and user interactions
+- **Code Coverage**: Measure test coverage with detailed reports
+
+### End-to-End Testing
 ```bash
 ng e2e
 ```
+
+### Testing Procedures
+
+The project includes comprehensive testing capabilities:
+
+- **Unit Testing**: Component and service testing with Jasmine and Karma
+- **End-to-End Testing**: Integration testing with Protractor (if configured)
+- **Emulator Testing**: Test Firebase rules and functions locally
+- **Manual Testing**: Use Firebase Emulator UI for data inspection
+- **Security Testing**: Validate Firebase rules with emulator testing
+
+**Troubleshooting Test Errors**
+
+If you encounter errors when running the test server, it may be due to:
+
+1. **Template Mismatch**: The test expects specific DOM elements that don't exist in the actual template
+2. **Missing Dependencies**: The App component depends on Firebase services that need to be mocked in tests
+3. **Environment Configuration**: Tests may fail if they can't connect to Firebase emulators
+
+To fix these issues, ensure that:
+- Test files properly mock all external dependencies
+- Test expectations match the actual component template
+- Firebase services are properly stubbed in the testing environment
 
 ## Contributing
 
