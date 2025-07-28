@@ -43,6 +43,12 @@ service firebase.storage {
       allow write: if isAdmin() && isValidImage() && isValidSize();
     }
     
+    // Branding assets (favicon, logos) - public read, admin write with validation
+    match /branding/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidSize();
+    }
+    
     // General uploads - admin only with validation
     match /uploads/{allPaths=**} {
       allow read: if true;
