@@ -104,6 +104,12 @@ echo -e "${BLUE}🔧 Injecting environment variables...${NC}"
 node scripts/inject-env.js
 
 echo ""
+echo -e "${BLUE}🎨 Injecting meta data from Firestore...${NC}"
+
+# Inject site settings from Firestore into index.html
+node scripts/inject-meta.js
+
+echo ""
 echo -e "${BLUE}🏗️  Building for production...${NC}"
 
 # Build with production configuration
