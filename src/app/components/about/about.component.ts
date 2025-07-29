@@ -26,10 +26,6 @@ import { PageHeaderComponent } from '../shared/page-header.component';
           </div>
         </section>
         
-        <!-- Loading state -->
-        <div *ngIf="isLoading" class="loading-state">
-          <p>Loading about information...</p>
-        </div>
         
         <!-- Empty state -->
         <div *ngIf="(aboutSections$ | async)?.length === 0 && !isLoading" class="empty-state">

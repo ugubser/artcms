@@ -15,10 +15,11 @@
   </div>
 </div>
 
-<!-- Loading state -->
+<!-- Loading state 
 <div *ngIf="isLoading" class="loading-state">
   <p>Loading portfolio...</p>
 </div>
+-->
 
 <!-- Empty state -->
 <div *ngIf="(portfolio$ | async)?.length === 0 && !isLoading" class="empty-state">

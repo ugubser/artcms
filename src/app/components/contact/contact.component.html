@@ -130,10 +130,6 @@
           </div>
         </div>
         
-        <!-- Loading state -->
-        <div *ngIf="isLoading" class="loading-state">
-          <p>Loading contact information...</p>
-        </div>
         
         <!-- Empty state -->
         <div *ngIf="(contactInfo$ | async)?.length === 0 && !isLoading" class="empty-state">
