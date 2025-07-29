@@ -48,41 +48,64 @@ function loadEnvFile(filePath) {
   }
 }
 
+async function ensureGoogleCloudAuth() {
+  const { exec } = require('child_process');
+  const { promisify } = require('util');
+  const execAsync = promisify(exec);
+
+  try {
+    // Check if Google Cloud Application Default Credentials are available
+    await execAsync('gcloud auth application-default print-access-token', { timeout: 5000 });
+    log('green', '✅ Google Cloud Application Default Credentials are available');
+    return true;
+  } catch (error) {
+    log('yellow', '⚠️  Google Cloud Application Default Credentials not found');
+    log('red', '❌ Google Cloud authentication required for Firestore access');
+    log('blue', '💡 Please run the following command manually in a separate terminal:');
+    log('blue', '   gcloud auth application-default login --no-launch-browser');
+    log('yellow', '   Then press any key to continue...');
+    
+    // Wait for user to press a key
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    
+    await new Promise(resolve => {
+      process.stdin.once('data', () => {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        resolve();
+      });
+    });
+
+    // Check again if authentication is now available
+    try {
+      await execAsync('gcloud auth application-default print-access-token', { timeout: 5000 });
+      log('green', '✅ Google Cloud authentication verified');
+      return true;
+    } catch (retryError) {
+      log('red', '❌ Authentication still not available');
+      log('yellow', '   Please ensure you completed the authentication process');
+      process.exit(1);
+    }
+  }
+}
+
 async function initializeFirebase(envVars) {
   try {
-    // Try different authentication methods in order of preference
-    
-    // Method 1: Application Default Credentials (if available)
-    try {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = `${process.env.HOME}/.config/firebase/urs_digitalwire_com_application_default_credentials.json`;
-      
-      admin.initializeApp({
-        projectId: envVars.FIREBASE_PROJECT_ID,
-        credential: admin.credential.applicationDefault()
-      });
-      
-      log('green', '✅ Using Application Default Credentials');
-    } catch (error) {
-      log('yellow', '⚠️  Application Default Credentials failed, trying direct initialization...');
-      
-      // Method 2: Simple project ID initialization (works if gcloud/firebase CLI is authenticated)
-      try {
-        admin.initializeApp({
-          projectId: envVars.FIREBASE_PROJECT_ID
-        });
-        log('green', '✅ Using simple project initialization');
-      } catch (error2) {
-        log('red', '❌ Could not initialize Firebase Admin SDK');
-        log('yellow', '   Please ensure you are logged in with: firebase login');
-        log('yellow', '   Or set up service account credentials');
-        throw error2;
-      }
-    }
+    // Ensure Google Cloud authentication is available
+    await ensureGoogleCloudAuth();
 
+    // Initialize Firebase Admin SDK with project ID only
+    // This should work if Google Cloud is authenticated
+    admin.initializeApp({
+      projectId: envVars.FIREBASE_PROJECT_ID
+    });
+    
     log('green', '✅ Firebase Admin SDK initialized successfully');
     return admin.firestore();
   } catch (error) {
     log('red', `❌ Error initializing Firebase: ${error.message}`);
+    log('yellow', '   Please ensure you are authenticated with Google Cloud');
     process.exit(1);
   }
 }
