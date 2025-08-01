@@ -21,7 +21,7 @@
           <p>{{ siteDescription() }}</p>
           <p class="copyright">© 2024 by {{ siteName() }}</p>
 -->
-          <p><span class="hero-subtitle"> {{ siteDescription() }}</span>|&nbsp; Design and Art in Zurich, Switzerland</p>
+          <p><span class="hero-subtitle"> {{ siteName() }}</span>|&nbsp; Design and Art in Zurich, Switzerland</p>
           <p class="copyright">{{ footerText() }}</p>
           <div *ngFor="let contact of contactInfo$ | async; trackBy: trackByContactFn" class="footer-links">
             <a 
