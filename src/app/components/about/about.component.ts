@@ -16,6 +16,8 @@ import { PageHeaderComponent } from '../shared/page-header.component';
         <section 
           *ngFor="let section of aboutSections$ | async; trackBy: trackByFn" 
           class="about-section"
+          [class.has-image]="section.image"
+          [class.no-image]="!section.image"
         >
           <div class="section-content">
             <h2>{{ section.title }}</h2>
@@ -78,7 +80,6 @@ import { PageHeaderComponent } from '../shared/page-header.component';
     
     .about-section {
       display: grid;
-      grid-template-columns: 2fr 1fr;
       gap: 3rem;
       margin-bottom: 4rem;
       align-items: start;
@@ -90,7 +91,15 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       }
     }
     
-    .about-section:nth-child(even) {
+    .about-section.has-image {
+      grid-template-columns: 2fr 1fr;
+    }
+    
+    .about-section.no-image {
+      grid-template-columns: 1fr;
+    }
+    
+    .about-section.has-image:nth-child(even) {
       grid-template-columns: 1fr 2fr;
       
       .section-content {
@@ -227,15 +236,38 @@ export class AboutComponent implements OnInit {
 
   formatContent(content: string): string {
     // Convert markdown-style formatting to HTML
-    return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/^/, '<p>')
-      .replace(/$/, '</p>')
-      .replace(/• /g, '</p><ul><li>')
-      .replace(/\n/g, '</li><li>')
-      .replace(/<li><\/li>/g, '')
-      .replace(/<\/ul><p>/g, '</ul><p>');
+    let html = content;
+    
+    // Handle bold text
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Split content into blocks (separated by double newlines)
+    const blocks = html.split(/\n\s*\n/);
+    const processedBlocks = blocks.map(block => {
+      const trimmedBlock = block.trim();
+      if (!trimmedBlock) return '';
+      
+      // Check if block contains ordered list items
+      if (/^\s*\d+\.\s/.test(trimmedBlock)) {
+        const items = trimmedBlock.split('\n')
+          .filter(line => line.trim())
+          .map(line => '<li>' + line.replace(/^\s*\d+\.\s+/, '') + '</li>');
+        return '<ol>' + items.join('') + '</ol>';
+      }
+      
+      // Check if block contains unordered list items
+      if (/^\s*[-*]\s/.test(trimmedBlock)) {
+        const items = trimmedBlock.split('\n')
+          .filter(line => line.trim())
+          .map(line => '<li>' + line.replace(/^\s*[-*]\s+/, '') + '</li>');
+        return '<ul>' + items.join('') + '</ul>';
+      }
+      
+      // Regular paragraph
+      return '<p>' + trimmedBlock.replace(/\n/g, '<br>') + '</p>';
+    });
+    
+    return processedBlocks.filter(block => block).join('');
   }
 
   async initializeSampleData() {
