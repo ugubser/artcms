@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "prebuild": "node scripts/inject-meta-dev.js",
     "build": "ng build --configuration development",
     "watch": "ng build --watch --configuration development",
     "emulator": "firebase emulators:start --import=./emulator_data --export-on-exit=./emulator_data",

@@ -1,20 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Meta Data Injection & SEO Files Generation Script
+ * Meta Data Injection & SEO Files Generation Script - Development Version
  * 
- * This script fetches site settings and portfolio data from production Firestore
- * and generates multiple SEO-related files before building:
+ * This script generates SEO files for development using Firebase emulator data:
  * 
- * - src/index.html (from template with injected meta data)
+ * - src/index.html (from template with default meta data)
  * - src/robots.txt (search engine crawler instructions)
  * - src/sitemap.xml (XML sitemap for search engines)
  * - src/sitemap.html (human-readable sitemap)
  * 
- * The script fetches published portfolio items and includes them in the sitemaps
- * along with static pages (home, art, design, about, contact).
+ * This version works with emulator data and doesn't require production Firestore access.
  * 
- * Usage: node scripts/inject-meta.js
+ * Usage: node scripts/inject-meta-dev.js
  */
 
 const fs = require('fs');
@@ -34,121 +32,77 @@ function log(color, message) {
   console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
-function loadEnvFile(filePath) {
+async function initializeFirebaseEmulator() {
   try {
-    const envContent = fs.readFileSync(filePath, 'utf8');
-    const envVars = {};
-    
-    envContent.split('\n').forEach(line => {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#')) {
-        const [key, ...valueParts] = trimmed.split('=');
-        if (key && valueParts.length > 0) {
-          envVars[key.trim()] = valueParts.join('=').trim();
-        }
-      }
-    });
-    
-    return envVars;
-  } catch (error) {
-    log('red', `❌ Error reading ${filePath}: ${error.message}`);
-    process.exit(1);
-  }
-}
-
-async function ensureGoogleCloudAuth() {
-  const { exec } = require('child_process');
-  const { promisify } = require('util');
-  const execAsync = promisify(exec);
-
-  try {
-    // Check if Google Cloud Application Default Credentials are available
-    await execAsync('gcloud auth application-default print-access-token', { timeout: 5000 });
-    log('green', '✅ Google Cloud Application Default Credentials are available');
-    return true;
-  } catch (error) {
-    log('yellow', '⚠️  Google Cloud Application Default Credentials not found');
-    log('red', '❌ Google Cloud authentication required for Firestore access');
-    log('blue', '💡 Please run the following command manually in a separate terminal:');
-    log('blue', '   gcloud auth application-default login --no-launch-browser');
-    log('yellow', '   Then press any key to continue...');
-    
-    // Wait for user to press a key
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-    
-    await new Promise(resolve => {
-      process.stdin.once('data', () => {
-        process.stdin.setRawMode(false);
-        process.stdin.pause();
-        resolve();
-      });
-    });
-
-    // Check again if authentication is now available
-    try {
-      await execAsync('gcloud auth application-default print-access-token', { timeout: 5000 });
-      log('green', '✅ Google Cloud authentication verified');
-      return true;
-    } catch (retryError) {
-      log('red', '❌ Authentication still not available');
-      log('yellow', '   Please ensure you completed the authentication process');
-      process.exit(1);
-    }
-  }
-}
-
-async function initializeFirebase(envVars) {
-  try {
-    // Ensure Google Cloud authentication is available
-    await ensureGoogleCloudAuth();
-
-    // Initialize Firebase Admin SDK with project ID only
-    // This should work if Google Cloud is authenticated
+    // Initialize Firebase Admin SDK for emulator
     admin.initializeApp({
-      projectId: envVars.FIREBASE_PROJECT_ID
+      projectId: 'tribecaconcepts-dev', // Default emulator project ID
     });
     
-    log('green', '✅ Firebase Admin SDK initialized successfully');
+    // Configure for emulator
+    process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
+    
+    log('green', '✅ Firebase Admin SDK initialized for emulator');
     return admin.firestore();
   } catch (error) {
-    log('red', `❌ Error initializing Firebase: ${error.message}`);
-    log('yellow', '   Please ensure you are authenticated with Google Cloud');
-    process.exit(1);
+    log('yellow', '⚠️  Could not connect to emulator, using default data');
+    return null;
   }
 }
 
-async function fetchSiteSettings(db) {
+async function fetchSiteSettingsDev(db) {
+  const defaultSettings = {
+    siteName: 'Tribecaconcepts',
+    siteDescription: 'MIYUKI NAGAI-GUBSER @ TribeCa conceptS',
+    siteKeywords: 'portfolio, art, abstract, paintings, visual, expression, mindmap, emotions, memories',
+    faviconUrl: 'favicon.ico',
+    siteUrl: 'http://localhost:5050'
+  };
+
+  if (!db) {
+    log('blue', '📋 Using default site settings...');
+    return defaultSettings;
+  }
+
   try {
-    log('blue', '📋 Fetching site settings from Firestore...');
+    log('blue', '📋 Fetching site settings from emulator...');
     
     const settingsDoc = await db.collection('settings').doc('main-settings').get();
     
     if (!settingsDoc.exists) {
-      log('red', '❌ Site settings document not found in Firestore');
-      log('yellow', '   Please ensure the settings document exists at /settings/main-settings');
-      process.exit(1);
+      log('yellow', '⚠️  Site settings not found in emulator, using defaults');
+      return defaultSettings;
     }
     
     const settings = settingsDoc.data();
-    log('green', '✅ Site settings fetched successfully');
+    log('green', '✅ Site settings fetched from emulator');
     
     return {
-      siteName: settings.siteName || 'Tribecaconcepts',
-      siteDescription: settings.siteDescription || 'MIYUKI NAGAI-GUBSER @ TribeCa conceptS',
-      siteKeywords: Array.isArray(settings.siteKeywords) ? settings.siteKeywords.join(', ') : 'portfolio, art, abstract, paintings, visual, expression, mindmap, emotions, memories',
-      faviconUrl: settings.faviconUrl || 'favicon.ico',
-      siteUrl: settings.siteUrl || 'https://tribecaconcepts.com'
+      siteName: settings.siteName || defaultSettings.siteName,
+      siteDescription: settings.siteDescription || defaultSettings.siteDescription,
+      siteKeywords: Array.isArray(settings.siteKeywords) ? settings.siteKeywords.join(', ') : defaultSettings.siteKeywords,
+      faviconUrl: settings.faviconUrl || defaultSettings.faviconUrl,
+      siteUrl: settings.siteUrl || defaultSettings.siteUrl
     };
   } catch (error) {
-    log('red', `❌ Error fetching site settings: ${error.message}`);
-    process.exit(1);
+    log('yellow', `⚠️  Error fetching from emulator: ${error.message}, using defaults`);
+    return defaultSettings;
   }
 }
 
-async function fetchPortfolioItems(db) {
+async function fetchPortfolioItemsDev(db) {
+  const defaultItems = [
+    { id: 'sample-art-1', title: 'Sample Art Piece', createdAt: new Date(), category: 'art' },
+    { id: 'sample-design-1', title: 'Sample Design Work', createdAt: new Date(), category: 'graphic-design' }
+  ];
+
+  if (!db) {
+    log('blue', '📋 Using default portfolio items...');
+    return defaultItems;
+  }
+
   try {
-    log('blue', '📋 Fetching portfolio items from Firestore...');
+    log('blue', '📋 Fetching portfolio items from emulator...');
     
     const portfolioSnapshot = await db.collection('portfolio')
       .where('published', '==', true)
@@ -158,19 +112,38 @@ async function fetchPortfolioItems(db) {
     const portfolioItems = [];
     portfolioSnapshot.forEach(doc => {
       const data = doc.data();
+      let createdAt;
+      try {
+        if (data.createdAt && data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+          // Firestore Timestamp object
+          createdAt = data.createdAt.toDate();
+        } else if (data.createdAt) {
+          createdAt = new Date(data.createdAt);
+        } else {
+          createdAt = new Date();
+        }
+      } catch (error) {
+        createdAt = new Date();
+      }
+      
       portfolioItems.push({
         id: doc.id,
         title: data.title || 'Untitled',
-        createdAt: data.createdAt || new Date(),
+        createdAt: createdAt,
         category: data.category || 'portfolio'
       });
     });
     
-    log('green', `✅ Fetched ${portfolioItems.length} published portfolio items`);
+    if (portfolioItems.length === 0) {
+      log('yellow', '⚠️  No published portfolio items found, using defaults');
+      return defaultItems;
+    }
+    
+    log('green', `✅ Fetched ${portfolioItems.length} published portfolio items from emulator`);
     return portfolioItems;
   } catch (error) {
-    log('red', `❌ Error fetching portfolio items: ${error.message}`);
-    process.exit(1);
+    log('yellow', `⚠️  Error fetching portfolio from emulator: ${error.message}, using defaults`);
+    return defaultItems;
   }
 }
 
@@ -233,9 +206,22 @@ function generateSitemapXml(siteSettings, portfolioItems) {
 
   // Add portfolio pages
   portfolioItems.forEach(item => {
-    const lastmod = item.createdAt instanceof Date 
-      ? item.createdAt.toISOString() 
-      : new Date(item.createdAt).toISOString();
+    let lastmod;
+    try {
+      if (item.createdAt instanceof Date) {
+        lastmod = item.createdAt.toISOString();
+      } else if (item.createdAt && item.createdAt.toDate && typeof item.createdAt.toDate === 'function') {
+        // Firestore Timestamp object
+        lastmod = item.createdAt.toDate().toISOString();
+      } else if (item.createdAt) {
+        lastmod = new Date(item.createdAt).toISOString();
+      } else {
+        lastmod = now;
+      }
+    } catch (error) {
+      // Fallback to current time if date conversion fails
+      lastmod = now;
+    }
     
     xml += `  <url>
     <loc>${baseUrl}/portfolio/${item.id}</loc>
@@ -314,9 +300,21 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
       font-size: 0.8em;
       color: #2c3e50;
     }
+    .dev-notice {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 20px;
+      color: #856404;
+    }
   </style>
 </head>
 <body>
+  <div class="dev-notice">
+    🔧 Development Version - URLs point to localhost:5050
+  </div>
+  
   <h1>Sitemap for ${siteSettings.siteName}</h1>
   <p class="description">${siteSettings.siteDescription}</p>
 
@@ -346,7 +344,7 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
   html += `  </ul>
   
   <div class="description" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
-    Last updated: ${new Date().toLocaleDateString()}
+    Last updated: ${new Date().toLocaleDateString()} (Development)
   </div>
 </body>
 </html>`;
@@ -355,22 +353,14 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
 }
 
 async function main() {
-  log('blue', '🔧 Injecting meta data and generating SEO files from Firestore...');
+  log('blue', '🔧 Generating SEO files for development...');
   
   // Paths
-  const envFile = path.join(process.cwd(), '.env.production');
   const templateFile = path.join(process.cwd(), 'src/index.html.template');
   const indexFile = path.join(process.cwd(), 'src/index.html');
   const robotsFile = path.join(process.cwd(), 'src/robots.txt');
   const sitemapXmlFile = path.join(process.cwd(), 'src/sitemap.xml');
   const sitemapHtmlFile = path.join(process.cwd(), 'src/sitemap.html');
-  
-  // Check if .env.production exists
-  if (!fs.existsSync(envFile)) {
-    log('red', '❌ .env.production file not found');
-    log('yellow', '   Please run ./scripts/setup-firebase.sh first');
-    process.exit(1);
-  }
   
   // Check if template file exists
   if (!fs.existsSync(templateFile)) {
@@ -378,18 +368,14 @@ async function main() {
     process.exit(1);
   }
   
-  // Load environment variables
-  log('blue', '📋 Loading environment variables from .env.production...');
-  const envVars = loadEnvFile(envFile);
+  // Try to initialize Firebase emulator connection
+  const db = await initializeFirebaseEmulator();
   
-  // Initialize Firebase Admin SDK
-  const db = await initializeFirebase(envVars);
+  // Fetch site settings (from emulator or defaults)
+  const siteSettings = await fetchSiteSettingsDev(db);
   
-  // Fetch site settings from Firestore
-  const siteSettings = await fetchSiteSettings(db);
-  
-  // Fetch portfolio items from Firestore
-  const portfolioItems = await fetchPortfolioItems(db);
+  // Fetch portfolio items (from emulator or defaults)
+  const portfolioItems = await fetchPortfolioItemsDev(db);
   
   // Generate index.html from template
   log('blue', '📋 Generating index.html from template...');
@@ -421,19 +407,24 @@ async function main() {
   }
   
   // Show summary
-  log('blue', '📋 Generated files summary:');
+  log('blue', '📋 Development files summary:');
   console.log(`   🏷️  Site Name: ${siteSettings.siteName}`);
-  console.log(`   🌐 Site URL: ${siteSettings.siteUrl}`);
+  console.log(`   🌐 Site URL: ${siteSettings.siteUrl} (Development)`);
   console.log(`   📝 Description: ${siteSettings.siteDescription.substring(0, 50)}...`);
-  console.log(`   🔍 Keywords: ${siteSettings.siteKeywords.substring(0, 60)}...`);
-  console.log(`   📁 Portfolio Items: ${portfolioItems.length} published items`);
+  console.log(`   📁 Portfolio Items: ${portfolioItems.length} items`);
   console.log(`   🎨 Static Pages: 5 pages (home, art, design, about, contact)`);
   console.log(`   📄 Total URLs in sitemap: ${5 + portfolioItems.length} URLs`);
   
-  log('green', '🎉 Meta data injection and SEO file generation completed successfully!');
+  log('green', '🎉 Development SEO file generation completed successfully!');
   
-  // Clean up Firebase connection
-  await admin.app().delete();
+  // Clean up Firebase connection if it exists
+  if (db) {
+    try {
+      await admin.app().delete();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  }
 }
 
 // Run the script
