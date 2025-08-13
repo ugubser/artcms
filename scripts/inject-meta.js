@@ -150,27 +150,57 @@ async function fetchPortfolioItems(db) {
   try {
     log('blue', '📋 Fetching portfolio items from Firestore...');
     
-    const portfolioSnapshot = await db.collection('portfolio')
-      .where('published', '==', true)
-      .orderBy('createdAt', 'desc')
-      .get();
+    let portfolioSnapshot;
+    try {
+      // Try the optimized query first (requires composite index)
+      portfolioSnapshot = await db.collection('portfolio')
+        .where('published', '==', true)
+        .orderBy('createdAt', 'desc')
+        .get();
+    } catch (indexError) {
+      log('yellow', '⚠️  Composite index not available, using fallback query...');
+      log('blue', '💡 You can create the index at: https://console.firebase.google.com/project/your-project/firestore/indexes');
+      
+      // Fallback: get all published items without ordering
+      portfolioSnapshot = await db.collection('portfolio')
+        .where('published', '==', true)
+        .get();
+    }
     
     const portfolioItems = [];
     portfolioSnapshot.forEach(doc => {
       const data = doc.data();
+      let createdAt;
+      try {
+        if (data.createdAt && data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+          // Firestore Timestamp object
+          createdAt = data.createdAt.toDate();
+        } else if (data.createdAt) {
+          createdAt = new Date(data.createdAt);
+        } else {
+          createdAt = new Date();
+        }
+      } catch (error) {
+        createdAt = new Date();
+      }
+      
       portfolioItems.push({
         id: doc.id,
         title: data.title || 'Untitled',
-        createdAt: data.createdAt || new Date(),
+        createdAt: createdAt,
         category: data.category || 'portfolio'
       });
     });
+    
+    // Sort by createdAt in JavaScript if we used the fallback query
+    portfolioItems.sort((a, b) => b.createdAt - a.createdAt);
     
     log('green', `✅ Fetched ${portfolioItems.length} published portfolio items`);
     return portfolioItems;
   } catch (error) {
     log('red', `❌ Error fetching portfolio items: ${error.message}`);
-    process.exit(1);
+    log('yellow', '⚠️  Continuing with empty portfolio list...');
+    return [];
   }
 }
 
@@ -233,9 +263,22 @@ function generateSitemapXml(siteSettings, portfolioItems) {
 
   // Add portfolio pages
   portfolioItems.forEach(item => {
-    const lastmod = item.createdAt instanceof Date 
-      ? item.createdAt.toISOString() 
-      : new Date(item.createdAt).toISOString();
+    let lastmod;
+    try {
+      if (item.createdAt instanceof Date) {
+        lastmod = item.createdAt.toISOString();
+      } else if (item.createdAt && item.createdAt.toDate && typeof item.createdAt.toDate === 'function') {
+        // Firestore Timestamp object
+        lastmod = item.createdAt.toDate().toISOString();
+      } else if (item.createdAt) {
+        lastmod = new Date(item.createdAt).toISOString();
+      } else {
+        lastmod = now;
+      }
+    } catch (error) {
+      // Fallback to current time if date conversion fails
+      lastmod = now;
+    }
     
     xml += `  <url>
     <loc>${baseUrl}/portfolio/${item.id}</loc>
