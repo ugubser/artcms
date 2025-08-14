@@ -138,7 +138,15 @@ async function fetchSiteSettings(db) {
       siteDescription: settings.siteDescription || 'MIYUKI NAGAI-GUBSER @ TribeCa conceptS',
       siteKeywords: Array.isArray(settings.siteKeywords) ? settings.siteKeywords.join(', ') : 'portfolio, art, abstract, paintings, visual, expression, mindmap, emotions, memories',
       faviconUrl: settings.faviconUrl || 'favicon.ico',
-      siteUrl: settings.siteUrl || 'https://tribecaconcepts.com'
+      siteUrl: settings.siteUrl || 'https://tribecaconcepts.com',
+      // Artist information
+      artistName: settings.artistName || '',
+      artistAlternateName: settings.artistAlternateName || '',
+      artistBirthPlace: settings.artistBirthPlace || '',
+      artistNationality: settings.artistNationality || '',
+      artistPortraitUrl: settings.artistPortraitUrl || '',
+      artistBiography: settings.artistBiography || '',
+      socialMedia: settings.socialMedia || {}
     };
   } catch (error) {
     log('red', `❌ Error fetching site settings: ${error.message}`);
@@ -249,7 +257,47 @@ async function fetchPortfolioItems(db) {
   }
 }
 
-function generateIndexFromTemplate(templatePath, siteSettings) {
+async function fetchContactInfo(db) {
+  try {
+    log('blue', '📋 Fetching contact info from Firestore...');
+    
+    // First try the specific document ID
+    let contactDoc = await db.collection('contact').doc('main-contact').get();
+    
+    if (!contactDoc.exists) {
+      // If main-contact doesn't exist, try to get any contact document
+      log('blue', '📋 main-contact not found, checking for any contact documents...');
+      const contactSnapshot = await db.collection('contact').limit(1).get();
+      
+      if (contactSnapshot.empty) {
+        log('yellow', '⚠️  No contact documents found in Firestore');
+        return null;
+      }
+      
+      contactDoc = contactSnapshot.docs[0];
+      log('green', `✅ Found contact document with ID: ${contactDoc.id}`);
+    } else {
+      log('green', '✅ Contact info fetched from Firestore (main-contact)');
+    }
+    
+    const contact = contactDoc.data();
+    
+    return {
+      address: contact.address || '',
+      socialMedia: {
+        instagram: contact.socialMedia?.instagram || '',
+        linkedin: contact.socialMedia?.linkedin || '',
+        twitter: contact.socialMedia?.twitter || '',
+        behance: contact.socialMedia?.behance || ''
+      }
+    };
+  } catch (error) {
+    log('red', `❌ Error fetching contact info: ${error.message}`);
+    return null;
+  }
+}
+
+function generateIndexFromTemplate(templatePath, siteSettings, contactInfo) {
   try {
     let content = fs.readFileSync(templatePath, 'utf8');
     
@@ -258,6 +306,81 @@ function generateIndexFromTemplate(templatePath, siteSettings) {
     content = content.replace(/{{SITE_DESCRIPTION}}/g, siteSettings.siteDescription);
     content = content.replace(/{{SITE_KEYWORDS}}/g, siteSettings.siteKeywords);
     content = content.replace(/{{FAVICON_URL}}/g, siteSettings.faviconUrl);
+    
+    // Generate VisualArtist structured data if artist information is available
+    if (siteSettings.artistName) {
+      // Build sameAs array from available social media links
+      const sameAsLinks = [];
+      
+      // Add contact social media links if contact info is available
+      if (contactInfo?.socialMedia) {
+        if (contactInfo.socialMedia.instagram) sameAsLinks.push(contactInfo.socialMedia.instagram);
+        if (contactInfo.socialMedia.linkedin) sameAsLinks.push(contactInfo.socialMedia.linkedin);
+        if (contactInfo.socialMedia.twitter) sameAsLinks.push(contactInfo.socialMedia.twitter);
+        if (contactInfo.socialMedia.behance) sameAsLinks.push(contactInfo.socialMedia.behance);
+      }
+      
+      // Add settings social media links
+      if (siteSettings.socialMedia?.facebook) sameAsLinks.push(siteSettings.socialMedia.facebook);
+      if (siteSettings.socialMedia?.instagram) sameAsLinks.push(siteSettings.socialMedia.instagram);
+      if (siteSettings.socialMedia?.linkedin) sameAsLinks.push(siteSettings.socialMedia.linkedin);
+      if (siteSettings.socialMedia?.twitter) sameAsLinks.push(siteSettings.socialMedia.twitter);
+      
+      const visualArtistSchema = {
+        "@context": "https://schema.org",
+        "@type": "VisualArtist",
+        "name": siteSettings.artistName,
+        "url": siteSettings.siteUrl
+      };
+      
+      // Add optional fields if they exist
+      if (siteSettings.artistAlternateName) {
+        visualArtistSchema.alternateName = siteSettings.artistAlternateName;
+      }
+      
+      if (siteSettings.artistBirthPlace) {
+        visualArtistSchema.birthPlace = {
+          "@type": "Place",
+          "name": siteSettings.artistBirthPlace
+        };
+      }
+      
+      if (siteSettings.artistNationality) {
+        visualArtistSchema.nationality = siteSettings.artistNationality;
+      }
+      
+      if (siteSettings.artistPortraitUrl) {
+        visualArtistSchema.image = siteSettings.artistPortraitUrl;
+      }
+      
+      if (siteSettings.artistBiography) {
+        visualArtistSchema.description = siteSettings.artistBiography;
+      }
+      
+      if (sameAsLinks.length > 0) {
+        visualArtistSchema.sameAs = sameAsLinks;
+      }
+      
+      if (contactInfo?.address) {
+        // Simple address parsing - could be enhanced
+        visualArtistSchema.address = {
+          "@type": "PostalAddress",
+          "addressLocality": "Zurich", // Default for now
+          "addressCountry": "CH"
+        };
+      }
+      
+      const schemaScript = `<script type="application/ld+json">
+${JSON.stringify(visualArtistSchema, null, 2)}
+</script>`;
+      
+      // Insert the structured data before the closing </head> tag
+      content = content.replace('</head>', `  ${schemaScript}\n</head>`);
+      
+      log('green', '✅ Added VisualArtist structured data to index.html');
+    } else {
+      log('yellow', '⚠️  No artist name provided, skipping VisualArtist structured data');
+    }
     
     return content;
   } catch (error) {
@@ -546,12 +669,15 @@ async function main() {
   // Fetch site settings from Firestore
   const siteSettings = await fetchSiteSettings(db);
   
+  // Fetch contact info from Firestore
+  const contactInfo = await fetchContactInfo(db);
+  
   // Fetch portfolio items from Firestore
   const portfolioItems = await fetchPortfolioItems(db);
   
   // Generate index.html from template
   log('blue', '📋 Generating index.html from template...');
-  const indexContent = generateIndexFromTemplate(templateFile, siteSettings);
+  const indexContent = generateIndexFromTemplate(templateFile, siteSettings, contactInfo);
   
   // Generate SEO files
   log('blue', '📋 Generating SEO files...');

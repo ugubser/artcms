@@ -22,6 +22,13 @@ export interface SiteSettings {
     instagram?: string;
     linkedin?: string;
   };
+  // Artist-specific fields for VisualArtist schema
+  artistName?: string;
+  artistAlternateName?: string;
+  artistBirthPlace?: string;
+  artistNationality?: string;
+  artistPortraitUrl?: string;
+  artistBiography?: string;
   updatedAt: Date;
 }
 
@@ -86,6 +93,13 @@ export class SettingsService {
         instagram: '',
         linkedin: ''
       },
+      // Default artist information
+      artistName: '',
+      artistAlternateName: '',
+      artistBirthPlace: '',
+      artistNationality: '',
+      artistPortraitUrl: '',
+      artistBiography: '',
       updatedAt: new Date()
     };
   }

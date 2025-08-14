@@ -34,6 +34,47 @@
               <input matInput formControlName="footerText" 
                      placeholder="© 2024 by TribecaConcepts">
             </mat-form-field>
+
+            <!-- Artist Information Section -->
+            <div class="artist-section">
+              <h3>Artist Information</h3>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Artist Name</mat-label>
+                <input matInput formControlName="artistName" 
+                       placeholder="Full name of the artist">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Artist Alternative Name</mat-label>
+                <input matInput formControlName="artistAlternateName" 
+                       placeholder="Professional or alternative name">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Birth Place</mat-label>
+                <input matInput formControlName="artistBirthPlace" 
+                       placeholder="City, Country">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nationality</mat-label>
+                <input matInput formControlName="artistNationality" 
+                       placeholder="Artist's nationality">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Portrait Image URL</mat-label>
+                <input matInput formControlName="artistPortraitUrl" 
+                       placeholder="https://example.com/portrait.jpg">
+                <mat-icon matPrefix>link</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Artist Biography</mat-label>
+                <textarea matInput formControlName="artistBiography" rows="4" 
+                         placeholder="Brief biography of the artist"></textarea>
+              </mat-form-field>
+            </div>
           </form>
         </div>
       </mat-tab>

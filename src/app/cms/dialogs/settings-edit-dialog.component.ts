@@ -77,7 +77,14 @@ export class SettingsEditDialogComponent implements OnInit {
         twitter: [''],
         instagram: [''],
         linkedin: ['']
-      })
+      }),
+      // Artist information fields
+      artistName: [''],
+      artistAlternateName: [''],
+      artistBirthPlace: [''],
+      artistNationality: [''],
+      artistPortraitUrl: [''],
+      artistBiography: ['']
     });
   }
 
@@ -96,7 +103,14 @@ export class SettingsEditDialogComponent implements OnInit {
         twitter: settings.socialMedia?.twitter || '',
         instagram: settings.socialMedia?.instagram || '',
         linkedin: settings.socialMedia?.linkedin || ''
-      }
+      },
+      // Artist information
+      artistName: settings.artistName || '',
+      artistAlternateName: settings.artistAlternateName || '',
+      artistBirthPlace: settings.artistBirthPlace || '',
+      artistNationality: settings.artistNationality || '',
+      artistPortraitUrl: settings.artistPortraitUrl || '',
+      artistBiography: settings.artistBiography || ''
     });
     
     this.keywords = settings.siteKeywords || [];
@@ -159,7 +173,14 @@ export class SettingsEditDialogComponent implements OnInit {
       footerText: formValue.footerText,
       enableAnalytics: formValue.enableAnalytics,
       analyticsId: formValue.analyticsId,
-      socialMedia: formValue.socialMedia
+      socialMedia: formValue.socialMedia,
+      // Artist information
+      artistName: formValue.artistName,
+      artistAlternateName: formValue.artistAlternateName,
+      artistBirthPlace: formValue.artistBirthPlace,
+      artistNationality: formValue.artistNationality,
+      artistPortraitUrl: formValue.artistPortraitUrl,
+      artistBiography: formValue.artistBiography
     };
 
     console.log('Saving settings:', settingsData);
