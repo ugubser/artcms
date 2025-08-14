@@ -92,8 +92,25 @@ async function fetchSiteSettingsDev(db) {
 
 async function fetchPortfolioItemsDev(db) {
   const defaultItems = [
-    { id: 'sample-art-1', title: 'Sample Art Piece', createdAt: new Date(), category: 'art' },
-    { id: 'sample-design-1', title: 'Sample Design Work', createdAt: new Date(), category: 'graphic-design' }
+    { 
+      id: 'sample-art-1', 
+      title: 'Sample Art Piece', 
+      createdAt: new Date(), 
+      category: 'art',
+      galleries: [
+        { description: 'Sample Gallery 1', pictures: [{ imageUrl: '/sample-image-1.jpg' }] },
+        { description: 'Sample Gallery 2', pictures: [{ imageUrl: '/sample-image-2.jpg' }] }
+      ]
+    },
+    { 
+      id: 'sample-design-1', 
+      title: 'Sample Design Work', 
+      createdAt: new Date(), 
+      category: 'graphic-design',
+      galleries: [
+        { description: 'Design Samples', pictures: [{ imageUrl: '/sample-design-1.jpg' }] }
+      ]
+    }
   ];
 
   if (!db) {
@@ -110,7 +127,8 @@ async function fetchPortfolioItemsDev(db) {
       .get();
     
     const portfolioItems = [];
-    portfolioSnapshot.forEach(doc => {
+    
+    for (const doc of portfolioSnapshot.docs) {
       const data = doc.data();
       let createdAt;
       try {
@@ -126,13 +144,58 @@ async function fetchPortfolioItemsDev(db) {
         createdAt = new Date();
       }
       
+      // Fetch galleries for this portfolio item
+      let galleries = [];
+      try {
+        log('blue', `📋 Checking galleries for portfolio item: ${doc.id}`);
+        const galleriesSnapshot = await db.collection('portfolio')
+          .doc(doc.id)
+          .collection('galleries')
+          .get();
+        
+        log('blue', `   Found ${galleriesSnapshot.docs.length} gallery documents`);
+        
+        for (const galleryDoc of galleriesSnapshot.docs) {
+          const galleryData = galleryDoc.data();
+          log('blue', `   Gallery ${galleryDoc.id}: ${JSON.stringify(galleryData, null, 2)}`);
+          
+          if (galleryData.pictures && Array.isArray(galleryData.pictures)) {
+            galleries.push({
+              id: galleryDoc.id,
+              description: galleryData.description || 'Gallery',
+              pictures: galleryData.pictures
+            });
+            log('green', `   ✅ Added gallery ${galleryDoc.id} with ${galleryData.pictures.length} pictures`);
+          } else {
+            log('yellow', `   ⚠️  Gallery ${galleryDoc.id} has no pictures array`);
+          }
+        }
+        
+        // Also check if galleries are stored as a field in the main document
+        if (galleries.length === 0 && data.galleries) {
+          log('blue', `   📋 Checking galleries field in main document`);
+          if (Array.isArray(data.galleries)) {
+            galleries = data.galleries.map((gallery, index) => ({
+              id: `gallery-${index}`,
+              description: gallery.description || `Gallery ${index + 1}`,
+              pictures: gallery.pictures || []
+            }));
+            log('green', `   ✅ Found ${galleries.length} galleries in main document`);
+          }
+        }
+        
+      } catch (galleryError) {
+        log('yellow', `⚠️  Error fetching galleries for ${doc.id}: ${galleryError.message}`);
+      }
+      
       portfolioItems.push({
         id: doc.id,
         title: data.title || 'Untitled',
         createdAt: createdAt,
-        category: data.category || 'portfolio'
+        category: data.category || 'portfolio',
+        galleries: galleries
       });
-    });
+    }
     
     if (portfolioItems.length === 0) {
       log('yellow', '⚠️  No published portfolio items found, using defaults');
@@ -204,7 +267,7 @@ function generateSitemapXml(siteSettings, portfolioItems) {
 `;
   });
 
-  // Add portfolio pages
+  // Add portfolio pages and individual gallery items
   portfolioItems.forEach(item => {
     let lastmod;
     try {
@@ -223,6 +286,7 @@ function generateSitemapXml(siteSettings, portfolioItems) {
       lastmod = now;
     }
     
+    // Add portfolio item page
     xml += `  <url>
     <loc>${baseUrl}/portfolio/${item.id}</loc>
     <lastmod>${lastmod}</lastmod>
@@ -230,6 +294,35 @@ function generateSitemapXml(siteSettings, portfolioItems) {
     <priority>0.8</priority>
   </url>
 `;
+    
+    // Add gallery and individual gallery items
+    if (item.galleries && item.galleries.length > 0) {
+      item.galleries.forEach((gallery, galleryIndex) => {
+        // Add gallery page URL
+        xml += `  <url>
+    <loc>${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+        
+        // Add individual picture URLs
+        if (gallery.pictures && gallery.pictures.length > 0) {
+          gallery.pictures.forEach((picture, pictureIndex) => {
+            if (picture.imageUrl) {
+              xml += `  <url>
+    <loc>${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+            }
+          });
+        }
+      });
+    }
   });
 
   xml += `</urlset>`;
@@ -337,7 +430,46 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
         <a href="${baseUrl}/portfolio/${item.id}">${item.title}</a>
         <span class="category">${item.category}</span>
       </div>
-    </li>
+`;
+    
+    // Add hierarchical gallery structure if galleries exist
+    if (item.galleries && item.galleries.length > 0) {
+      html += `      <div style="margin-left: 20px; margin-top: 8px;">
+`;
+      item.galleries.forEach((gallery, galleryIndex) => {
+        if (gallery.pictures && gallery.pictures.length > 0) {
+          const galleryDescription = gallery.description || `Gallery ${galleryIndex + 1}`;
+          html += `        <div style="margin-bottom: 12px;">
+          <strong style="font-size: 0.9em; color: #2c3e50;">
+            <a href="${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}" style="text-decoration: none; color: #2c3e50;">📁 ${galleryDescription}</a>
+          </strong>
+          <ul style="margin: 4px 0 0 20px; list-style: none; padding: 0;">
+`;
+          gallery.pictures.forEach((picture, pictureIndex) => {
+            if (picture.imageUrl) {
+              const pictureDescription = picture.description || picture.title || `Image ${pictureIndex + 1}`;
+              html += `            <li style="margin: 4px 0; display: flex; align-items: center;">
+              <img src="${picture.imageUrl}" 
+                   style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 8px; border: 1px solid #ddd;" 
+                   alt="${pictureDescription}">
+              <a href="${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}" 
+                 style="font-size: 0.8em; color: #3498db; text-decoration: none;">
+                ${pictureDescription}
+              </a>
+            </li>
+`;
+            }
+          });
+          html += `          </ul>
+        </div>
+`;
+        }
+      });
+      html += `      </div>
+`;
+    }
+    
+    html += `    </li>
 `;
   });
 
@@ -351,6 +483,7 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
 
   return html;
 }
+
 
 async function main() {
   log('blue', '🔧 Generating SEO files for development...');
@@ -387,7 +520,8 @@ async function main() {
   const sitemapXmlContent = generateSitemapXml(siteSettings, portfolioItems);
   const sitemapHtmlContent = generateSitemapHtml(siteSettings, portfolioItems);
   
-  // Write all files
+  // Prepare files to write (no static picture pages needed - Angular handles routing)
+  log('blue', '📋 Preparing files (Angular will handle picture routing)...');
   const filesToWrite = [
     { path: indexFile, content: indexContent, name: 'index.html' },
     { path: robotsFile, content: robotsContent, name: 'robots.txt' },
@@ -406,14 +540,30 @@ async function main() {
     process.exit(1);
   }
   
+  // Calculate total gallery items and gallery pages
+  let totalGalleries = 0;
+  let totalGalleryItems = 0;
+  portfolioItems.forEach(item => {
+    if (item.galleries && item.galleries.length > 0) {
+      totalGalleries += item.galleries.length;
+      item.galleries.forEach(gallery => {
+        if (gallery.pictures && gallery.pictures.length > 0) {
+          totalGalleryItems += gallery.pictures.length;
+        }
+      });
+    }
+  });
+
   // Show summary
   log('blue', '📋 Development files summary:');
   console.log(`   🏷️  Site Name: ${siteSettings.siteName}`);
   console.log(`   🌐 Site URL: ${siteSettings.siteUrl} (Development)`);
   console.log(`   📝 Description: ${siteSettings.siteDescription.substring(0, 50)}...`);
   console.log(`   📁 Portfolio Items: ${portfolioItems.length} items`);
+  console.log(`   📂 Gallery Pages: ${totalGalleries} galleries`);
+  console.log(`   🖼️  Individual Picture Items: ${totalGalleryItems} pictures`);
   console.log(`   🎨 Static Pages: 5 pages (home, art, design, about, contact)`);
-  console.log(`   📄 Total URLs in sitemap: ${5 + portfolioItems.length} URLs`);
+  console.log(`   📄 Total URLs in sitemap: ${5 + portfolioItems.length + totalGalleries + totalGalleryItems} URLs`);
   
   log('green', '🎉 Development SEO file generation completed successfully!');
   

@@ -1,0 +1,62 @@
+<div class="picture-viewer-container" *ngIf="!isLoading">
+  <!-- Close Button -->
+  <button mat-icon-button class="close-button" (click)="goToPortfolio()" title="Close">
+    <mat-icon>close</mat-icon>
+  </button>
+  
+  <!-- Navigation Buttons -->
+
+  <div class="navigation">
+    <button mat-icon-button 
+            class="nav-button nav-next" 
+            [disabled]="currentImageIndex === 0"
+            (click)="previousImage()" 
+            title="Previous Image">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+        <button mat-icon-button 
+            class="nav-button nav-prev" 
+            [disabled]="currentImageIndex === totalImages - 1"
+            (click)="nextImage()" 
+            title="Next Image">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+  </div>
+
+  <!-- Main Picture Display -->
+  <div class="picture-display" *ngIf="currentImage">
+    <div class="picture-container">
+      <img [src]="currentImage.url" 
+           [alt]="currentImage.alt || portfolioItem?.title" 
+           class="main-picture">
+      
+      <div class="picture-info">
+        <h1 class="picture-title">
+          {{ currentImage.description || 'Image ' + (currentImageIndex + 1) }}
+        </h1>
+        <div class="gallery-info" *ngIf="currentImage.galleryDescription || currentImage.galleryTitle">
+          From <strong>{{ currentImage.galleryTitle || currentImage.galleryDescription || 'Gallery' }}</strong>
+        </div>
+        <div class="portfolio-info" *ngIf="portfolioItem">
+          in <a [routerLink]="['/portfolio', portfolioId]" class="portfolio-link">{{ portfolioItem.title }}</a>
+          <span class="category-badge">{{ getCategoryLabel(portfolioItem.category || 'portfolio') }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Counter -->
+  <div class="image-counter">
+    {{ currentImageIndex + 1 }} / {{ totalImages }}
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="isLoading">
+  <div class="loading-spinner">
+    <mat-icon class="spinning">refresh</mat-icon>
+  </div>
+  <p>Loading image...</p>
+</div>
