@@ -448,13 +448,14 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
           gallery.pictures.forEach((picture, pictureIndex) => {
             if (picture.imageUrl) {
               const pictureDescription = picture.description || picture.title || `Image ${pictureIndex + 1}`;
-              html += `            <li style="margin: 4px 0; display: flex; align-items: center;">
-              <img src="${picture.imageUrl}" 
-                   style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 8px; border: 1px solid #ddd;" 
-                   alt="${pictureDescription}">
+              html += `            <li style="margin: 4px 0;">
               <a href="${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}" 
-                 style="font-size: 0.8em; color: #3498db; text-decoration: none;">
-                ${pictureDescription}
+                 style="text-decoration: none; display: block;">
+                <img src="${picture.imageUrl}" 
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; transition: transform 0.2s;" 
+                     alt="${pictureDescription}"
+                     onmouseover="this.style.transform='scale(1.1)'" 
+                     onmouseout="this.style.transform='scale(1)'">
               </a>
             </li>
 `;
