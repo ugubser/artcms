@@ -328,7 +328,7 @@ function generateIndexFromTemplate(templatePath, siteSettings, contactInfo) {
       
       const visualArtistSchema = {
         "@context": "https://schema.org",
-        "@type": "VisualArtist",
+        "@type": "Person",
         "name": siteSettings.artistName,
         "url": siteSettings.siteUrl
       };
@@ -377,9 +377,9 @@ ${JSON.stringify(visualArtistSchema, null, 2)}
       // Insert the structured data before the closing </head> tag
       content = content.replace('</head>', `  ${schemaScript}\n</head>`);
       
-      log('green', '✅ Added VisualArtist structured data to index.html');
+      log('green', '✅ Added Person structured data to index.html');
     } else {
-      log('yellow', '⚠️  No artist name provided, skipping VisualArtist structured data');
+      log('yellow', '⚠️  No artist name provided, skipping Person structured data');
     }
     
     return content;
