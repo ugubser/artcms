@@ -157,6 +157,31 @@
                                  placeholder="Alt text for accessibility">
                         </mat-form-field>
 
+                        <div class="structured-data-fields">
+                          <h5>Structured Data for SEO</h5>
+                          
+                          <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Date Created</mat-label>
+                            <input matInput [(ngModel)]="picture.dateCreated" 
+                                   placeholder="e.g., 2025-06 or 2024">
+                            <mat-hint>Format: YYYY-MM or YYYY (for schema.org structured data)</mat-hint>
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Art Medium</mat-label>
+                            <input matInput [(ngModel)]="picture.artMedium" 
+                                   placeholder="e.g., Acrylic on canvas, Digital painting, Oil on canvas">
+                            <mat-hint>The material or technique used to create this artwork</mat-hint>
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Genre</mat-label>
+                            <input matInput [(ngModel)]="picture.genre" 
+                                   placeholder="e.g., Abstract expressionism, Landscape, Portrait">
+                            <mat-hint>The artistic style or genre of this artwork</mat-hint>
+                          </mat-form-field>
+                        </div>
+
                         <div class="picture-actions">
                           <mat-form-field appearance="outline" class="order-field">
                             <mat-label>Order</mat-label>

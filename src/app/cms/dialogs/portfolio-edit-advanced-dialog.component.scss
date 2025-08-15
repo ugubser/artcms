@@ -118,6 +118,24 @@ h3, h4 {
   color: #333;
 }
 
+h5 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  color: #333;
+}
+
+.structured-data-fields {
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  
+  h5 {
+    margin-bottom: 1rem;
+    color: #666;
+  }
+}
+
 mat-dialog-actions {
   padding: 1rem 0 0 0;
 }

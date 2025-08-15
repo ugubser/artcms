@@ -10,6 +10,9 @@ export interface Picture {
   description: string; // Markdown formatted
   alt: string;
   order: number;
+  dateCreated?: string; // Date when the artwork was created (YYYY-MM format)
+  artMedium?: string; // e.g., "Acrylic on canvas", "Digital painting", "Oil on canvas"
+  genre?: string; // e.g., "Abstract expressionism", "Landscape", "Portrait"
 }
 
 export interface GalleryEntry {
@@ -149,7 +152,10 @@ export class PortfolioService {
       imageUrl: '',
       description: '',
       alt: '',
-      order: 0
+      order: 0,
+      dateCreated: '',
+      artMedium: '',
+      genre: ''
     };
   }
 
