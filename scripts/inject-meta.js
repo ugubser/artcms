@@ -491,10 +491,75 @@ function generateSitemapXml(siteSettings, portfolioItems) {
   return xml;
 }
 
+function generateArtworkStructuredData(siteSettings, portfolioItems) {
+  // Generate structured data for each artwork
+  const artworkSchemas = [];
+  
+  portfolioItems.forEach(item => {
+    if (item.galleries && item.galleries.length > 0) {
+      item.galleries.forEach((gallery, galleryIndex) => {
+        if (gallery.pictures && gallery.pictures.length > 0) {
+          gallery.pictures.forEach((picture, pictureIndex) => {
+            if (picture.imageUrl) {
+              // Create structured data for all pictures with images
+              const artworkSchema = {
+                "@context": "https://schema.org",
+                "@type": "Painting", // Default type - could be made more specific based on artMedium
+                "name": picture.description || picture.alt || `Artwork from ${item.title}`,
+                "creator": {
+                  "@type": "Person",
+                  "name": siteSettings.artistName || "Artist",
+                  "url": siteSettings.siteUrl
+                },
+                "image": picture.imageUrl
+              };
+              
+              // Add optional fields if they exist
+              if (picture.dateCreated) {
+                artworkSchema.dateCreated = picture.dateCreated;
+              }
+              
+              if (picture.artMedium) {
+                artworkSchema.artMedium = picture.artMedium;
+              }
+              
+              if (picture.genre) {
+                artworkSchema.genre = picture.genre;
+              }
+              
+              // Add description if available
+              if (picture.description && picture.description.trim() !== '') {
+                artworkSchema.description = picture.description;
+              }
+              
+              artworkSchemas.push(artworkSchema);
+            }
+          });
+        }
+      });
+    }
+  });
+  
+  return artworkSchemas;
+}
+
 function generateSitemapHtml(siteSettings, portfolioItems) {
   const baseUrl = siteSettings.siteUrl.endsWith('/') 
     ? siteSettings.siteUrl.slice(0, -1) 
     : siteSettings.siteUrl;
+  
+  // Generate structured data for artworks
+  const artworkSchemas = generateArtworkStructuredData(siteSettings, portfolioItems);
+  
+  let structuredDataScripts = '';
+  if (artworkSchemas.length > 0) {
+    artworkSchemas.forEach((schema, index) => {
+      structuredDataScripts += `  <script type="application/ld+json">
+${JSON.stringify(schema, null, 4)}
+  </script>
+`;
+    });
+  }
   
   let html = `<!DOCTYPE html>
 <html lang="en">
@@ -502,6 +567,7 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sitemap - ${siteSettings.siteName}</title>
+${structuredDataScripts}
   <style>
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -683,6 +749,15 @@ async function main() {
   log('blue', '📋 Generating SEO files...');
   const robotsContent = generateRobotsTxt(siteSettings);
   const sitemapXmlContent = generateSitemapXml(siteSettings, portfolioItems);
+  
+  // Generate artwork structured data and log count
+  const artworkSchemas = generateArtworkStructuredData(siteSettings, portfolioItems);
+  if (artworkSchemas.length > 0) {
+    log('green', `✅ Generated structured data for ${artworkSchemas.length} artworks`);
+  } else {
+    log('yellow', '⚠️  No artworks with structured data fields found');
+  }
+  
   const sitemapHtmlContent = generateSitemapHtml(siteSettings, portfolioItems);
   
   // Write all files
@@ -718,6 +793,9 @@ async function main() {
     }
   });
 
+  // Recalculate artwork structured data for summary
+  const finalArtworkSchemas = generateArtworkStructuredData(siteSettings, portfolioItems);
+
   // Show summary
   log('blue', '📋 Generated files summary:');
   console.log(`   🏷️  Site Name: ${siteSettings.siteName}`);
@@ -727,6 +805,7 @@ async function main() {
   console.log(`   📁 Portfolio Items: ${portfolioItems.length} published items`);
   console.log(`   📂 Gallery Pages: ${totalGalleries} galleries`);
   console.log(`   🖼️  Individual Picture Items: ${totalGalleryItems} pictures`);
+  console.log(`   🎨 Artwork Structured Data: ${finalArtworkSchemas.length} artworks with schema.org data`);
   console.log(`   🎨 Static Pages: 5 pages (home, art, design, about, contact)`);
   console.log(`   📄 Total URLs in sitemap: ${5 + portfolioItems.length + totalGalleries + totalGalleryItems} URLs`);
   
