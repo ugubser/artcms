@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Environment Variable Injection Script
+ * Development Environment Variable Injection Script
  * 
- * This script injects environment variables from .env.production into 
- * src/environments/environment.prod.ts before building for production.
+ * This script creates the development environment.ts file from template
+ * if it doesn't already exist. It will NOT overwrite an existing file
+ * to preserve developer's local configuration.
  * 
- * Usage: node scripts/inject-env.js
+ * Usage: node scripts/inject-env-dev.js
  */
 
 const fs = require('fs');
@@ -87,12 +88,20 @@ function generateEnvironmentFromTemplate(templatePath, envVars) {
 }
 
 function main() {
-  log('blue', '🔧 Injecting environment variables into configuration files...');
+  log('blue', '🔧 Checking development environment configuration...');
   
   // Paths
   const envFile = path.join(process.cwd(), '.env.production');
-  const envProdTemplate = path.join(process.cwd(), 'src/environments/environment.prod.ts.template');
-  const envProdFile = path.join(process.cwd(), 'src/environments/environment.prod.ts');
+  const envTemplate = path.join(process.cwd(), 'src/environments/environment.ts.template');
+  const envDevFile = path.join(process.cwd(), 'src/environments/environment.ts');
+  
+  // Check if development environment file already exists
+  if (fs.existsSync(envDevFile)) {
+    log('green', '✅ Development environment file already exists');
+    log('blue', `   📁 Using existing: ${envDevFile}`);
+    log('yellow', '💡 To regenerate, delete the file and run this script again');
+    return;
+  }
   
   // Check if .env.production exists
   if (!fs.existsSync(envFile)) {
@@ -102,8 +111,8 @@ function main() {
   }
   
   // Check if template file exists
-  if (!fs.existsSync(envProdTemplate)) {
-    log('red', '❌ src/environments/environment.prod.ts.template file not found');
+  if (!fs.existsSync(envTemplate)) {
+    log('red', '❌ src/environments/environment.ts.template file not found');
     process.exit(1);
   }
   
@@ -114,18 +123,18 @@ function main() {
   // Validate required variables
   validateEnvironmentVariables(envVars);
   
-  // Generate production environment file from template
-  log('blue', '📋 Generating production environment file...');
-  const prodContent = generateEnvironmentFromTemplate(envProdTemplate, envVars);
+  // Generate development environment file from template
+  log('blue', '📋 Generating development environment file...');
+  const devContent = generateEnvironmentFromTemplate(envTemplate, envVars);
   
-  // Write the production environment file only
+  // Write the development environment file
   try {
-    fs.writeFileSync(envProdFile, prodContent, 'utf8');
-    log('green', '✅ Production environment file generated successfully');
-    log('blue', `   📁 Created: ${envProdFile}`);
-    log('blue', '💡 Development environment.ts file left unchanged');
+    fs.writeFileSync(envDevFile, devContent, 'utf8');
+    log('green', '✅ Development environment file created successfully');
+    log('blue', `   📁 Created: ${envDevFile}`);
+    log('yellow', '💡 This file is now yours to customize for development');
   } catch (error) {
-    log('red', `❌ Error writing environment files: ${error.message}`);
+    log('red', `❌ Error writing environment file: ${error.message}`);
     process.exit(1);
   }
   
@@ -137,7 +146,8 @@ function main() {
   console.log(`   🗄️  Storage Bucket: ${envVars.FIREBASE_STORAGE_BUCKET}`);
   console.log(`   👥 Admin Emails: ${envVars.ADMIN_EMAILS}`);
   
-  log('green', '🎉 Environment injection completed successfully!');
+  log('green', '🎉 Development environment setup completed!');
+  log('blue', '💡 Note: This file will not be overwritten in future runs');
 }
 
 // Run the script

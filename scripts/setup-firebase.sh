@@ -29,11 +29,28 @@ if ! firebase projects:list &> /dev/null; then
     exit 1
 fi
 
+# Check if .firebaserc exists
+if [ ! -f ".firebaserc" ]; then
+    echo -e "${RED}❌ .firebaserc file not found${NC}"
+    echo "Please initialize a Firebase project first by running:"
+    echo "  firebase init"
+    echo ""
+    echo "This will create the necessary .firebaserc file with your project configuration."
+    exit 1
+fi
+
 echo -e "${BLUE}📋 Current Firebase Projects:${NC}"
 firebase projects:list
 
 echo ""
 echo -e "${YELLOW}🔧 Setting up production project...${NC}"
+
+# Read existing .firebaserc to preserve existing projects
+if command -v jq &> /dev/null; then
+    EXISTING_PROJECTS=$(cat .firebaserc | jq -r '.projects // {}')
+else
+    echo -e "${YELLOW}⚠️  jq not found, will preserve existing .firebaserc structure manually${NC}"
+fi
 
 # Get project ID from user
 read -p "Enter your production Firebase project ID: " PROJECT_ID
@@ -43,16 +60,38 @@ if [ -z "$PROJECT_ID" ]; then
     exit 1
 fi
 
-# Update .firebaserc with production project
+# Update .firebaserc with production project, preserving existing projects
 echo -e "${BLUE}📝 Updating .firebaserc...${NC}"
-cat > .firebaserc << EOF
+
+if command -v jq &> /dev/null; then
+    # Use jq to merge existing projects with new default
+    cat .firebaserc | jq --arg pid "$PROJECT_ID" '.projects.default = $pid' > .firebaserc.tmp && mv .firebaserc.tmp .firebaserc
+else
+    # Fallback: backup existing file and create new one with current default preserved
+    cp .firebaserc .firebaserc.backup
+    
+    # Extract existing dev project if it exists
+    EXISTING_DEV=$(grep -o '"dev"[[:space:]]*:[[:space:]]*"[^"]*"' .firebaserc | sed 's/.*"dev"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
+    
+    if [ -n "$EXISTING_DEV" ]; then
+        cat > .firebaserc << EOF
 {
   "projects": {
     "default": "$PROJECT_ID",
-    "dev": "tribecaconcepts-9c"
+    "dev": "$EXISTING_DEV"
   }
 }
 EOF
+    else
+        cat > .firebaserc << EOF
+{
+  "projects": {
+    "default": "$PROJECT_ID"
+  }
+}
+EOF
+    fi
+fi
 
 echo -e "${GREEN}✅ Updated .firebaserc${NC}"
 
