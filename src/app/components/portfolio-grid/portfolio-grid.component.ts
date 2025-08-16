@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-portfolio-grid',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ResolveStorageUrlPipe],
   templateUrl: './portfolio-grid.component.html',
   styleUrls: ['./portfolio-grid.component.scss']
 })

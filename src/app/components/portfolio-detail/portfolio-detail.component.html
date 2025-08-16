@@ -26,7 +26,7 @@
             <div *ngFor="let picture of gallery.pictures; let i = index" 
                  class="gallery-item"
                  (click)="openImageViewer(picture.imageUrl, getImageIndex(galleryIndex, i))">
-              <img [src]="picture.imageUrl" [alt]="picture.alt || portfolioItem.title + ' - Image ' + (i + 1)" class="gallery-image">
+              <img [src]="picture.imageUrl | resolveStorageUrl | async" [alt]="picture.alt || portfolioItem.title + ' - Image ' + (i + 1)" class="gallery-image">
               <div class="image-overlay">
                 <div class="image-content">
                   <h4 class="image-title" *ngIf="gallery.title">{{ gallery.title }}</h4>
@@ -81,7 +81,7 @@
           </button>
           
           <div class="image-container">
-            <img [src]="selectedImageUrl" [alt]="currentImageData?.alt || portfolioItem?.title">
+            <img [src]="selectedImageUrl | resolveStorageUrl | async" [alt]="currentImageData?.alt || portfolioItem?.title">
           </div>
           
           <button mat-icon-button 

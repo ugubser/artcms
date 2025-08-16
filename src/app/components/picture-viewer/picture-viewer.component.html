@@ -28,7 +28,7 @@
   <!-- Main Picture Display -->
   <div class="picture-display" *ngIf="currentImage">
     <div class="picture-container">
-      <img [src]="currentImage.url" 
+      <img [src]="currentImage.url | resolveStorageUrl | async" 
            [alt]="currentImage.alt || portfolioItem?.title" 
            class="main-picture">
       

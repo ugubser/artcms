@@ -6,7 +6,7 @@
     (click)="selectItem(item)"
   >
     <div class="portfolio-image">
-      <img [src]="item.featuredImage" [alt]="item.title" />
+      <img [src]="item.featuredImage | resolveStorageUrl | async" [alt]="item.title" />
     </div>
     <div class="portfolio-info">
       <h3>{{ item.title }}</h3>

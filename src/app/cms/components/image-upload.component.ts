@@ -5,6 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { StorageUrlService } from '../../services/storage-url.service';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-image-upload',
@@ -14,13 +16,14 @@ import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angula
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ResolveStorageUrlPipe
   ],
   template: `
     <div class="image-upload-container">
       <!-- Current Image Preview -->
       <div class="current-image" *ngIf="currentImageUrl && !uploading">
-        <img [src]="currentImageUrl" [alt]="alt" class="preview-image">
+        <img [src]="currentImageUrl | resolveStorageUrl | async" [alt]="alt" class="preview-image">
         <div class="image-overlay">
           <button mat-icon-button color="warn" (click)="removeImage()" 
                   [disabled]="uploading" title="Remove image">
@@ -184,11 +187,12 @@ export class ImageUploadComponent implements OnInit {
 
   constructor(
     private storage: Storage,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private storageUrlService: StorageUrlService
   ) {}
 
   ngOnInit() {
-    // Component initialization
+    // Component initialization - pipe handles URL resolution automatically
   }
 
   async onFileSelected(event: any) {
@@ -227,16 +231,14 @@ export class ImageUploadComponent implements OnInit {
       clearInterval(progressInterval);
       this.uploadProgress = 100;
 
-      // Get download URL
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
       // Remove old image if exists
       if (this.currentImageUrl && this.currentImageUrl.includes('firebase')) {
         await this.deleteOldImage(this.currentImageUrl);
       }
 
-      this.currentImageUrl = downloadURL;
-      this.imageUploaded.emit(downloadURL);
+      // Always use object paths
+      this.currentImageUrl = filePath; // Store object path
+      this.imageUploaded.emit(filePath); // Emit object path
       
       this.snackBar.open('Image uploaded successfully!', 'Close', { duration: 3000 });
       
@@ -251,7 +253,7 @@ export class ImageUploadComponent implements OnInit {
     }
   }
 
-  setImageFromUrl(url: string) {
+  async setImageFromUrl(url: string) {
     if (!url.trim()) {
       this.snackBar.open('Please enter a valid URL', 'Close', { duration: 3000 });
       return;
@@ -260,8 +262,18 @@ export class ImageUploadComponent implements OnInit {
     // Basic URL validation
     try {
       new URL(url);
-      this.currentImageUrl = url;
-      this.imageUploaded.emit(url);
+      
+      if (this.storageUrlService.extractPathFromUrl(url) !== url) {
+        // If it's a Firebase Storage URL, extract the path
+        const objectPath = this.storageUrlService.extractPathFromUrl(url);
+        this.currentImageUrl = objectPath;
+        this.imageUploaded.emit(objectPath);
+      } else {
+        // Otherwise use the URL as-is (for external URLs)
+        this.currentImageUrl = url;
+        this.imageUploaded.emit(url);
+      }
+      
       this.snackBar.open('Image URL set successfully!', 'Close', { duration: 3000 });
     } catch {
       this.snackBar.open('Invalid URL format', 'Close', { duration: 3000 });

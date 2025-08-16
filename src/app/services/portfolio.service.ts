@@ -166,11 +166,28 @@ export class PortfolioService {
     return await getDownloadURL(snapshot.ref);
   }
 
+  // Upload image and return object path instead of absolute URL
+  async uploadImageReturnPath(file: File, path: string): Promise<string> {
+    const storageRef = ref(this.storage, path);
+    await uploadBytes(storageRef, file);
+    return path; // Return the object path, not the download URL
+  }
+
   // Upload multiple images for gallery
   async uploadGalleryImages(files: File[], portfolioId: string): Promise<string[]> {
     const uploadPromises = files.map((file, index) => {
       const path = `portfolio/gallery/${portfolioId}_${index}_${file.name}`;
       return this.uploadImage(file, path);
+    });
+    
+    return Promise.all(uploadPromises);
+  }
+
+  // Upload multiple images and return object paths instead of absolute URLs
+  async uploadGalleryImagesReturnPaths(files: File[], portfolioId: string): Promise<string[]> {
+    const uploadPromises = files.map((file, index) => {
+      const path = `portfolio/gallery/${portfolioId}_${index}_${file.name}`;
+      return this.uploadImageReturnPath(file, path);
     });
     
     return Promise.all(uploadPromises);

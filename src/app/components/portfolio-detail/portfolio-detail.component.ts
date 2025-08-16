@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { MetaService } from '../../services/meta.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-portfolio-detail',
@@ -14,7 +15,8 @@ import { PageHeaderComponent } from '../shared/page-header.component';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    PageHeaderComponent
+    PageHeaderComponent,
+    ResolveStorageUrlPipe
   ],
   templateUrl: './portfolio-detail.component.html',
   styleUrl: './portfolio-detail.component.scss'

@@ -8,11 +8,12 @@ import { MetaService } from '../../services/meta.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, PageHeaderComponent],
+  imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

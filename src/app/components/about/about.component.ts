@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { AboutService, AboutSection } from '../../services/about.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, PageHeaderComponent],
+  imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe],
   template: `
     <div class="about-container">
       <app-page-header></app-page-header>
@@ -24,7 +25,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
             <div class="section-text" [innerHTML]="formatContent(section.content)"></div>
           </div>
           <div *ngIf="section.image" class="section-image">
-            <img [src]="section.image" [alt]="section.title" />
+            <img [src]="section.image | resolveStorageUrl | async" [alt]="section.title" />
           </div>
         </section>
         

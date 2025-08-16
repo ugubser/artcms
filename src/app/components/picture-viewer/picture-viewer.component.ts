@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { MetaService } from '../../services/meta.service';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-picture-viewer',
@@ -13,7 +14,8 @@ import { MetaService } from '../../services/meta.service';
     CommonModule,
     RouterModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    ResolveStorageUrlPipe
   ],
   templateUrl: './picture-viewer.component.html',
   styleUrl: './picture-viewer.component.scss'

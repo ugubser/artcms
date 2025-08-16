@@ -23,6 +23,7 @@ import { AboutEditDialogComponent } from './dialogs/about-edit-dialog.component'
 import { ContactEditDialogComponent } from './dialogs/contact-edit-dialog.component';
 import { SettingsEditDialogComponent } from './dialogs/settings-edit-dialog.component';
 import { PortfolioPagesEditDialogComponent } from './dialogs/portfolio-pages-edit-dialog.component';
+import { ResolveStorageUrlPipe } from '../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-cms',
@@ -41,7 +42,8 @@ import { PortfolioPagesEditDialogComponent } from './dialogs/portfolio-pages-edi
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatDialogModule
+    MatDialogModule,
+    ResolveStorageUrlPipe
   ],
   template: `
     <div class="cms-wrapper">
@@ -67,7 +69,7 @@ import { PortfolioPagesEditDialogComponent } from './dialogs/portfolio-pages-edi
                   <mat-card-title>{{ item.title }}</mat-card-title>
                   <mat-card-subtitle>{{ item.category }}</mat-card-subtitle>
                 </mat-card-header>
-                <img mat-card-image [src]="item.featuredImage" [alt]="item.title" *ngIf="item.featuredImage">
+                <img mat-card-image [src]="item.featuredImage | resolveStorageUrl | async" [alt]="item.title" *ngIf="item.featuredImage">
                 <mat-card-content>
                   <p>{{ item.description }}</p>
                   <p><strong>Status:</strong> {{ item.published ? 'Published' : 'Draft' }}</p>
@@ -115,7 +117,7 @@ import { PortfolioPagesEditDialogComponent } from './dialogs/portfolio-pages-edi
                   <mat-card-title>{{ page.title }}</mat-card-title>
                   <mat-card-subtitle>{{ page.slug }}</mat-card-subtitle>
                 </mat-card-header>
-                <img mat-card-image [src]="page.featuredImage" [alt]="page.title" *ngIf="page.featuredImage">
+                <img mat-card-image [src]="page.featuredImage | resolveStorageUrl | async" [alt]="page.title" *ngIf="page.featuredImage">
                 <mat-card-content>
                   <p>{{ page.excerpt }}</p>
                   <p><strong>Status:</strong> {{ page.published ? 'Published' : 'Draft' }}</p>
@@ -162,7 +164,7 @@ import { PortfolioPagesEditDialogComponent } from './dialogs/portfolio-pages-edi
                   <mat-card-title>{{ section.title }}</mat-card-title>
                   <mat-card-subtitle>Order: {{ section.order }}</mat-card-subtitle>
                 </mat-card-header>
-                <img mat-card-image [src]="section.image" [alt]="section.title" *ngIf="section.image">
+                <img mat-card-image [src]="section.image | resolveStorageUrl | async" [alt]="section.title" *ngIf="section.image">
                 <mat-card-content>
                   <div [innerHTML]="section.content"></div>
                 </mat-card-content>

@@ -9,7 +9,7 @@
   <mat-dialog-content class="portfolio-content">
     <!-- Featured Image -->
     <div class="featured-image" *ngIf="data.featuredImage">
-      <img [src]="data.featuredImage" [alt]="data.title" (click)="openImageViewer(data.featuredImage, 0)">
+      <img [src]="data.featuredImage | resolveStorageUrl | async" [alt]="data.title" (click)="openImageViewer(data.featuredImage, 0)">
     </div>
 
     <!-- Portfolio Info -->
@@ -27,7 +27,7 @@
           <div *ngFor="let picture of gallery.pictures; let i = index" 
                class="gallery-item"
                (click)="openImageViewer(picture.imageUrl, galleryIndex * 100 + i + 1)">
-            <img [src]="picture.imageUrl" [alt]="picture.alt || data.title + ' - Image ' + (i + 1)">
+            <img [src]="picture.imageUrl | resolveStorageUrl | async" [alt]="picture.alt || data.title + ' - Image ' + (i + 1)">
             <div class="gallery-overlay">
               <mat-icon>zoom_in</mat-icon>
             </div>
@@ -56,7 +56,7 @@
         </button>
         
         <div class="image-container">
-          <img [src]="selectedImageUrl" [alt]="currentImageData?.alt || data.title">
+          <img [src]="selectedImageUrl | resolveStorageUrl | async" [alt]="currentImageData?.alt || data.title">
           <div class="image-description" *ngIf="currentImageData?.description">
             {{ currentImageData?.description }}
           </div>

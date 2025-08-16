@@ -4,6 +4,7 @@ import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortfolioItem } from '../../services/portfolio.service';
+import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-portfolio-detail-dialog',
@@ -12,7 +13,8 @@ import { PortfolioItem } from '../../services/portfolio.service';
     CommonModule,
     MatDialogModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    ResolveStorageUrlPipe
   ],
   templateUrl: './portfolio-detail-dialog.component.html',
   styleUrl: './portfolio-detail-dialog.component.scss',
