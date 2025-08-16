@@ -39,7 +39,6 @@ testem.log
 /typings
 hardcoded-values-analysis.md
 
-
 # System files
 .DS_Store
 Thumbs.db
@@ -55,6 +54,7 @@ functions/lib/
 # Firebase emulator logs and cache
 firebase-export-*
 .firebase-export-*
+.firebaserc
 
 # Package manager lock files
 yarn.lock
