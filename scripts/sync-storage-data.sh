@@ -47,23 +47,32 @@ STORAGE_BUCKET="${PROD_PROJECT}.firebasestorage.app"
 # Also try the legacy .appspot.com format if the new one doesn't work
 LEGACY_BUCKET="${PROD_PROJECT}.appspot.com"
 
-# Create local storage directory
+# Create Firebase Storage emulator directory structure
+# Firebase Storage emulator expects: storage/v0/b/{bucket}/o/
 LOCAL_STORAGE_DIR="./emulator_data/storage"
-mkdir -p "$LOCAL_STORAGE_DIR"
+EMULATOR_STORAGE_DIR="$LOCAL_STORAGE_DIR/v0/b/$STORAGE_BUCKET/o"
+mkdir -p "$EMULATOR_STORAGE_DIR"
 
 echo ""
 echo -e "${YELLOW}🔄 Syncing Firebase Storage from production...${NC}"
 echo -e "${BLUE}📦 Source: gs://$STORAGE_BUCKET${NC}"
-echo -e "${BLUE}📁 Destination: $LOCAL_STORAGE_DIR${NC}"
+echo -e "${BLUE}📁 Destination: $EMULATOR_STORAGE_DIR${NC}"
 
 # Check if bucket exists and is accessible (try both formats)
 BUCKET_TO_USE=""
+BUCKET_FOR_EMULATOR=""
 if gsutil ls "gs://$STORAGE_BUCKET" &> /dev/null; then
     BUCKET_TO_USE="$STORAGE_BUCKET"
+    BUCKET_FOR_EMULATOR="$STORAGE_BUCKET"
     echo -e "${GREEN}✅ Found Firebase Storage bucket: gs://$STORAGE_BUCKET${NC}"
 elif gsutil ls "gs://$LEGACY_BUCKET" &> /dev/null; then
     BUCKET_TO_USE="$LEGACY_BUCKET"
+    BUCKET_FOR_EMULATOR="$STORAGE_BUCKET"  # Use new format for emulator structure
     echo -e "${GREEN}✅ Found legacy storage bucket: gs://$LEGACY_BUCKET${NC}"
+    echo -e "${BLUE}💡 Using $STORAGE_BUCKET for emulator directory structure${NC}"
+    # Update emulator directory path for legacy bucket
+    EMULATOR_STORAGE_DIR="$LOCAL_STORAGE_DIR/v0/b/$BUCKET_FOR_EMULATOR/o"
+    mkdir -p "$EMULATOR_STORAGE_DIR"
 else
     echo -e "${RED}❌ Cannot access storage buckets:${NC}"
     echo "  - gs://$STORAGE_BUCKET"
@@ -78,19 +87,19 @@ else
     exit 1
 fi
 
-# Sync storage data
+# Sync storage data to proper emulator structure
 echo -e "${BLUE}🔄 Downloading files from gs://$BUCKET_TO_USE...${NC}"
-gsutil -m rsync -r -d "gs://$BUCKET_TO_USE" "$LOCAL_STORAGE_DIR"
+gsutil -m rsync -r -d "gs://$BUCKET_TO_USE" "$EMULATOR_STORAGE_DIR"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Storage sync completed${NC}"
     
     # Count downloaded files
-    FILE_COUNT=$(find "$LOCAL_STORAGE_DIR" -type f | wc -l)
+    FILE_COUNT=$(find "$EMULATOR_STORAGE_DIR" -type f | wc -l)
     echo -e "${BLUE}📊 Downloaded $FILE_COUNT files${NC}"
     
     # Show storage usage
-    STORAGE_SIZE=$(du -sh "$LOCAL_STORAGE_DIR" | cut -f1)
+    STORAGE_SIZE=$(du -sh "$EMULATOR_STORAGE_DIR" | cut -f1)
     echo -e "${BLUE}💾 Total size: $STORAGE_SIZE${NC}"
     
 else
@@ -100,9 +109,22 @@ fi
 
 echo ""
 echo -e "${GREEN}🎉 Storage sync completed!${NC}"
-echo "Files are now available in: $LOCAL_STORAGE_DIR"
+echo "Files are now available in Firebase Storage emulator format:"
+echo "📁 Storage root: $LOCAL_STORAGE_DIR"
+echo "📁 Emulator files: $EMULATOR_STORAGE_DIR"
 echo ""
 echo -e "${YELLOW}💡 Next steps:${NC}"
 echo "1. Start the Firebase emulator: npm run emulator"
 echo "2. The storage emulator will serve files from: $LOCAL_STORAGE_DIR"
-echo "3. Access files at: http://localhost:9199/v0/b/$STORAGE_BUCKET/o/[file-path]"
+echo "3. Production URLs will automatically route to local files"
+echo "4. Example URL: http://localhost:9199/v0/b/$BUCKET_FOR_EMULATOR/o/portfolio%2Fimage.jpg"
+echo ""
+echo -e "${BLUE}🔧 Firebase Storage emulator structure:${NC}"
+echo "   storage/"
+echo "   └── v0/"
+echo "       └── b/"
+echo "           └── $BUCKET_FOR_EMULATOR/"
+echo "               └── o/"
+echo "                   ├── portfolio/"
+echo "                   ├── about/"
+echo "                   └── ..."

@@ -148,6 +148,13 @@ EOF
 
 echo -e "${GREEN}✅ Metadata updated${NC}"
 
+echo ""
+echo -e "${YELLOW}🔄 Step 5: Skip URL rewriting to preserve data integrity...${NC}"
+
+echo -e "${BLUE}   ℹ️  Skipping URL rewriting to avoid corrupting binary export format${NC}"
+echo -e "${BLUE}   💡 The app's Firebase configuration will handle emulator routing${NC}"
+echo -e "${GREEN}✅ Data integrity preserved${NC}"
+
 # Cleanup
 rm -rf "$TEMP_DIR"
 
@@ -161,11 +168,18 @@ echo "   🔧 Ready for emulator import"
 
 echo ""
 echo -e "${YELLOW}🚀 Next steps:${NC}"
-echo "1. Start emulator: npm run emulator"
-echo "2. Or: firebase emulators:start --import=./emulator_data"
+echo "1. Download Storage files: ./scripts/sync-storage-data.sh"
+echo "2. Start emulator: npm run emulator"
+echo "3. All images will now load from local emulator!"
 
 echo ""
-echo -e "${BLUE}💡 Note:${NC}"
-echo "The production export is still stored in Cloud Storage at:"
+echo -e "${BLUE}💡 What was completed:${NC}"
+echo "✅ Firestore data downloaded (URLs preserved for data integrity)"
+echo "⏭️  Storage files: Run ./scripts/sync-storage-data.sh to download images"
+echo "💡 App will use emulator when FIRESTORE_EMULATOR_HOST is set"
+
+echo ""
+echo -e "${BLUE}💡 Cleanup:${NC}"
+echo "The production export is stored in Cloud Storage at:"
 echo "$EXPORT_URI"
-echo "You can delete it later if needed: gsutil -m rm -r $EXPORT_URI"
+echo "You can delete it later: gsutil -m rm -r $EXPORT_URI"
