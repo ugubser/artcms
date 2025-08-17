@@ -47,10 +47,10 @@ STORAGE_BUCKET="${PROD_PROJECT}.firebasestorage.app"
 # Also try the legacy .appspot.com format if the new one doesn't work
 LEGACY_BUCKET="${PROD_PROJECT}.appspot.com"
 
-# Create Firebase Storage emulator directory structure
-# Firebase Storage emulator expects: storage/v0/b/{bucket}/o/
-LOCAL_STORAGE_DIR="./emulator_data/storage"
-EMULATOR_STORAGE_DIR="$LOCAL_STORAGE_DIR/v0/b/$STORAGE_BUCKET/o"
+# Create Firebase Storage download directory (outside emulator_data to avoid deletion)
+# Download to persistent storage/ directory
+LOCAL_STORAGE_DIR="./storage"
+EMULATOR_STORAGE_DIR="$LOCAL_STORAGE_DIR"
 mkdir -p "$EMULATOR_STORAGE_DIR"
 
 echo ""
@@ -70,9 +70,6 @@ elif gsutil ls "gs://$LEGACY_BUCKET" &> /dev/null; then
     BUCKET_FOR_EMULATOR="$STORAGE_BUCKET"  # Use new format for emulator structure
     echo -e "${GREEN}✅ Found legacy storage bucket: gs://$LEGACY_BUCKET${NC}"
     echo -e "${BLUE}💡 Using $STORAGE_BUCKET for emulator directory structure${NC}"
-    # Update emulator directory path for legacy bucket
-    EMULATOR_STORAGE_DIR="$LOCAL_STORAGE_DIR/v0/b/$BUCKET_FOR_EMULATOR/o"
-    mkdir -p "$EMULATOR_STORAGE_DIR"
 else
     echo -e "${RED}❌ Cannot access storage buckets:${NC}"
     echo "  - gs://$STORAGE_BUCKET"
@@ -109,22 +106,19 @@ fi
 
 echo ""
 echo -e "${GREEN}🎉 Storage sync completed!${NC}"
-echo "Files are now available in Firebase Storage emulator format:"
-echo "📁 Storage root: $LOCAL_STORAGE_DIR"
-echo "📁 Emulator files: $EMULATOR_STORAGE_DIR"
+echo "Files are now available in persistent storage directory:"
+echo "📁 Storage directory: $LOCAL_STORAGE_DIR"
+echo "📁 Files: $EMULATOR_STORAGE_DIR"
 echo ""
 echo -e "${YELLOW}💡 Next steps:${NC}"
 echo "1. Start the Firebase emulator: npm run emulator"
-echo "2. The storage emulator will serve files from: $LOCAL_STORAGE_DIR"
-echo "3. Production URLs will automatically route to local files"
-echo "4. Example URL: http://localhost:9199/v0/b/$BUCKET_FOR_EMULATOR/o/portfolio%2Fimage.jpg"
+echo "2. Upload files to emulator: ./scripts/upload-storage-to-emulator.sh"
+echo "3. Files will be available in the emulator"
 echo ""
-echo -e "${BLUE}🔧 Firebase Storage emulator structure:${NC}"
-echo "   storage/"
-echo "   └── v0/"
-echo "       └── b/"
-echo "           └── $BUCKET_FOR_EMULATOR/"
-echo "               └── o/"
-echo "                   ├── portfolio/"
-echo "                   ├── about/"
-echo "                   └── ..."
+echo -e "${BLUE}🔧 Storage structure:${NC}"
+echo "   storage/ (persistent, protected from emulator export)"
+echo "   ├── portfolio/"
+echo "   ├── about/"
+echo "   └── ..."
+echo ""
+echo -e "${GREEN}✅ Files protected from emulator export/import cycles${NC}"

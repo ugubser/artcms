@@ -15,7 +15,7 @@ This guide explains how to sync production data (Firestore + Storage) to your lo
 
 ## Quick Start
 
-### Option 1: Sync Everything (Recommended)
+### Option 1: Automated Sync (Recommended)
 ```bash
 ./scripts/sync-all-production-data.sh
 ```
@@ -23,39 +23,61 @@ This guide explains how to sync production data (Firestore + Storage) to your lo
 This will:
 1. Export Firestore data from production
 2. Download Storage files (if gsutil available)
-3. Start emulator with production data
+3. Start emulator automatically
+4. Upload storage files to running emulator
+5. Keep emulator running with all production data
 
-### Option 2: Individual Components
+### Option 2: Manual Process (Step by Step)
 
-**Firestore only:**
+**Step 1: Sync Firestore Data**
 ```bash
-./scripts/sync-production-data.sh
+./scripts/sync-production-gcloud.sh
 ```
 
-**Storage only:**
+**Step 2: Download Storage Files**
 ```bash
 ./scripts/sync-storage-data.sh
+```
+
+**Step 3: Start Emulator**
+```bash
+npm run emulator
+```
+
+**Step 4: Upload Storage Files to Emulator**
+```bash
+# In a new terminal window
+./scripts/upload-storage-to-emulator.sh
 ```
 
 ## How It Works
 
 ### Firestore Data
-1. Uses `firebase firestore:export` to export production data
-2. Imports data into emulator using `firebase emulators:start --import`
-3. Data is saved to `./emulator_data/` for future use
+1. Uses `gcloud firestore export` to export production data to Cloud Storage
+2. Downloads exported data locally
+3. Imports data into emulator using `firebase emulators:start --import`
+4. Data is saved to `./emulator_data/` for future use
 
 ### Storage Data
-1. Uses `gsutil rsync` to download all files from production Storage
-2. Files are stored in `./emulator_data/storage/`
-3. Emulator serves files from this local directory
+1. **Download Phase**: Uses `gsutil rsync` to download all files from production Storage to `./storage/`
+2. **Upload Phase**: Uses Firebase Admin SDK to upload files to running emulator
+3. **Benefits**: 
+   - Files persist across emulator restarts
+   - Proper authentication handling
+   - Protected from emulator export/import cycles
 
 ## File Structure After Sync
 
 ```
-./emulator_data/
+./emulator_data/                # Emulator data (Firestore + Auth)
 ├── firestore_export/          # Firestore collections & documents
-├── storage/                   # All Firebase Storage files
+├── auth_export/               # Authentication data
 └── firebase-export-metadata.json
+
+./storage/                     # Downloaded storage files (persistent)
+├── portfolio/                 # Portfolio images
+├── about/                     # About page assets
+└── branding/                  # Brand assets
 ```
 
 ## Usage Scenarios
@@ -80,8 +102,17 @@ npm run emulator
 # Regular development (uses cached data)
 npm run emulator
 
+# Upload storage files (if not done automatically)
+./scripts/upload-storage-to-emulator.sh
+
 # Refresh when needed
 ./scripts/sync-all-production-data.sh
+```
+
+### 4. Manual Storage Upload (if needed)
+```bash
+# If emulator is already running and you have downloaded files
+./scripts/upload-storage-to-emulator.sh
 ```
 
 ## Troubleshooting
@@ -96,6 +127,12 @@ npm run emulator
 - **Authentication**: Run `gcloud auth login`
 - **Project access**: Run `gcloud config set project YOUR_PROJECT_ID`
 - **Bucket permissions**: Ensure you have Storage Object Viewer permissions
+
+### Storage Upload Fails
+- **Emulator not running**: Make sure `npm run emulator` is running first
+- **Files not downloaded**: Run `./scripts/sync-storage-data.sh` first
+- **Permission errors**: Storage upload uses Firebase Admin SDK and bypasses rules
+- **File path issues**: Ensure files are in `./storage/` directory
 
 ### Common Issues
 
@@ -124,12 +161,33 @@ gsutil ls
 gcloud config get-value project
 ```
 
+**Upload script can't find files:**
+```bash
+# Check if files were downloaded
+ls -la ./storage/
+
+# Re-download if needed
+./scripts/sync-storage-data.sh
+```
+
+**Emulator not accessible:**
+```bash
+# Check if emulator is running
+curl http://localhost:9199
+curl http://localhost:8080
+
+# Restart emulator if needed
+npm run emulator
+```
+
 ## Security Notes
 
 - ✅ **Safe**: All operations are read-only on production
-- ✅ **Isolated**: Emulator data is completely separate from production
+- ✅ **Isolated**: Emulator data is completely separate from production  
 - ✅ **Local**: Files are stored locally, no ongoing connection to production
+- ✅ **Admin SDK**: Storage uploads use Firebase Admin SDK with elevated privileges (appropriate for development)
 - ⚠️ **Sensitive data**: Be careful with downloaded production data
+- ⚠️ **Local files**: Add `storage/` to `.gitignore` to avoid committing production files
 
 ## Performance Tips
 
@@ -147,7 +205,10 @@ firebase firestore:export ./custom-export --collection-ids=portfolio,settings
 ### Storage Filtering
 ```bash
 # Sync only specific folders
-gsutil -m rsync -r gs://bucket-name/portfolio ./emulator_data/storage/portfolio
+gsutil -m rsync -r gs://bucket-name/portfolio ./storage/portfolio
+
+# Then upload to emulator
+./scripts/upload-storage-to-emulator.sh
 ```
 
 ## Script Customization
@@ -162,6 +223,11 @@ EXPORT_DIR="./custom-export-location"
 Edit `scripts/sync-storage-data.sh`:
 ```bash
 LOCAL_STORAGE_DIR="./custom-storage-location"
+```
+
+**Note**: If you change the storage directory, also update `scripts/upload-to-emulator.js`:
+```javascript
+const downloadDir = './custom-storage-location';
 ```
 
 ### Add Pre/Post Processing
