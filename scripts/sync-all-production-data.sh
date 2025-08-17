@@ -67,7 +67,7 @@ fi
 # Step 1: Sync Firestore data
 echo ""
 echo -e "${BLUE}🔄 Step 1: Syncing Firestore data...${NC}"
-./scripts/sync-production-data.sh &
+./scripts/sync-production-gcloud.sh &
 FIRESTORE_PID=$!
 
 # Step 2: Sync Storage data (if gsutil available)

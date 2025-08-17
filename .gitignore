@@ -38,6 +38,7 @@ yarn-error.log
 testem.log
 /typings
 hardcoded-values-analysis.md
+storage/
 
 # System files
 .DS_Store
