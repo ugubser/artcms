@@ -13,6 +13,13 @@ export interface Picture {
   dateCreated?: string; // Date when the artwork was created (YYYY-MM format)
   artMedium?: string; // e.g., "Acrylic on canvas", "Digital painting", "Oil on canvas"
   genre?: string; // e.g., "Abstract expressionism", "Landscape", "Portrait"
+  dimensions?: {
+    width: number; // Width in units (cm, inches, etc.)
+    height: number; // Height in units (cm, inches, etc.)
+  };
+  price?: number; // Price in base currency
+  sold?: boolean; // Whether the piece is sold (default: false)
+  showPrice?: boolean; // Whether to display the price (default: false)
 }
 
 export interface GalleryEntry {
@@ -155,7 +162,14 @@ export class PortfolioService {
       order: 0,
       dateCreated: '',
       artMedium: '',
-      genre: ''
+      genre: '',
+      dimensions: {
+        width: 0,
+        height: 0
+      },
+      price: 0,
+      sold: false,
+      showPrice: false
     };
   }
 

@@ -87,8 +87,26 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
     // Set featured image
     this.currentFeaturedImage = item.featuredImage || null;
     
-    // Set galleries
+    // Set galleries and ensure proper initialization
     this.galleries = item.galleries ? [...item.galleries] : [];
+    
+    // Ensure all pictures have the new fields properly initialized
+    this.galleries.forEach(gallery => {
+      gallery.pictures.forEach(picture => {
+        if (!picture.dimensions) {
+          picture.dimensions = { width: 0, height: 0 };
+        }
+        if (picture.price === undefined) {
+          picture.price = 0;
+        }
+        if (picture.sold === undefined) {
+          picture.sold = false;
+        }
+        if (picture.showPrice === undefined) {
+          picture.showPrice = false;
+        }
+      });
+    });
     
     // Ensure at least one gallery
     if (this.galleries.length === 0) {
@@ -126,6 +144,10 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   addPictureToGallery(galleryIndex: number) {
     const newPicture = this.portfolioService.createEmptyPicture();
     newPicture.order = this.galleries[galleryIndex].pictures.length;
+    // Ensure dimensions object is initialized
+    if (!newPicture.dimensions) {
+      newPicture.dimensions = { width: 0, height: 0 };
+    }
     this.galleries[galleryIndex].pictures.push(newPicture);
   }
 

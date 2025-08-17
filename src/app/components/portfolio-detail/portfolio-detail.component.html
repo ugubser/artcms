@@ -67,6 +67,49 @@
           <p class="viewer-description" *ngIf="currentImageData?.galleryDescription">
             {{ currentImageData?.galleryDescription }}
           </p>
+          <p class="viewer-picture-description" *ngIf="currentImageData?.description">
+            {{ currentImageData?.description }}
+          </p>
+          
+          <!-- Artwork Details -->
+          <div class="artwork-details" *ngIf="currentImageData && (currentImageData.dimensions || currentImageData.price || currentImageData.sold || currentImageData.dateCreated || currentImageData.artMedium || currentImageData.genre)">
+            <h3>Artwork Details</h3>
+            
+            <!-- Date Created -->
+            <div class="detail-item" *ngIf="currentImageData.dateCreated">
+              <span class="detail-label">Created:</span>
+              <span class="detail-value">{{ currentImageData.dateCreated }}</span>
+            </div>
+            
+            <!-- Art Medium -->
+            <div class="detail-item" *ngIf="currentImageData.artMedium">
+              <span class="detail-label">Medium:</span>
+              <span class="detail-value">{{ currentImageData.artMedium }}</span>
+            </div>
+            
+            <!-- Genre -->
+            <div class="detail-item" *ngIf="currentImageData.genre">
+              <span class="detail-label">Genre:</span>
+              <span class="detail-value">{{ currentImageData.genre }}</span>
+            </div>
+            
+            <!-- Dimensions -->
+            <div class="detail-item" *ngIf="currentImageData.dimensions && (currentImageData.dimensions.width > 0 || currentImageData.dimensions.height > 0)">
+              <span class="detail-label">Dimensions:</span>
+              <span class="detail-value">{{ currentImageData.dimensions.width }} × {{ currentImageData.dimensions.height }} cm</span>
+            </div>
+            
+            <!-- Price -->
+            <div class="detail-item" *ngIf="currentImageData.showPrice && currentImageData.price && currentImageData.price > 0">
+              <span class="detail-label">Price:</span>
+              <span class="detail-value">${{ currentImageData.price | number:'1.2-2' }}</span>
+            </div>
+            
+            <!-- Sold status -->
+            <div class="detail-item" *ngIf="currentImageData.sold">
+              <span class="sold-badge">SOLD</span>
+            </div>
+          </div>
         </div>
       </div>
       

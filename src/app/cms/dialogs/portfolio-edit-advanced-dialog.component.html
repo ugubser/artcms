@@ -182,6 +182,43 @@
                           </mat-form-field>
                         </div>
 
+                        <div class="artwork-details-fields">
+                          <h5>Artwork Details</h5>
+                          
+                          <div class="dimensions-row">
+                            <mat-form-field appearance="outline" class="dimension-field">
+                              <mat-label>Width</mat-label>
+                              <input matInput type="number" [(ngModel)]="picture.dimensions!.width" 
+                                     placeholder="0" min="0" step="0.1">
+                              <mat-hint>Width in cm/inches</mat-hint>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" class="dimension-field">
+                              <mat-label>Height</mat-label>
+                              <input matInput type="number" [(ngModel)]="picture.dimensions!.height" 
+                                     placeholder="0" min="0" step="0.1">
+                              <mat-hint>Height in cm/inches</mat-hint>
+                            </mat-form-field>
+                          </div>
+
+                          <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Price</mat-label>
+                            <input matInput type="number" [(ngModel)]="picture.price" 
+                                   placeholder="0" min="0" step="0.01">
+                            <mat-hint>Price in your base currency</mat-hint>
+                          </mat-form-field>
+
+                          <div class="checkbox-row">
+                            <mat-checkbox [(ngModel)]="picture.sold">
+                              Sold
+                            </mat-checkbox>
+
+                            <mat-checkbox [(ngModel)]="picture.showPrice">
+                              Show Price
+                            </mat-checkbox>
+                          </div>
+                        </div>
+
                         <div class="picture-actions">
                           <mat-form-field appearance="outline" class="order-field">
                             <mat-label>Order</mat-label>

@@ -27,8 +27,8 @@ export class PortfolioDetailComponent implements OnInit {
   currentImageIndex = 0;
   totalImages = 0;
   allImages: string[] = [];
-  allImageData: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string }[] = [];
-  currentImageData: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string } | null = null;
+  allImageData: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string }[] = [];
+  currentImageData: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string } | null = null;
   isLoading = true;
 
   constructor(
@@ -78,7 +78,14 @@ export class PortfolioDetailComponent implements OnInit {
               description: picture.description,
               alt: picture.alt || this.portfolioItem!.title,
               galleryTitle: gallery.title,
-              galleryDescription: gallery.description
+              galleryDescription: gallery.description,
+              dimensions: picture.dimensions,
+              price: picture.price,
+              sold: picture.sold,
+              showPrice: picture.showPrice,
+              dateCreated: picture.dateCreated,
+              artMedium: picture.artMedium,
+              genre: picture.genre
             });
           });
         }

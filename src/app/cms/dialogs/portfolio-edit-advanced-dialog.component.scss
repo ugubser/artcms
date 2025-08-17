@@ -136,6 +136,33 @@ h5 {
   }
 }
 
+.artwork-details-fields {
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  
+  h5 {
+    margin-bottom: 1rem;
+    color: #666;
+  }
+}
+
+.dimensions-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dimension-field {
+  flex: 1;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
 mat-dialog-actions {
   padding: 1rem 0 0 0;
 }
