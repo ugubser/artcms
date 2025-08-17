@@ -214,9 +214,9 @@ gsutil -m rsync -r gs://bucket-name/portfolio ./storage/portfolio
 ## Script Customization
 
 ### Modify Export Location
-Edit `scripts/sync-production-data.sh`:
+Edit `scripts/sync-production-gcloud.sh`:
 ```bash
-EXPORT_DIR="./custom-export-location"
+FINAL_DIR="./custom-export-location"
 ```
 
 ### Change Storage Directory
