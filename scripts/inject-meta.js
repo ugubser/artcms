@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Meta Data Injection & SEO Files Generation Script
+ * Meta Data Injection & SEO Files Generation Script - Production Version
  * 
  * This script fetches site settings and portfolio data from production Firestore
  * and generates multiple SEO-related files before building:
@@ -9,10 +9,11 @@
  * - src/index.html (from template with injected meta data)
  * - src/robots.txt (search engine crawler instructions)
  * - src/sitemap.xml (XML sitemap for search engines)
- * - src/sitemap.html (human-readable sitemap)
+ * - src/sitemap.html (human-readable sitemap with structured data)
  * 
- * The script fetches published portfolio items and includes them in the sitemaps
- * along with static pages (home, art, design, about, contact).
+ * The script fetches published portfolio items and includes them in the static sitemaps
+ * along with static pages (home, art, design, about, contact). Static sitemaps are
+ * crawler-friendly and include Schema.org structured data for all artworks.
  * 
  * Usage: node scripts/inject-meta.js
  */
@@ -435,6 +436,397 @@ Sitemap: ${siteSettings.siteUrl}/sitemap.xml
   return content;
 }
 
+function generateSitemapXml(siteSettings, portfolioItems) {
+  const baseUrl = siteSettings.siteUrl.endsWith('/') ? siteSettings.siteUrl.slice(0, -1) : siteSettings.siteUrl;
+  const now = new Date().toISOString();
+  
+  // Static pages with priorities
+  const staticPages = [
+    { url: `${baseUrl}/home`, priority: '1.0', changefreq: 'weekly' },
+    { url: `${baseUrl}/art`, priority: '0.9', changefreq: 'weekly' },
+    { url: `${baseUrl}/design`, priority: '0.9', changefreq: 'weekly' },
+    { url: `${baseUrl}/about`, priority: '0.8', changefreq: 'monthly' },
+    { url: `${baseUrl}/contact`, priority: '0.7', changefreq: 'monthly' }
+  ];
+  
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+
+  // Add static pages
+  staticPages.forEach(page => {
+    xml += `  <url>
+    <loc>${escapeXml(page.url)}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>
+`;
+  });
+
+  // Add portfolio pages and individual gallery items
+  portfolioItems.forEach(item => {
+    let lastmod;
+    try {
+      if (item.createdAt instanceof Date) {
+        lastmod = item.createdAt.toISOString();
+      } else if (item.createdAt && typeof (item.createdAt).toDate === 'function') {
+        // Firestore Timestamp object
+        lastmod = item.createdAt.toDate().toISOString();
+      } else if (item.createdAt) {
+        lastmod = new Date(item.createdAt).toISOString();
+      } else {
+        lastmod = now;
+      }
+    } catch (error) {
+      // Fallback to current time if date conversion fails
+      lastmod = now;
+    }
+    
+    // Add portfolio item page
+    xml += `  <url>
+    <loc>${escapeXml(baseUrl)}/portfolio/${escapeXml(item.id || '')}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    
+    // Add gallery and individual gallery items
+    if (item.galleries && item.galleries.length > 0) {
+      item.galleries.forEach((gallery, galleryIndex) => {
+        // Add gallery page URL
+        xml += `  <url>
+    <loc>${escapeXml(baseUrl)}/portfolio/${escapeXml(item.id || '')}/galleries/${galleryIndex}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+        
+        // Add individual picture URLs
+        if (gallery.pictures && gallery.pictures.length > 0) {
+          gallery.pictures.forEach((picture, pictureIndex) => {
+            if (picture.imageUrl) {
+              xml += `  <url>
+    <loc>${escapeXml(baseUrl)}/portfolio/${escapeXml(item.id || '')}/galleries/${galleryIndex}/pictures/${pictureIndex}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+            }
+          });
+        }
+      });
+    }
+  });
+
+  xml += `</urlset>`;
+  return xml;
+}
+
+function generateSitemapHtml(siteSettings, portfolioItems) {
+  const lastUpdated = new Date().toISOString();
+  
+  log('blue', `📋 Generating sitemap HTML for ${portfolioItems.length} portfolio items...`);
+  
+  // Generate structured data for all portfolio artworks
+  const artworkSchemas = [];
+  portfolioItems.forEach(item => {
+    log('blue', `   📁 Processing portfolio item: ${item.title} with ${item.galleries?.length || 0} galleries`);
+    if (item.galleries && item.galleries.length > 0) {
+      item.galleries.forEach((gallery, galleryIndex) => {
+        log('blue', `     📂 Gallery ${galleryIndex}: ${gallery.description} with ${gallery.pictures?.length || 0} pictures`);
+        if (gallery.pictures && gallery.pictures.length > 0) {
+          gallery.pictures.forEach((picture, pictureIndex) => {
+            log('blue', `       🖼️ Picture ${pictureIndex}: imageUrl="${picture.imageUrl}"`);
+            if (picture.imageUrl) {
+              const artworkSchema = {
+                "@context": "https://schema.org",
+                "@type": "Painting",
+                "name": picture.description || picture.alt || `Artwork from ${item.title}`,
+                "creator": {
+                  "@type": "Person",
+                  "name": siteSettings.artistName || "Artist",
+                  "url": siteSettings.siteUrl
+                },
+                "image": picture.imageUrl
+              };
+              
+              // Add optional fields if they exist
+              if (picture.dateCreated) {
+                artworkSchema.dateCreated = picture.dateCreated;
+              }
+              if (picture.artMedium) {
+                artworkSchema.artMedium = picture.artMedium;
+              }
+              if (picture.genre) {
+                artworkSchema.genre = picture.genre;
+              }
+              if (picture.description && picture.description.trim() !== '') {
+                artworkSchema.description = picture.description;
+              }
+              
+              artworkSchemas.push(artworkSchema);
+              log('green', `       ✅ Added structured data for: ${artworkSchema.name}`);
+            } else {
+              log('yellow', `       ⚠️ Picture has empty imageUrl, skipping structured data`);
+            }
+          });
+        }
+      });
+    }
+  });
+  
+  log('blue', `📋 Generated ${artworkSchemas.length} artwork schemas`);
+  
+  if (artworkSchemas.length === 0) {
+    log('yellow', '⚠️ No artwork schemas generated - checking portfolio data...');
+    portfolioItems.forEach((item, index) => {
+      log('yellow', `   Portfolio ${index}: ${item.title}`);
+      if (item.galleries) {
+        item.galleries.forEach((gallery, galleryIndex) => {
+          log('yellow', `     Gallery ${galleryIndex}: ${gallery.description}`);
+          if (gallery.pictures) {
+            gallery.pictures.forEach((picture, pictureIndex) => {
+              log('yellow', `       Picture ${pictureIndex}: imageUrl="${picture.imageUrl || 'EMPTY'}"`);
+            });
+          } else {
+            log('yellow', '       No pictures array');
+          }
+        });
+      } else {
+        log('yellow', '     No galleries');
+      }
+    });
+  }
+  
+  let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap - ${siteSettings.siteName}</title>`;
+
+  // Add structured data for artworks
+  if (artworkSchemas.length > 0) {
+    artworkSchemas.forEach(schema => {
+      html += `
+    <script type="application/ld+json">
+${JSON.stringify(schema, null, 2)}
+    </script>`;
+    });
+  }
+
+  html += `
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 8px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .portfolio-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category {
+            background: #ecf0f1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: #2c3e50;
+        }
+        .galleries {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+        .gallery {
+            margin-bottom: 12px;
+        }
+        .gallery-title {
+            font-size: 0.9em;
+            color: #2c3e50;
+        }
+        .pictures {
+            margin: 4px 0 0 20px;
+            list-style: none;
+            padding: 0;
+        }
+        .pictures li {
+            margin: 4px 0;
+            border: none;
+            padding: 0;
+            font-size: 0.8em;
+        }
+        .picture-link {
+            text-decoration: none;
+            display: block;
+        }
+        .thumbnail {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            transition: transform 0.2s;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .thumbnail:hover {
+            transform: scale(1.1);
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="sitemap-container">
+        <h1>Sitemap for ${siteSettings.siteName}</h1>
+        <p class="description">${siteSettings.siteDescription}</p>
+
+        <h2>Main Pages</h2>
+        <ul class="main-pages">
+            <li><a href="/home">Home</a><div class="description">Main landing page</div></li>
+            <li><a href="/art">Art Portfolio</a><div class="description">Art and creative works</div></li>
+            <li><a href="/design">Design Portfolio</a><div class="description">Graphic design projects</div></li>
+            <li><a href="/about">About</a><div class="description">About the artist</div></li>
+            <li><a href="/contact">Contact</a><div class="description">Get in touch</div></li>
+        </ul>
+
+        <h2>Portfolio Items</h2>`;
+
+  if (portfolioItems.length > 0) {
+    html += `
+        <ul class="portfolio-items">`;
+    
+    portfolioItems.forEach(item => {
+      html += `
+            <li>
+                <div class="portfolio-item">
+                    <a href="/portfolio/${item.id}">${item.title}</a>
+                    <span class="category">${item.category}</span>
+                </div>`;
+      
+      // Gallery structure
+      if (item.galleries && item.galleries.length > 0) {
+        html += `
+                <div class="galleries">`;
+        
+        item.galleries.forEach((gallery, galleryIndex) => {
+          html += `
+                    <div class="gallery">
+                        <strong class="gallery-title">
+                            <a href="/portfolio/${item.id}/galleries/${galleryIndex}">
+                                📁 ${gallery.description || 'Gallery ' + (galleryIndex + 1)}
+                            </a>
+                        </strong>`;
+          
+          if (gallery.pictures && gallery.pictures.length > 0) {
+            html += `
+                        <ul class="pictures">`;
+            
+            gallery.pictures.forEach((picture, pictureIndex) => {
+              const altText = picture.alt || picture.description;
+              const displayText = picture.description || picture.alt;
+              
+              html += `
+                            <li>
+                                <a href="/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}" class="picture-link">
+                                    <img src="${picture.imageUrl || ''}"${altText ? ` 
+                                         alt="${altText}"` : ''} 
+                                         class="thumbnail">${displayText ? `
+                                    ${displayText}` : ''}
+                                </a>
+                            </li>`;
+            });
+            
+            html += `
+                        </ul>`;
+          }
+          
+          html += `
+                    </div>`;
+        });
+        
+        html += `
+                </div>`;
+      }
+      
+      html += `
+            </li>`;
+    });
+    
+    html += `
+        </ul>`;
+  } else {
+    html += `
+        <p class="description">No portfolio items available.</p>`;
+  }
+
+  html += `
+        
+        <div class="footer">
+            <div class="description">
+                Last updated: ${new Date(lastUpdated).toLocaleString()}
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+  return html;
+}
+
+function escapeXml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 
 async function main() {
   log('blue', '🔧 Injecting meta data and generating SEO files from Firestore...');
@@ -444,6 +836,8 @@ async function main() {
   const templateFile = path.join(process.cwd(), 'src/index.html.template');
   const indexFile = path.join(process.cwd(), 'src/index.html');
   const robotsFile = path.join(process.cwd(), 'src/robots.txt');
+  const sitemapXmlFile = path.join(process.cwd(), 'src/sitemap.xml');
+  const sitemapHtmlFile = path.join(process.cwd(), 'src/sitemap.html');
   
   // Check if .env.production exists
   if (!fs.existsSync(envFile)) {
@@ -485,11 +879,16 @@ async function main() {
   // Generate SEO files
   log('blue', '📋 Generating SEO files...');
   const robotsContent = generateRobotsTxt(siteSettings);
+  const sitemapXmlContent = generateSitemapXml(siteSettings, portfolioItems);
+  const sitemapHtmlContent = generateSitemapHtml(siteSettings, portfolioItems);
   
-  // Write all files (sitemaps are now dynamic Angular routes)
+  // Prepare files to write (now including static sitemaps)
+  log('blue', '📋 Preparing files (static sitemaps for crawler compatibility)...');
   const filesToWrite = [
     { path: indexFile, content: indexContent, name: 'index.html' },
-    { path: robotsFile, content: robotsContent, name: 'robots.txt' }
+    { path: robotsFile, content: robotsContent, name: 'robots.txt' },
+    { path: sitemapXmlFile, content: sitemapXmlContent, name: 'sitemap.xml' },
+    { path: sitemapHtmlFile, content: sitemapHtmlContent, name: 'sitemap.html' }
   ];
   
   try {
@@ -504,16 +903,16 @@ async function main() {
   }
   
   // Show summary
-  log('blue', '📋 Generated files summary:');
+  log('blue', '📋 Production files summary:');
   console.log(`   🏷️  Site Name: ${siteSettings.siteName}`);
   console.log(`   🌐 Site URL: ${siteSettings.siteUrl}`);
   console.log(`   📝 Description: ${siteSettings.siteDescription.substring(0, 50)}...`);
   console.log(`   🔍 Keywords: ${siteSettings.siteKeywords.substring(0, 60)}...`);
   console.log(`   📁 Portfolio Items: ${portfolioItems.length} published items`);
-  console.log(`   📄 Static Files Generated: 2 files (index.html, robots.txt)`);
-  console.log(`   🌐 Dynamic Sitemaps: Available at /sitemap.html and /sitemap.xml`);
+  console.log(`   📄 Static Files Generated: 4 files (index.html, robots.txt, sitemap.xml, sitemap.html)`);
+  console.log(`   🌐 Static Sitemaps: Available at /sitemap.html and /sitemap.xml (crawler-friendly)`);
   
-  log('green', '🎉 Meta data injection and SEO file generation completed successfully!');
+  log('green', '🎉 Production SEO file generation completed successfully!');
   
   // Clean up Firebase connection
   await admin.app().delete();

@@ -79,15 +79,11 @@ class StorageUrlResolver {
         console.log(`🔧 EMULATOR URL (Client SDK): ${url}`);
         return url;
       } else {
-        // For production: Use Firebase Admin SDK getSignedUrl
-        const bucket = admin.storage().bucket(this.bucket);
-        const file = bucket.file(path);
-        
-        const [url] = await file.getSignedUrl({
-          action: 'read',
-          expires: '03-09-2491' // Far future date
-        });
-        console.log(`🌐 PRODUCTION URL (Admin SDK): ${url}`);
+        // For production: Generate Firebase Storage public URL pattern
+        // This matches how the live application generates URLs
+        const encodedPath = encodeURIComponent(path);
+        const url = `https://firebasestorage.googleapis.com/v0/b/${this.bucket}/o/${encodedPath}?alt=media`;
+        console.log(`🌐 PRODUCTION URL (Public Pattern): ${url}`);
         return url;
       }
     } catch (error) {
