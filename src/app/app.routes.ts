@@ -11,6 +11,8 @@ export const routes: Routes = [
   { path: 'portfolio/:id/galleries/:galleryIndex/pictures/:pictureIndex', loadComponent: () => import('./components/picture-viewer/picture-viewer.component').then(m => m.PictureViewerComponent) },
   { path: 'about', loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent) },
   { path: 'contact', loadComponent: () => import('./components/contact/contact.component').then(m => m.ContactComponent) },
+  { path: 'sitemap.html', loadComponent: () => import('./components/sitemap-html/sitemap-html.component').then(m => m.SitemapHtmlComponent) },
+  { path: 'sitemap.xml', loadComponent: () => import('./components/sitemap-xml/sitemap-xml.component').then(m => m.SitemapXmlComponent) },
   { path: 'admin/login', loadComponent: () => import('./components/admin-login/admin-login.component').then(m => m.AdminLoginComponent) },
   { path: 'admin', component: CMSComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/home' }

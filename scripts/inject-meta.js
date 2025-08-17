@@ -20,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const admin = require('firebase-admin');
+const StorageUrlResolver = require('./storage-url-resolver');
 
 // Colors for console output
 const colors = {
@@ -154,7 +155,7 @@ async function fetchSiteSettings(db) {
   }
 }
 
-async function fetchPortfolioItems(db) {
+async function fetchPortfolioItems(db, urlResolver) {
   try {
     log('blue', '📋 Fetching portfolio items from Firestore...');
     
@@ -208,12 +209,26 @@ async function fetchPortfolioItems(db) {
           const galleryData = galleryDoc.data();
           
           if (galleryData.pictures && Array.isArray(galleryData.pictures)) {
+            // Resolve picture URLs
+            const resolvedPictures = await Promise.all(
+              galleryData.pictures.map(async (picture) => {
+                if (picture.imageUrl) {
+                  const resolvedUrl = await urlResolver.resolveUrl(picture.imageUrl);
+                  return {
+                    ...picture,
+                    imageUrl: resolvedUrl
+                  };
+                }
+                return picture;
+              })
+            );
+
             galleries.push({
               id: galleryDoc.id,
               description: galleryData.description || 'Gallery',
-              pictures: galleryData.pictures
+              pictures: resolvedPictures
             });
-            log('green', `   ✅ Added gallery ${galleryDoc.id} with ${galleryData.pictures.length} pictures`);
+            log('green', `   ✅ Added gallery ${galleryDoc.id} with ${resolvedPictures.length} pictures (URLs resolved)`);
           } else {
             log('yellow', `   ⚠️  Gallery ${galleryDoc.id} has no pictures array`);
           }
@@ -223,12 +238,34 @@ async function fetchPortfolioItems(db) {
         if (galleries.length === 0 && data.galleries) {
           log('blue', `   📋 Checking galleries field in main document`);
           if (Array.isArray(data.galleries)) {
-            galleries = data.galleries.map((gallery, index) => ({
-              id: `gallery-${index}`,
-              description: gallery.description || `Gallery ${index + 1}`,
-              pictures: gallery.pictures || []
-            }));
-            log('green', `   ✅ Found ${galleries.length} galleries in main document`);
+            galleries = await Promise.all(
+              data.galleries.map(async (gallery, index) => {
+                let resolvedPictures = gallery.pictures || [];
+                
+                // Resolve picture URLs if they exist
+                if (resolvedPictures.length > 0) {
+                  resolvedPictures = await Promise.all(
+                    resolvedPictures.map(async (picture) => {
+                      if (picture.imageUrl) {
+                        const resolvedUrl = await urlResolver.resolveUrl(picture.imageUrl);
+                        return {
+                          ...picture,
+                          imageUrl: resolvedUrl
+                        };
+                      }
+                      return picture;
+                    })
+                  );
+                }
+
+                return {
+                  id: `gallery-${index}`,
+                  description: gallery.description || `Gallery ${index + 1}`,
+                  pictures: resolvedPictures
+                };
+              })
+            );
+            log('green', `   ✅ Found ${galleries.length} galleries in main document (URLs resolved)`);
           }
         }
         
@@ -398,308 +435,6 @@ Sitemap: ${siteSettings.siteUrl}/sitemap.xml
   return content;
 }
 
-function generateSitemapXml(siteSettings, portfolioItems) {
-  const baseUrl = siteSettings.siteUrl.endsWith('/') 
-    ? siteSettings.siteUrl.slice(0, -1) 
-    : siteSettings.siteUrl;
-  
-  const now = new Date().toISOString();
-  
-  // Static pages with priorities
-  const staticPages = [
-    { url: `${baseUrl}/home`, priority: '1.0', changefreq: 'weekly' },
-    { url: `${baseUrl}/art`, priority: '0.9', changefreq: 'weekly' },
-    { url: `${baseUrl}/design`, priority: '0.9', changefreq: 'weekly' },
-    { url: `${baseUrl}/about`, priority: '0.8', changefreq: 'monthly' },
-    { url: `${baseUrl}/contact`, priority: '0.7', changefreq: 'monthly' }
-  ];
-  
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`;
-
-  // Add static pages
-  staticPages.forEach(page => {
-    xml += `  <url>
-    <loc>${page.url}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>
-`;
-  });
-
-  // Add portfolio pages and individual gallery items
-  portfolioItems.forEach(item => {
-    let lastmod;
-    try {
-      if (item.createdAt instanceof Date) {
-        lastmod = item.createdAt.toISOString();
-      } else if (item.createdAt && item.createdAt.toDate && typeof item.createdAt.toDate === 'function') {
-        // Firestore Timestamp object
-        lastmod = item.createdAt.toDate().toISOString();
-      } else if (item.createdAt) {
-        lastmod = new Date(item.createdAt).toISOString();
-      } else {
-        lastmod = now;
-      }
-    } catch (error) {
-      // Fallback to current time if date conversion fails
-      lastmod = now;
-    }
-    
-    // Add portfolio item page
-    xml += `  <url>
-    <loc>${baseUrl}/portfolio/${item.id}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
-    
-    // Add gallery and individual gallery items
-    if (item.galleries && item.galleries.length > 0) {
-      item.galleries.forEach((gallery, galleryIndex) => {
-        // Add gallery page URL
-        xml += `  <url>
-    <loc>${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-        
-        // Add individual picture URLs
-        if (gallery.pictures && gallery.pictures.length > 0) {
-          gallery.pictures.forEach((picture, pictureIndex) => {
-            if (picture.imageUrl) {
-              xml += `  <url>
-    <loc>${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-`;
-            }
-          });
-        }
-      });
-    }
-  });
-
-  xml += `</urlset>`;
-  return xml;
-}
-
-function generateArtworkStructuredData(siteSettings, portfolioItems) {
-  // Generate structured data for each artwork
-  const artworkSchemas = [];
-  
-  portfolioItems.forEach(item => {
-    if (item.galleries && item.galleries.length > 0) {
-      item.galleries.forEach((gallery, galleryIndex) => {
-        if (gallery.pictures && gallery.pictures.length > 0) {
-          gallery.pictures.forEach((picture, pictureIndex) => {
-            if (picture.imageUrl) {
-              // Create structured data for all pictures with images
-              const artworkSchema = {
-                "@context": "https://schema.org",
-                "@type": "Painting", // Default type - could be made more specific based on artMedium
-                "name": picture.description || picture.alt || `Artwork from ${item.title}`,
-                "creator": {
-                  "@type": "Person",
-                  "name": siteSettings.artistName || "Artist",
-                  "url": siteSettings.siteUrl
-                },
-                "image": picture.imageUrl
-              };
-              
-              // Add optional fields if they exist
-              if (picture.dateCreated) {
-                artworkSchema.dateCreated = picture.dateCreated;
-              }
-              
-              if (picture.artMedium) {
-                artworkSchema.artMedium = picture.artMedium;
-              }
-              
-              if (picture.genre) {
-                artworkSchema.genre = picture.genre;
-              }
-              
-              // Add description if available
-              if (picture.description && picture.description.trim() !== '') {
-                artworkSchema.description = picture.description;
-              }
-              
-              artworkSchemas.push(artworkSchema);
-            }
-          });
-        }
-      });
-    }
-  });
-  
-  return artworkSchemas;
-}
-
-function generateSitemapHtml(siteSettings, portfolioItems) {
-  const baseUrl = siteSettings.siteUrl.endsWith('/') 
-    ? siteSettings.siteUrl.slice(0, -1) 
-    : siteSettings.siteUrl;
-  
-  // Generate structured data for artworks
-  const artworkSchemas = generateArtworkStructuredData(siteSettings, portfolioItems);
-  
-  let structuredDataScripts = '';
-  if (artworkSchemas.length > 0) {
-    artworkSchemas.forEach((schema, index) => {
-      structuredDataScripts += `  <script type="application/ld+json">
-${JSON.stringify(schema, null, 4)}
-  </script>
-`;
-    });
-  }
-  
-  let html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sitemap - ${siteSettings.siteName}</title>
-${structuredDataScripts}
-  <style>
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 800px; 
-      margin: 40px auto; 
-      padding: 0 20px;
-      color: #333;
-      line-height: 1.6;
-    }
-    h1 { 
-      color: #2c3e50;
-      border-bottom: 2px solid #ecf0f1;
-      padding-bottom: 10px;
-    }
-    h2 { 
-      color: #34495e;
-      margin-top: 40px;
-      margin-bottom: 20px;
-    }
-    ul { 
-      list-style: none; 
-      padding: 0; 
-    }
-    li { 
-      margin: 8px 0;
-      padding: 8px 0;
-      border-bottom: 1px solid #ecf0f1;
-    }
-    a { 
-      color: #3498db; 
-      text-decoration: none;
-      font-weight: 500;
-    }
-    a:hover { 
-      text-decoration: underline; 
-    }
-    .description {
-      color: #7f8c8d;
-      font-size: 0.9em;
-      margin-top: 5px;
-    }
-    .portfolio-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .category {
-      background: #ecf0f1;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.8em;
-      color: #2c3e50;
-    }
-  </style>
-</head>
-<body>
-  <h1>Sitemap for ${siteSettings.siteName}</h1>
-  <p class="description">${siteSettings.siteDescription}</p>
-
-  <h2>Main Pages</h2>
-  <ul>
-    <li><a href="${baseUrl}/home">Home</a><div class="description">Main landing page</div></li>
-    <li><a href="${baseUrl}/art">Art Portfolio</a><div class="description">Art and creative works</div></li>
-    <li><a href="${baseUrl}/design">Design Portfolio</a><div class="description">Graphic design projects</div></li>
-    <li><a href="${baseUrl}/about">About</a><div class="description">About the artist</div></li>
-    <li><a href="${baseUrl}/contact">Contact</a><div class="description">Get in touch</div></li>
-  </ul>
-
-  <h2>Portfolio Items (${portfolioItems.length} items)</h2>
-  <ul>
-`;
-
-  portfolioItems.forEach(item => {
-    html += `    <li>
-      <div class="portfolio-item">
-        <a href="${baseUrl}/portfolio/${item.id}">${item.title}</a>
-        <span class="category">${item.category}</span>
-      </div>
-`;
-    
-    // Add hierarchical gallery structure if galleries exist
-    if (item.galleries && item.galleries.length > 0) {
-      html += `      <div style="margin-left: 20px; margin-top: 8px;">
-`;
-      item.galleries.forEach((gallery, galleryIndex) => {
-        if (gallery.pictures && gallery.pictures.length > 0) {
-          const galleryDescription = gallery.description || `Gallery ${galleryIndex + 1}`;
-          html += `        <div style="margin-bottom: 12px;">
-          <strong style="font-size: 0.9em; color: #2c3e50;">
-            <a href="${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}" style="text-decoration: none; color: #2c3e50;">📁 ${galleryDescription}</a>
-          </strong>
-          <ul style="margin: 4px 0 0 20px; list-style: none; padding: 0;">
-`;
-          gallery.pictures.forEach((picture, pictureIndex) => {
-            if (picture.imageUrl) {
-              const pictureDescription = picture.description || picture.title || `Image ${pictureIndex + 1}`;
-              html += `            <li style="margin: 4px 0;">
-              <a href="${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}" 
-                 style="text-decoration: none; display: block;">
-                <img src="${picture.imageUrl}" 
-                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; transition: transform 0.2s;" 
-                     alt="${pictureDescription}"
-                     onmouseover="this.style.transform='scale(1.1)'" 
-                     onmouseout="this.style.transform='scale(1)'">
-              </a>
-            </li>
-`;
-            }
-          });
-          html += `          </ul>
-        </div>
-`;
-        }
-      });
-      html += `      </div>
-`;
-    }
-    
-    html += `    </li>
-`;
-  });
-
-  html += `  </ul>
-  
-  <div class="description" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
-    Last updated: ${new Date().toLocaleDateString()}
-  </div>
-</body>
-</html>`;
-
-  return html;
-}
 
 async function main() {
   log('blue', '🔧 Injecting meta data and generating SEO files from Firestore...');
@@ -709,8 +444,6 @@ async function main() {
   const templateFile = path.join(process.cwd(), 'src/index.html.template');
   const indexFile = path.join(process.cwd(), 'src/index.html');
   const robotsFile = path.join(process.cwd(), 'src/robots.txt');
-  const sitemapXmlFile = path.join(process.cwd(), 'src/sitemap.xml');
-  const sitemapHtmlFile = path.join(process.cwd(), 'src/sitemap.html');
   
   // Check if .env.production exists
   if (!fs.existsSync(envFile)) {
@@ -732,14 +465,18 @@ async function main() {
   // Initialize Firebase Admin SDK
   const db = await initializeFirebase(envVars);
   
+  // Create URL resolver for production
+  const urlResolver = StorageUrlResolver.createFromEnv(envVars, false);
+  log('green', '✅ Storage URL resolver initialized for production');
+  
   // Fetch site settings from Firestore
   const siteSettings = await fetchSiteSettings(db);
   
   // Fetch contact info from Firestore
   const contactInfo = await fetchContactInfo(db);
   
-  // Fetch portfolio items from Firestore
-  const portfolioItems = await fetchPortfolioItems(db);
+  // Fetch portfolio items from Firestore (with URL resolution)
+  const portfolioItems = await fetchPortfolioItems(db, urlResolver);
   
   // Generate index.html from template
   log('blue', '📋 Generating index.html from template...');
@@ -748,24 +485,11 @@ async function main() {
   // Generate SEO files
   log('blue', '📋 Generating SEO files...');
   const robotsContent = generateRobotsTxt(siteSettings);
-  const sitemapXmlContent = generateSitemapXml(siteSettings, portfolioItems);
   
-  // Generate artwork structured data and log count
-  const artworkSchemas = generateArtworkStructuredData(siteSettings, portfolioItems);
-  if (artworkSchemas.length > 0) {
-    log('green', `✅ Generated structured data for ${artworkSchemas.length} artworks`);
-  } else {
-    log('yellow', '⚠️  No artworks with structured data fields found');
-  }
-  
-  const sitemapHtmlContent = generateSitemapHtml(siteSettings, portfolioItems);
-  
-  // Write all files
+  // Write all files (sitemaps are now dynamic Angular routes)
   const filesToWrite = [
     { path: indexFile, content: indexContent, name: 'index.html' },
-    { path: robotsFile, content: robotsContent, name: 'robots.txt' },
-    { path: sitemapXmlFile, content: sitemapXmlContent, name: 'sitemap.xml' },
-    { path: sitemapHtmlFile, content: sitemapHtmlContent, name: 'sitemap.html' }
+    { path: robotsFile, content: robotsContent, name: 'robots.txt' }
   ];
   
   try {
@@ -779,23 +503,6 @@ async function main() {
     process.exit(1);
   }
   
-  // Calculate total gallery items and gallery pages
-  let totalGalleries = 0;
-  let totalGalleryItems = 0;
-  portfolioItems.forEach(item => {
-    if (item.galleries && item.galleries.length > 0) {
-      totalGalleries += item.galleries.length;
-      item.galleries.forEach(gallery => {
-        if (gallery.pictures && gallery.pictures.length > 0) {
-          totalGalleryItems += gallery.pictures.length;
-        }
-      });
-    }
-  });
-
-  // Recalculate artwork structured data for summary
-  const finalArtworkSchemas = generateArtworkStructuredData(siteSettings, portfolioItems);
-
   // Show summary
   log('blue', '📋 Generated files summary:');
   console.log(`   🏷️  Site Name: ${siteSettings.siteName}`);
@@ -803,11 +510,8 @@ async function main() {
   console.log(`   📝 Description: ${siteSettings.siteDescription.substring(0, 50)}...`);
   console.log(`   🔍 Keywords: ${siteSettings.siteKeywords.substring(0, 60)}...`);
   console.log(`   📁 Portfolio Items: ${portfolioItems.length} published items`);
-  console.log(`   📂 Gallery Pages: ${totalGalleries} galleries`);
-  console.log(`   🖼️  Individual Picture Items: ${totalGalleryItems} pictures`);
-  console.log(`   🎨 Artwork Structured Data: ${finalArtworkSchemas.length} artworks with schema.org data`);
-  console.log(`   🎨 Static Pages: 5 pages (home, art, design, about, contact)`);
-  console.log(`   📄 Total URLs in sitemap: ${5 + portfolioItems.length + totalGalleries + totalGalleryItems} URLs`);
+  console.log(`   📄 Static Files Generated: 2 files (index.html, robots.txt)`);
+  console.log(`   🌐 Dynamic Sitemaps: Available at /sitemap.html and /sitemap.xml`);
   
   log('green', '🎉 Meta data injection and SEO file generation completed successfully!');
   
