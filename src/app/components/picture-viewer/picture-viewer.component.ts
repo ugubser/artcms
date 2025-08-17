@@ -22,10 +22,10 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 })
 export class PictureViewerComponent implements OnInit, OnDestroy {
   portfolioItem: PortfolioItem | null = null;
-  currentImage: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; galleryIndex: number; pictureIndex: number } | null = null;
+  currentImage: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string; galleryIndex: number; pictureIndex: number } | null = null;
   currentImageIndex = 0;
   totalImages = 0;
-  allImages: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; galleryIndex: number; pictureIndex: number }[] = [];
+  allImages: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string; galleryIndex: number; pictureIndex: number }[] = [];
   isLoading = true;
   
   // URL parameters
@@ -93,6 +93,13 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
               alt: picture.alt || this.portfolioItem!.title,
               galleryTitle: gallery.title,
               galleryDescription: gallery.description,
+              dimensions: picture.dimensions,
+              price: picture.price,
+              sold: picture.sold,
+              showPrice: picture.showPrice,
+              dateCreated: picture.dateCreated,
+              artMedium: picture.artMedium,
+              genre: picture.genre,
               galleryIndex: galIdx,
               pictureIndex: picIdx
             });

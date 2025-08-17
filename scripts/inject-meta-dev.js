@@ -576,6 +576,7 @@ function generateSitemapXml(siteSettings, portfolioItems) {
 
 function generateSitemapHtml(siteSettings, portfolioItems) {
   const lastUpdated = new Date().toISOString();
+  const baseUrl = siteSettings.siteUrl.endsWith('/') ? siteSettings.siteUrl.slice(0, -1) : siteSettings.siteUrl;
   
   // Generate structured data for all portfolio artworks
   const artworkSchemas = [];
@@ -587,28 +588,46 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
             if (picture.imageUrl) {
               const artworkSchema = {
                 "@context": "https://schema.org",
-                "@type": "Painting",
-                "name": picture.description || picture.alt || `Artwork from ${item.title}`,
-                "creator": {
+                "@type": ["Painting", "VisualArtwork"],
+                "@id": `${baseUrl}/portfolio/${item.id}/galleries/${galleryIndex}/pictures/${pictureIndex}`,
+                "name": gallery.title || gallery.description || `Gallery ${galleryIndex + 1}`,
+                "description": picture.description || (gallery.title || gallery.description || `Artwork from ${item.title}`),
+                "image": picture.imageUrl,
+                "artist": {
                   "@type": "Person",
-                  "name": siteSettings.artistName || "Artist",
-                  "url": siteSettings.siteUrl
-                },
-                "image": picture.imageUrl
+                  "@id": baseUrl,
+                  "name": siteSettings.artistName || "Miyuki Nagai-Gubser",
+                  "url": baseUrl,
+                  "sameAs": [
+                    "http://instagram.com/tribecaconcepts_art",
+                    "https://www.linkedin.com/in/miyuki-nagai-gubser-91311477/"
+                  ]
+                }
               };
               
-              // Add optional fields if they exist
-              if (picture.dateCreated) {
-                artworkSchema.dateCreated = picture.dateCreated;
-              }
+              // Add artwork details if they exist
               if (picture.artMedium) {
                 artworkSchema.artMedium = picture.artMedium;
               }
-              if (picture.genre) {
-                artworkSchema.genre = picture.genre;
+              if (picture.dimensions && (picture.dimensions.width > 0 || picture.dimensions.height > 0)) {
+                artworkSchema.width = {
+                  "@type": "QuantitativeValue",
+                  "value": picture.dimensions.width || 0,
+                  "unitCode": "CMT"
+                };
+                artworkSchema.height = {
+                  "@type": "QuantitativeValue", 
+                  "value": picture.dimensions.height || 0,
+                  "unitCode": "CMT"
+                };
               }
-              if (picture.description && picture.description.trim() !== '') {
-                artworkSchema.description = picture.description;
+              if (picture.price && picture.showPrice && picture.price > 0) {
+                artworkSchema.offers = {
+                  "@type": "Offer",
+                  "price": picture.price,
+                  "priceCurrency": "CHF",
+                  "availability": picture.sold ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
+                };
               }
               
               artworkSchemas.push(artworkSchema);
@@ -624,7 +643,8 @@ function generateSitemapHtml(siteSettings, portfolioItems) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sitemap - ${siteSettings.siteName}</title>`;
+    <title>Sitemap - ${siteSettings.siteName}</title>
+    <meta name="description" content="${siteSettings.siteDescription}">`;
 
   // Add structured data for artworks
   if (artworkSchemas.length > 0) {
@@ -784,7 +804,8 @@ ${JSON.stringify(schema, null, 2)}
             
             gallery.pictures.forEach((picture, pictureIndex) => {
               const altText = picture.alt || picture.description;
-              const displayText = picture.description || picture.alt;
+              // Use Gallery Title as description, fallback to picture description or alt
+              const displayText = gallery.title || gallery.description || picture.description || picture.alt;
               
               html += `
                             <li>

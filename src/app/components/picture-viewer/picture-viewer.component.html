@@ -1,55 +1,87 @@
-<div class="picture-viewer-container" *ngIf="!isLoading">
-  <!-- Close Button -->
-  <button mat-icon-button class="close-button" (click)="goToPortfolio()" title="Close">
-    <mat-icon>close</mat-icon>
-  </button>
-  
-  <!-- Navigation Buttons -->
-
-  <div class="navigation">
-    <button mat-icon-button 
-            class="nav-button nav-next" 
-            [disabled]="currentImageIndex === 0"
-            (click)="previousImage()" 
-            title="Previous Image">
-      <mat-icon>chevron_left</mat-icon>
+<div class="picture-viewer-overlay" *ngIf="!isLoading">
+  <div class="image-viewer-container">
+    <button mat-icon-button (click)="goToPortfolio()" class="viewer-close">
+      <mat-icon>close</mat-icon>
     </button>
-
-        <button mat-icon-button 
-            class="nav-button nav-prev" 
-            [disabled]="currentImageIndex === totalImages - 1"
-            (click)="nextImage()" 
-            title="Next Image">
-      <mat-icon>chevron_right</mat-icon>
-    </button>
-
-  </div>
-
-  <!-- Main Picture Display -->
-  <div class="picture-display" *ngIf="currentImage">
-    <div class="picture-container">
-      <img [src]="currentImage.url | resolveStorageUrl | async" 
-           [alt]="currentImage.alt || portfolioItem?.title" 
-           class="main-picture">
-      
-      <div class="picture-info">
-        <h1 class="picture-title">
-          {{ currentImage.description || 'Image ' + (currentImageIndex + 1) }}
-        </h1>
-        <div class="gallery-info" *ngIf="currentImage.galleryDescription || currentImage.galleryTitle">
-          From <strong>{{ currentImage.galleryTitle || currentImage.galleryDescription || 'Gallery' }}</strong>
+    
+    <div class="viewer-content">
+      <!-- Left side - Image info -->
+      <div class="viewer-info-section">
+        <div class="viewer-info">
+          <h2 class="viewer-title" *ngIf="currentImage?.galleryTitle">{{ currentImage?.galleryTitle }}</h2>
+          <div class="viewer-counter">{{ currentImageIndex + 1 }} / {{ totalImages }}</div>
+          <p class="viewer-description" *ngIf="currentImage?.galleryDescription">
+            {{ currentImage?.galleryDescription }}
+          </p>
+          <p class="viewer-picture-description" *ngIf="currentImage?.description">
+            {{ currentImage?.description }}
+          </p>
+          
+          <!-- Artwork Details -->
+          <div class="artwork-details" *ngIf="currentImage && (currentImage.dimensions || currentImage.price || currentImage.sold || currentImage.dateCreated || currentImage.artMedium || currentImage.genre)">
+            <h3>Artwork Details</h3>
+            
+            <!-- Date Created -->
+            <div class="detail-item" *ngIf="currentImage.dateCreated">
+              <span class="detail-label">Created:</span>
+              <span class="detail-value">{{ currentImage.dateCreated }}</span>
+            </div>
+            
+            <!-- Art Medium -->
+            <div class="detail-item" *ngIf="currentImage.artMedium">
+              <span class="detail-label">Medium:</span>
+              <span class="detail-value">{{ currentImage.artMedium }}</span>
+            </div>
+            
+            <!-- Genre -->
+            <div class="detail-item" *ngIf="currentImage.genre">
+              <span class="detail-label">Genre:</span>
+              <span class="detail-value">{{ currentImage.genre }}</span>
+            </div>
+            
+            <!-- Dimensions -->
+            <div class="detail-item" *ngIf="currentImage.dimensions && (currentImage.dimensions.width > 0 || currentImage.dimensions.height > 0)">
+              <span class="detail-label">Dimensions:</span>
+              <span class="detail-value">{{ currentImage.dimensions.width }} × {{ currentImage.dimensions.height }} cm</span>
+            </div>
+            
+            <!-- Price -->
+            <div class="detail-item" *ngIf="currentImage.showPrice && currentImage.price && currentImage.price > 0">
+              <span class="detail-label">Price:</span>
+              <span class="detail-value">${{ currentImage.price | number:'1.2-2' }}</span>
+            </div>
+            
+            <!-- Sold status -->
+            <div class="detail-item" *ngIf="currentImage.sold">
+              <span class="sold-badge">SOLD</span>
+            </div>
+          </div>
         </div>
-        <div class="portfolio-info" *ngIf="portfolioItem">
-          in <a [routerLink]="['/portfolio', portfolioId]" class="portfolio-link">{{ portfolioItem.title }}</a>
-          <span class="category-badge">{{ getCategoryLabel(portfolioItem.category || 'portfolio') }}</span>
+      </div>
+      
+      <!-- Right side - Image with navigation -->
+      <div class="viewer-image-section">
+        <div class="image-navigation">
+          <button mat-icon-button 
+                  (click)="previousImage()" 
+                  [disabled]="currentImageIndex <= 0"
+                  class="nav-button nav-prev">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          
+          <div class="image-container">
+            <img [src]="currentImage!.url | resolveStorageUrl | async" [alt]="currentImage?.alt || portfolioItem?.title">
+          </div>
+          
+          <button mat-icon-button 
+                  (click)="nextImage()" 
+                  [disabled]="currentImageIndex >= totalImages - 1"
+                  class="nav-button nav-next">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Image Counter -->
-  <div class="image-counter">
-    {{ currentImageIndex + 1 }} / {{ totalImages }}
   </div>
 </div>
 
