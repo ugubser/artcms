@@ -2,6 +2,13 @@
 
 A Swiss design-inspired portfolio website built with Angular and powered by Firebase for seamless content management. This project demonstrates modern web development practices with secure deployment, real-time content management, and elegant Swiss design principles.
 
+**✨ Version 2.0 Features:**
+- **Flexible Portfolio Management**: Cross-category assignments with centralized category system
+- **Enhanced SEO & Schema.org**: Complete structured data implementation for search engines
+- **Advanced Picture Management**: Individual artwork metadata with pricing, dimensions, and detailed information
+- **Production Data Sync**: Seamless local development with production data integration
+- **Dynamic Routing System**: Support for both ID-based and legacy category routes
+
 ## 🎯 Perfect For
 
 - **Portfolio Websites**: Showcase creative work with elegant galleries
@@ -12,7 +19,9 @@ A Swiss design-inspired portfolio website built with Angular and powered by Fire
 
 ## 🔥 Live Demo
 
-> **Note**: This is a template repository. Set up your own Firebase project to see it in action following the setup guide below.
+[tribecaconcept.com](https://www.tribecaconcepts.com/)
+
+> **Note**: This is a template repository. Set up your own Firebase project to see it in action following the setup guide below. 
 
 ## Architecture Overview
 
@@ -68,8 +77,12 @@ const newsCollection = buildCollection({
 
 ### Content Collections
 
-**Portfolio Management** (`/portfolio`)
-- Project showcase with categories (Art, Design, Branding)
+**Portfolio Management** (`/portfolio`) - **Enhanced in v2.0**
+- **Flexible Assignment System**: Assign any portfolio to any portfolio page across categories
+- **Centralized Category Management**: Dynamic categories loaded from `categories.json`
+- **Dual Routing Support**: Both ID-based (`/portfolio-page/:pageId`) and legacy category routes
+- **Enhanced Artwork Metadata**: Dimensions, pricing, sold status, art medium, genre, and creation dates
+- **Individual Picture Viewer**: Direct access to artworks with `/portfolio/:id/galleries/:galleryIndex/pictures/:pictureIndex`
 - Multi-image galleries with Firebase Storage integration
 - Publishing workflow for content control
 - Automatic image optimization and responsive serving
@@ -84,8 +97,10 @@ const newsCollection = buildCollection({
 - Social media link management
 - Email configuration
 
-**Site Settings** (`/settings`)
-- SEO metadata management
+**Site Settings** (`/settings`) - **Enhanced in v2.0**
+- **Artist Profile Schema**: Complete artist information for Schema.org structured data
+- **Enhanced SEO Management**: Comprehensive metadata with structured data support
+- **Sitemap Generation**: Automatic XML and HTML sitemap creation with portfolio data
 - Branding assets (logos, favicons)
 - Global site configuration
 
@@ -157,12 +172,12 @@ ng serve
 ```
 
 5. **Access the Application**
-- **Public Site**: `http://localhost:4200/`
-- **Admin Panel**: `http://localhost:4200/admin`
+- **Public Site**: `http://localhost:5050/`
+- **Admin Panel**: `http://localhost:5050/admin`
 - **Firebase Emulator UI**: `http://localhost:4000/`
 
 6. **Initial Admin Setup**
-- Go to `http://localhost:4200/admin/login`
+- Go to `http://localhost:5050/admin/login`
 - Sign in with Google using one of your configured admin emails
 - Start managing content through the CMS interface
 
@@ -240,16 +255,20 @@ src/
 │   │   ├── about.service.ts           # About content management
 │   │   ├── analytics.service.ts       # Analytics integration
 │   │   ├── auth.service.ts            # Authentication service
+│   │   ├── category.service.ts        # **NEW v2.0**: Dynamic category management
 │   │   ├── contact.service.ts         # Contact content management
 │   │   ├── firebase.service.ts        # Firebase utilities
 │   │   ├── meta.service.ts            # Meta tag management
 │   │   ├── portfolio-pages.service.ts # Portfolio page settings
-│   │   ├── portfolio.service.ts       # Portfolio content management
-│   │   └── settings.service.ts       # Site settings management
+│   │   ├── portfolio.service.ts       # **ENHANCED v2.0**: Portfolio content with flexible assignments
+│   │   ├── settings.service.ts       # Site settings management
+│   │   └── storage-url.service.ts     # **NEW v2.0**: Storage URL resolution system
 │   ├── app.config.ts                 # Angular application configuration
 │   ├── app.routes.ts                 # Application routing configuration
 │   └── app.ts                        # Main application component
 ├── assets/                           # Static assets
+│   ├── data/                         # **NEW v2.0**: Configuration data
+│   │   └── categories.json           # **NEW v2.0**: Centralized category definitions
 │   ├── fonts/                        # Custom fonts
 │   └── images/                       # Static images
 ├── environments/                      # Environment configuration
@@ -262,8 +281,14 @@ scripts/                              # Deployment and setup scripts
 ├── deploy.sh                         # Production deployment script
 ├── generate-rules.js                 # Firebase rules generation
 ├── inject-env.js                     # Environment variable injection
-├── inject-meta.js                    # Metadata injection from Firestore
-└── setup-firebase.sh                 # Firebase project setup
+├── inject-meta.js                    # **ENHANCED v2.0**: Production metadata & sitemap generation
+├── inject-meta-dev.js                # **NEW v2.0**: Development metadata & sitemap generation
+├── setup-firebase.sh                 # Firebase project setup
+├── sync-all-production-data.sh       # **NEW v2.0**: Complete production data sync
+├── sync-production-gcloud.sh         # **NEW v2.0**: Firestore data sync
+├── sync-storage-data.sh              # **NEW v2.0**: Firebase Storage sync
+├── upload-to-emulator.js             # **NEW v2.0**: Storage upload to emulator
+└── upload-storage-to-emulator.sh     # **NEW v2.0**: Storage sync wrapper
 ```
 
 ### Deployment Process Details
@@ -288,6 +313,9 @@ The application follows a modular structure with clear separation of concerns:
 - **Services**: Firebase integration is encapsulated in dedicated services
 - **Guards**: Route protection using Angular guards
 - **CMS Integration**: Custom FireCMS implementation for content management
+- **Picture Viewer Component**: **NEW v2.0** - Individual artwork viewing with navigation
+- **Flexible Routing**: **NEW v2.0** - Dual routing system supporting both ID-based and category routes
+- **Dynamic Categories**: **NEW v2.0** - Category management through external configuration
 
 ### Authentication and Authorization System
 
@@ -321,6 +349,38 @@ ng build --configuration production
 # Deploy to Firebase
 firebase deploy
 ```
+
+## What's New in v2.0
+
+### 🎯 Flexible Portfolio Management System
+- **Cross-Category Assignments**: Assign any portfolio item to any portfolio page, regardless of category
+- **Centralized Category Management**: New `CategoryService` with `categories.json` for dynamic category handling
+- **Dual Routing System**: Support for both ID-based routes (`/portfolio-page/:pageId`) and legacy category routes (`/art`, `/exhibition`)
+- **Enhanced Admin Interface**: Advanced edit dialogs with dynamic dropdowns and improved form validation
+
+### 🖼️ Advanced Artwork & Picture Management
+- **Expanded Metadata**: Dimensions, pricing, sold status, art medium, genre, and creation date fields
+- **Individual Picture Viewer**: Direct access to artworks with keyboard navigation and full-screen viewing
+- **Enhanced Image Navigation**: Cross-gallery navigation with visual controls and hover effects
+- **Redesigned Picture Interface**: Two-column layout matching portfolio detail design
+
+### 🔍 Enhanced SEO & Schema.org Integration
+- **Static Sitemap Generation**: XML and HTML sitemaps with complete portfolio data for search engines
+- **Schema.org Structured Data**: Full VisualArtwork and Person schema implementation
+- **Artist Profile Support**: Comprehensive artist information fields with social media integration
+- **Enhanced Meta Generation**: Automatic SEO file generation for both development and production
+
+### 🔧 Development Workflow Improvements
+- **Production Data Sync**: Complete Firebase Storage and Firestore sync for local development
+- **Storage URL Resolution**: Centralized system for seamless emulator/production switching
+- **Environment Separation**: Improved development/production configuration management
+- **Enhanced Firebase Integration**: Better emulator support with production data compatibility
+
+### 🎨 UI/UX Enhancements
+- **Improved Layout System**: Dynamic grid layouts with responsive image handling
+- **Enhanced Markdown Support**: Fixed list parsing and improved content formatting
+- **Interactive Thumbnails**: Direct clickable sitemap thumbnails with scale animations
+- **Consistent Design Language**: Swiss design principles maintained across all new components
 
 ## Features & Benefits
 
@@ -464,9 +524,16 @@ This project is open source and available under the [MIT License](LICENSE).
 ## Acknowledgments
 
 - **Swiss Design Movement**: For the timeless design principles
-- **Angular Team**: For the excellent framework
-- **Firebase**: For the powerful backend-as-a-service platform
+- **Angular Team**: For the excellent framework and Angular 20+ capabilities
+- **Firebase**: For the powerful backend-as-a-service platform and emulator tools
+- **FireCMS**: For a very simple to implement CMS system
+- **Schema.org Community**: For the structured data standards implemented in v2.0
 - **Open Source Community**: For the tools and libraries that make this possible
+
+## Version History
+
+- **v2.0** (Current) - Major portfolio management overhaul with SEO enhancements
+- **v1.x** - Initial FireCMS implementation with Swiss design principles
 
 ## Support
 
@@ -480,6 +547,7 @@ If you find this project helpful, please consider:
 
 - [Angular CLI Documentation](https://angular.dev/tools/cli)
 - [Firebase Documentation](https://firebase.google.com/docs)
+- [FireCMS Documentation](https://firecms.co/docs)
 - [Swiss Design Principles](https://www.smashingmagazine.com/2009/07/lessons-from-swiss-style-graphic-design/)
 - [Angular Material Design](https://material.angular.io/)
 - [Firebase Security Rules](https://firebase.google.com/docs/rules)
