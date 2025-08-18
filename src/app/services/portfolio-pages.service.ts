@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, collectionData, doc, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, doc, setDoc, addDoc, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -8,6 +8,8 @@ export interface PortfolioPageConfig {
   category: string;
   title: string;
   subtitle: string;
+  slug?: string; // URL slug for the page (optional, generated from title)
+  order?: number; // Order within category (optional)
   updatedAt: Date;
 }
 
@@ -36,7 +38,7 @@ export class PortfolioPagesService {
     );
   }
 
-  async updatePortfolioPage(config: Partial<PortfolioPageConfig>): Promise<void> {
+  async updatePortfolioPage(config: Partial<PortfolioPageConfig>): Promise<string> {
     console.log('Updating portfolio page:', config);
     
     const configData = {
@@ -44,15 +46,27 @@ export class PortfolioPagesService {
       updatedAt: new Date()
     };
 
-    const docRef = doc(this.firestore, 'portfolio-pages', config.category!);
-    
     try {
-      await setDoc(docRef, configData, { merge: true });
-      console.log('Portfolio page updated successfully');
+      if (config.id) {
+        // Update existing page
+        const docRef = doc(this.firestore, 'portfolio-pages', config.id);
+        await setDoc(docRef, configData, { merge: true });
+        console.log('Portfolio page updated successfully');
+        return config.id;
+      } else {
+        // Create new page
+        const docRef = await addDoc(this.portfolioPagesCollection, configData);
+        console.log('Portfolio page created successfully with ID:', docRef.id);
+        return docRef.id;
+      }
     } catch (error) {
       console.error('Error updating portfolio page:', error);
       throw error;
     }
+  }
+
+  async createPortfolioPage(config: Omit<PortfolioPageConfig, 'id' | 'updatedAt'>): Promise<string> {
+    return this.updatePortfolioPage(config);
   }
 
   getDefaultPortfolioPages(): PortfolioPageConfig[] {

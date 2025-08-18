@@ -10,7 +10,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { Observable } from 'rxjs';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
+import { CategoryService } from '../../services/category.service';
+import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 import { ImageUploadComponent } from '../components/image-upload.component';
 
 @Component({
@@ -40,25 +43,52 @@ export class PortfolioEditDialogComponent implements OnInit {
   saving = false;
   currentFeaturedImage: string | null = null;
   galleryImages: (string | null)[] = [];
+  categories$: Observable<{value: string, label: string}[]>;
+  categories: {value: string, label: string}[] = [];
+  portfolioPages: PortfolioPageConfig[] = [];
+  filteredPortfolioPages: PortfolioPageConfig[] = [];
 
   constructor(
     private fb: FormBuilder,
     private portfolioService: PortfolioService,
+    private categoryService: CategoryService,
     private snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<PortfolioEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { item?: PortfolioItem }
   ) {
     this.isEdit = !!data?.item;
     this.portfolioForm = this.createForm();
+    this.categories$ = this.categoryService.getCategoriesForSelect();
   }
 
   ngOnInit() {
-    if (this.isEdit && this.data.item) {
-      this.populateForm(this.data.item);
-    } else {
-      // Initialize with one empty gallery slot for new items
-      this.galleryImages = [null];
-    }
+    // Load categories and populate form
+    this.categoryService.getCategoriesForSelect().subscribe({
+      next: (categories) => {
+        console.log('Categories loaded for select:', categories);
+        this.categories = categories;
+        
+        if (this.isEdit && this.data.item) {
+          this.populateForm(this.data.item);
+        } else {
+          // Initialize with one empty gallery slot for new items
+          this.galleryImages = [null];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        // Fallback categories
+        this.categories = [
+          { value: 'art', label: 'Art' },
+          { value: 'exhibition', label: 'Exhibition' },
+          { value: 'graphic-design', label: 'Graphic Design' },
+          { value: 'branding', label: 'Branding' },
+          { value: 'web-design', label: 'Web Design' },
+          { value: 'photography', label: 'Photography' },
+          { value: 'illustration', label: 'Illustration' }
+        ];
+      }
+    });
   }
 
   private createForm(): FormGroup {

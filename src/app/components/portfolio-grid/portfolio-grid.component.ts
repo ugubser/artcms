@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
+import { CategoryService } from '../../services/category.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
@@ -14,12 +15,15 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 })
 export class PortfolioGridComponent implements OnInit {
   @Input() category?: string;
+  @Input() portfolioPageId?: string;
+  @Input() mode: 'page' | 'category' = 'category';
   
   portfolio$: Observable<PortfolioItem[]>;
   isLoading = true;
 
   constructor(
     private portfolioService: PortfolioService,
+    private categoryService: CategoryService,
     private router: Router
   ) {
     this.portfolio$ = new Observable<PortfolioItem[]>();
@@ -32,9 +36,16 @@ export class PortfolioGridComponent implements OnInit {
   private loadPortfolio() {
     this.isLoading = true;
     
-    if (this.category) {
-      this.portfolio$ = this.portfolioService.getPortfolioByCategory(this.category);
+    console.log('Loading portfolio - Mode:', this.mode, 'PageId:', this.portfolioPageId, 'Category:', this.category);
+    
+    if (this.portfolioPageId) {
+      // Load portfolios assigned to specific portfolio page (regardless of mode)
+      this.portfolio$ = this.portfolioService.getPortfolioForPage(this.portfolioPageId);
+    } else if (this.category) {
+      // Load portfolios by category (backwards compatible + auto-assigned items)
+      this.portfolio$ = this.portfolioService.getPortfolioForPage(undefined, this.category);
     } else {
+      // Load all published portfolios
       this.portfolio$ = this.portfolioService.getPublishedPortfolio();
     }
     
@@ -56,13 +67,7 @@ export class PortfolioGridComponent implements OnInit {
   }
 
   getCategoryLabel(category: string): string {
-    const labels: { [key: string]: string } = {
-      'graphic-design': 'Graphic Design',
-      'art': 'Art',
-      'branding': 'Branding',
-      'web-design': 'Web Design'
-    };
-    return labels[category] || category;
+    return this.categoryService.getCategoryLabelSync(category);
   }
 
   async initializeSampleData() {

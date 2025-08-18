@@ -1,0 +1,44 @@
+{
+  "categories": [
+    {
+      "id": "portfolio",
+      "label": "General Portfolio",
+      "order": 0
+    },
+    {
+      "id": "art",
+      "label": "Art",
+      "order": 1
+    },
+    {
+      "id": "exhibition",
+      "label": "Exhibition",
+      "order": 2
+    },
+    {
+      "id": "graphic-design",
+      "label": "Graphic Design",
+      "order": 3
+    },
+    {
+      "id": "branding",
+      "label": "Branding",
+      "order": 4
+    },
+    {
+      "id": "web-design",
+      "label": "Web Design",
+      "order": 5
+    },
+    {
+      "id": "photography",
+      "label": "Photography",
+      "order": 6
+    },
+    {
+      "id": "illustration",
+      "label": "Illustration",
+      "order": 7
+    }
+  ]
+}

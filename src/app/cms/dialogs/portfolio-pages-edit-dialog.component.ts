@@ -4,11 +4,13 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Va
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
+import { CategoryService } from '../../services/category.service';
 
 @Component({
   selector: 'app-portfolio-pages-edit-dialog',
@@ -20,6 +22,7 @@ import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portf
     MatDialogModule,
     MatButtonModule,
     MatInputModule,
+    MatSelectModule,
     MatFormFieldModule,
     MatIconModule,
     MatSnackBarModule,
@@ -31,25 +34,62 @@ import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portf
 export class PortfolioPagesEditDialogComponent implements OnInit {
   portfolioPagesForm: FormGroup;
   isLoading = false;
+  isEdit = false;
+  isAddMode = false;
 
   constructor(
     private fb: FormBuilder,
     private portfolioPagesService: PortfolioPagesService,
+    private categoryService: CategoryService,
     private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<PortfolioPagesEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.portfolioPagesForm = this.fb.group({
-      pages: this.fb.array([])
-    });
+    this.isEdit = !!this.data?.page;
+    this.isAddMode = this.data?.page === null;
+    
+    if (this.isEdit || this.isAddMode) {
+      // Single page mode
+      this.portfolioPagesForm = this.fb.group({
+        category: ['', Validators.required],
+        title: ['', Validators.required],
+        subtitle: ['', Validators.required]
+      });
+    } else {
+      // Multi-page mode (legacy)
+      this.portfolioPagesForm = this.fb.group({
+        pages: this.fb.array([])
+      });
+    }
   }
 
   ngOnInit() {
-    this.loadPortfolioPages();
+    if (this.isEdit || this.isAddMode) {
+      this.loadSinglePage();
+    } else {
+      this.loadPortfolioPages();
+    }
   }
 
   get pagesArray(): FormArray {
     return this.portfolioPagesForm.get('pages') as FormArray;
+  }
+
+  private loadSinglePage() {
+    if (this.isEdit && this.data.page) {
+      // Editing existing page
+      this.portfolioPagesForm.patchValue({
+        category: this.data.page.category,
+        title: this.data.page.title,
+        subtitle: this.data.page.subtitle
+      });
+    } else if (this.isAddMode) {
+      // Adding new page - form is already initialized with empty values
+      // Set a default category if needed
+      this.portfolioPagesForm.patchValue({
+        category: 'portfolio'
+      });
+    }
   }
 
   private async loadPortfolioPages() {
@@ -69,11 +109,15 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       
       this.pagesArray.clear();
       
-      // Ensure we have all the standard pages
-      const standardCategories = ['portfolio', 'art', 'graphic-design'];
+      // Get page categories from CategoryService (only portfolio, art, and graphic-design for now)
+      const availableCategories = this.categoryService.getCategoriesArray();
+      const pageCategories = availableCategories
+        .filter(cat => ['portfolio', 'art', 'graphic-design'].includes(cat.id))
+        .map(cat => cat.id);
+      
       const defaultPages = this.portfolioPagesService.getDefaultPortfolioPages();
       
-      for (const category of standardCategories) {
+      for (const category of pageCategories) {
         const existingPage = pages.find(p => p.category === category);
         const defaultPage = defaultPages.find(p => p.category === category);
         
@@ -95,12 +139,7 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
   }
 
   getCategoryLabel(category: string): string {
-    const labels: { [key: string]: string } = {
-      'portfolio': 'General Portfolio',
-      'art': 'Art Portfolio',
-      'graphic-design': 'Design Portfolio'
-    };
-    return labels[category] || category;
+    return this.categoryService.getCategoryLabelSync(category);
   }
 
   async onSave() {
@@ -112,13 +151,28 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
     this.isLoading = true;
 
     try {
-      const pages = this.pagesArray.value as PortfolioPageConfig[];
-      
-      for (const page of pages) {
-        await this.portfolioPagesService.updatePortfolioPage(page);
+      if (this.isEdit || this.isAddMode) {
+        // Single page mode
+        const formValue = this.portfolioPagesForm.value;
+        const pageConfig: PortfolioPageConfig = {
+          category: formValue.category,
+          title: formValue.title,
+          subtitle: formValue.subtitle,
+          updatedAt: new Date()
+        };
+        
+        await this.portfolioPagesService.updatePortfolioPage(pageConfig);
+        this.snackBar.open(`Portfolio page ${this.isEdit ? 'updated' : 'created'} successfully!`, 'Close', { duration: 3000 });
+      } else {
+        // Multi-page mode (legacy)
+        const pages = this.pagesArray.value as PortfolioPageConfig[];
+        
+        for (const page of pages) {
+          await this.portfolioPagesService.updatePortfolioPage(page);
+        }
+        this.snackBar.open('Portfolio pages updated successfully!', 'Close', { duration: 3000 });
       }
-
-      this.snackBar.open('Portfolio pages updated successfully!', 'Close', { duration: 3000 });
+      
       this.dialogRef.close(true);
     } catch (error) {
       console.error('Error updating portfolio pages:', error);

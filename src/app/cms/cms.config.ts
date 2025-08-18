@@ -27,6 +27,9 @@ export const portfolioCollection = buildCollection({
       dataType: "string",
       enumValues: {
         "graphic-design": "Graphic Design",
+        "exhibition": "Exhibition",
+        "photography": "Photography",
+        "illustration": "Illustration",
         "art": "Art",
         "branding": "Branding",
         "web-design": "Web Design"

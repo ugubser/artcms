@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
+import { CategoryService } from '../../services/category.service';
 import { MetaService } from '../../services/meta.service';
-import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { SettingsService } from '../../services/settings.service';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
@@ -26,6 +27,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private portfolioService: PortfolioService,
+    private categoryService: CategoryService,
     private router: Router,
     private metaService: MetaService,
     private settingsService: SettingsService,
@@ -69,12 +71,6 @@ export class HomeComponent implements OnInit {
   }
 
   getCategoryLabel(category: string): string {
-    const labels: { [key: string]: string } = {
-      'graphic-design': 'Graphic Design',
-      'art': 'Art',
-      'branding': 'Branding',
-      'web-design': 'Web Design'
-    };
-    return labels[category] || category;
+    return this.categoryService.getCategoryLabelSync(category);
   }
 }

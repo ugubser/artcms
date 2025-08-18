@@ -4,6 +4,7 @@ import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortfolioItem } from '../../services/portfolio.service';
+import { CategoryService } from '../../services/category.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
@@ -29,6 +30,7 @@ export class PortfolioDetailDialogComponent {
   currentImageData: { url: string; description?: string; alt?: string } | null = null;
 
   constructor(
+    private categoryService: CategoryService,
     private dialogRef: MatDialogRef<PortfolioDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: PortfolioItem
   ) {
@@ -68,13 +70,7 @@ export class PortfolioDetailDialogComponent {
   }
 
   getCategoryLabel(category: string): string {
-    const labels: { [key: string]: string } = {
-      'graphic-design': 'Graphic Design',
-      'art': 'Art',
-      'branding': 'Branding',
-      'web-design': 'Web Design'
-    };
-    return labels[category] || category;
+    return this.categoryService.getCategoryLabelSync(category);
   }
 
   openImageViewer(imageUrl: string, index: number) {

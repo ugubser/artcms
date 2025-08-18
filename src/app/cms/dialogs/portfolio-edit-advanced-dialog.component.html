@@ -24,15 +24,28 @@
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Category</mat-label>
-              <mat-select formControlName="category">
-                <mat-option value="art">Art</mat-option>
-                <mat-option value="graphic-design">Graphic Design</mat-option>
-                <mat-option value="branding">Branding</mat-option>
-                <mat-option value="web-design">Web Design</mat-option>
+              <mat-select formControlName="category" [disabled]="categories.length === 0">
+                <mat-option *ngFor="let category of categories" [value]="category.value">
+                  {{ category.label }}
+                </mat-option>
               </mat-select>
               <mat-error *ngIf="portfolioForm.get('category')?.hasError('required')">
                 Category is required
               </mat-error>
+              <mat-hint *ngIf="categories.length === 0">Loading categories...</mat-hint>
+              <mat-hint *ngIf="categories.length > 0">{{ categories.length }} categories available</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Portfolio Page (Optional)</mat-label>
+              <mat-select formControlName="portfolioPageId">
+                <mat-option value="">Auto-assign by category</mat-option>
+                <mat-option *ngFor="let page of filteredPortfolioPages" [value]="page.id">
+                  {{ page.title }}
+                </mat-option>
+              </mat-select>
+              <mat-hint *ngIf="filteredPortfolioPages.length === 0">Loading portfolio pages...</mat-hint>
+              <mat-hint *ngIf="filteredPortfolioPages.length > 0">{{ filteredPortfolioPages.length }} pages available (can assign to any page regardless of category)</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">

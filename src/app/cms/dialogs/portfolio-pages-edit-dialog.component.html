@@ -1,60 +1,109 @@
-    <div class="dialog-container">
-      <h2 mat-dialog-title>Portfolio Page Settings</h2>
-      
-      <mat-dialog-content>
-        <p class="dialog-description">
-          Configure the titles and descriptions for each portfolio page section.
-        </p>
-        
-        <form [formGroup]="portfolioPagesForm" class="portfolio-pages-form">
-          <div formArrayName="pages" class="pages-container">
-            <div *ngFor="let pageGroup of pagesArray.controls; let i = index" 
-                 [formGroupName]="i" 
-                 class="page-section">
-              
-              <h3>{{ getCategoryLabel(pageGroup.get('category')?.value) }}</h3>
-              
-              <div class="page-form">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Page Title</mat-label>
-                  <input matInput formControlName="title" placeholder="e.g., Art">
-                  <mat-error *ngIf="pageGroup.get('title')?.hasError('required')">
-                    Title is required
-                  </mat-error>
-                </mat-form-field>
+<div class="dialog-container">
+  <h2 mat-dialog-title>
+    {{ (isEdit || isAddMode) ? 'Portfolio Page' : 'Portfolio Page Settings' }}
+  </h2>
+  
+  <mat-dialog-content>
+    <p class="dialog-description" *ngIf="!isEdit && !isAddMode">
+      Configure the titles and descriptions for each portfolio page section.
+    </p>
+    <p class="dialog-description" *ngIf="isEdit">
+      Edit the portfolio page details.
+    </p>
+    <p class="dialog-description" *ngIf="isAddMode">
+      Add a new portfolio page.
+    </p>
+    
+    <form [formGroup]="portfolioPagesForm" class="portfolio-pages-form">
+      <!-- Single page mode -->
+      <div *ngIf="isEdit || isAddMode" class="single-page-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            <mat-option value="portfolio">General Portfolio</mat-option>
+            <mat-option value="art">Art</mat-option>
+            <mat-option value="exhibition">Exhibition</mat-option>
+            <mat-option value="graphic-design">Graphic Design</mat-option>
+            <mat-option value="branding">Branding</mat-option>
+            <mat-option value="web-design">Web Design</mat-option>
+            <mat-option value="photography">Photography</mat-option>
+            <mat-option value="illustration">Illustration</mat-option>
+          </mat-select>
+          <mat-error *ngIf="portfolioPagesForm.get('category')?.hasError('required')">
+            Category is required
+          </mat-error>
+        </mat-form-field>
 
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Page Subtitle</mat-label>
-                  <textarea matInput 
-                           formControlName="subtitle" 
-                           rows="3"
-                           placeholder="Brief description of this portfolio section">
-                  </textarea>
-                  <mat-error *ngIf="pageGroup.get('subtitle')?.hasError('required')">
-                    Subtitle is required
-                  </mat-error>
-                </mat-form-field>
-              </div>
-            </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Page Title</mat-label>
+          <input matInput formControlName="title" placeholder="e.g., Art">
+          <mat-error *ngIf="portfolioPagesForm.get('title')?.hasError('required')">
+            Title is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Page Subtitle</mat-label>
+          <textarea matInput 
+                   formControlName="subtitle" 
+                   rows="3"
+                   placeholder="Brief description of this portfolio section">
+          </textarea>
+          <mat-error *ngIf="portfolioPagesForm.get('subtitle')?.hasError('required')">
+            Subtitle is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Multi-page mode (legacy) -->
+      <div *ngIf="!isEdit && !isAddMode" formArrayName="pages" class="pages-container">
+        <div *ngFor="let pageGroup of pagesArray.controls; let i = index" 
+             [formGroupName]="i" 
+             class="page-section">
+          
+          <h3>{{ getCategoryLabel(pageGroup.get('category')?.value) }}</h3>
+          
+          <div class="page-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Page Title</mat-label>
+              <input matInput formControlName="title" placeholder="e.g., Art">
+              <mat-error *ngIf="pageGroup.get('title')?.hasError('required')">
+                Title is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Page Subtitle</mat-label>
+              <textarea matInput 
+                       formControlName="subtitle" 
+                       rows="3"
+                       placeholder="Brief description of this portfolio section">
+              </textarea>
+              <mat-error *ngIf="pageGroup.get('subtitle')?.hasError('required')">
+                Subtitle is required
+              </mat-error>
+            </mat-form-field>
           </div>
-        </form>
-        
-        <!-- Loading state -->
-        <div *ngIf="isLoading" class="loading-state">
-          <p>Loading portfolio page settings...</p>
         </div>
-      </mat-dialog-content>
-
-      <mat-dialog-actions align="end">
-        <button mat-button (click)="onCancel()" [disabled]="isLoading">
-          Cancel
-        </button>
-        <button mat-raised-button 
-                color="primary" 
-                (click)="onSave()" 
-                [disabled]="isLoading || portfolioPagesForm.invalid">
-          <mat-icon>save</mat-icon>
-          Save Settings
-        </button>
-      </mat-dialog-actions>
+      </div>
+    </form>
+    
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="loading-state">
+      <p>Loading portfolio page settings...</p>
     </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isLoading">
+      Cancel
+    </button>
+    <button mat-raised-button 
+            color="primary" 
+            (click)="onSave()" 
+            [disabled]="isLoading || portfolioPagesForm.invalid">
+      <mat-icon>save</mat-icon>
+      {{ (isEdit || isAddMode) ? 'Save Page' : 'Save Settings' }}
+    </button>
+  </mat-dialog-actions>
+</div>

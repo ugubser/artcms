@@ -34,7 +34,8 @@ export interface PortfolioItem {
   id?: string;
   title: string;
   description: string; // Markdown formatted - main project description
-  category: 'graphic-design' | 'art' | 'branding' | 'web-design';
+  category: string; // Category from categories.json
+  portfolioPageId?: string; // Optional: specific portfolio page ID, falls back to category-based matching
   featuredImage: string; // Main portfolio image
   galleries: GalleryEntry[]; // Multiple gallery entries
   published: boolean;
@@ -78,6 +79,35 @@ export class PortfolioService {
     return collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>;
   }
 
+  // Get portfolio items by portfolio page ID (new method)
+  getPortfolioByPageId(portfolioPageId: string): Observable<PortfolioItem[]> {
+    const q = query(
+      this.portfolioCollection,
+      where('portfolioPageId', '==', portfolioPageId),
+      where('published', '==', true),
+      orderBy('order', 'asc')
+    );
+    
+    return collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>;
+  }
+
+  // Get portfolio items for a specific page with backwards compatibility
+  getPortfolioForPage(portfolioPageId?: string, category?: string): Observable<PortfolioItem[]> {
+    if (portfolioPageId) {
+      // Use specific portfolio page assignment
+      return this.getPortfolioByPageId(portfolioPageId);
+    } else if (category) {
+      // Fall back to category-based assignment for backwards compatibility
+      // Get all items of this category and filter client-side for better backwards compatibility
+      return this.getPortfolioByCategory(category).pipe(
+        map(items => items.filter(item => !item.portfolioPageId)) // Only items without specific page assignment
+      );
+    } else {
+      // Return empty if no criteria provided
+      return new Observable<PortfolioItem[]>(observer => observer.next([]));
+    }
+  }
+
   // Get all portfolio items (for admin)
   getAllPortfolio(): Observable<PortfolioItem[]> {
     const q = query(this.portfolioCollection, orderBy('createdAt', 'desc'));
@@ -102,7 +132,7 @@ export class PortfolioService {
     const portfolioItem = {
       title: item.title || '',
       description: item.description || '',
-      category: item.category || 'graphic-design',
+      category: item.category || 'art',
       featuredImage: item.featuredImage || '',
       galleries: item.galleries || [],
       published: item.published || false,

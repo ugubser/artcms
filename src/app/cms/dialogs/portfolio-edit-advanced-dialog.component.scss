@@ -166,3 +166,37 @@ h5 {
 mat-dialog-actions {
   padding: 1rem 0 0 0;
 }
+
+// Fix dropdown styling for better visibility
+::ng-deep .mat-select-panel {
+  background: white !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #ddd !important;
+}
+
+::ng-deep .mat-option {
+  background: white !important;
+  color: #333 !important;
+  
+  &:hover, &.mat-option-highlighted {
+    background: #f5f5f5 !important;
+  }
+  
+  &.mat-selected {
+    background: #e3f2fd !important;
+    color: #1976d2 !important;
+  }
+}
+
+::ng-deep .mat-select-arrow {
+  color: #666 !important;
+}
+
+::ng-deep .mat-select-trigger {
+  min-height: 1.5rem !important;
+}
+
+// Ensure proper spacing for form fields
+.portfolio-form mat-form-field {
+  margin-bottom: 0.5rem;
+}

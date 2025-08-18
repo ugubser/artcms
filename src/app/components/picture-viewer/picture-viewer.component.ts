@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
+import { CategoryService } from '../../services/category.service';
 import { MetaService } from '../../services/meta.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
@@ -37,6 +38,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private portfolioService: PortfolioService,
+    private categoryService: CategoryService,
     private metaService: MetaService
   ) {}
 
@@ -180,12 +182,6 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
   }
 
   getCategoryLabel(category: string): string {
-    const labels: { [key: string]: string } = {
-      'graphic-design': 'Graphic Design',
-      'art': 'Art',
-      'branding': 'Branding',
-      'web-design': 'Web Design'
-    };
-    return labels[category] || category;
+    return this.categoryService.getCategoryLabelSync(category);
   }
 }

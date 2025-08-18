@@ -18,12 +18,14 @@ import { SettingsService } from '../../services/settings.service';
           <li class="nav-divider">|</li>
           <li><a routerLink="/art" routerLinkActive="active">ART</a></li>
           <li class="nav-divider">|</li>
+          <li><a routerLink="/exhibition" routerLinkActive="active">EXHIBITION</a></li>
+          <li class="nav-divider">|</li>
           <li><a routerLink="/about" routerLinkActive="active">ABOUT</a></li>
           <li class="nav-divider">|</li>
           <li><a routerLink="/contact" routerLinkActive="active">CONTACT</a></li>
           <!-- <li class="nav-divider">|</li>
           <li><a routerLink="/design" routerLinkActive="active">DESIGN</a></li>
-	 -->
+	        -->
         </ul>
       </nav>
     </header>

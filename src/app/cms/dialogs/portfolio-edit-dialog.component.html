@@ -22,10 +22,9 @@
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Category</mat-label>
               <mat-select formControlName="category">
-                <mat-option value="art">Art</mat-option>
-                <mat-option value="graphic-design">Graphic Design</mat-option>
-                <mat-option value="branding">Branding</mat-option>
-                <mat-option value="web-design">Web Design</mat-option>
+                <mat-option *ngFor="let category of categories" [value]="category.value">
+                  {{ category.label }}
+                </mat-option>
               </mat-select>
               <mat-error *ngIf="portfolioForm.get('category')?.hasError('required')">
                 Category is required

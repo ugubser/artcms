@@ -12,7 +12,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
+import { deleteField } from 'firebase/firestore';
 import { PortfolioService, PortfolioItem, GalleryEntry, Picture } from '../../services/portfolio.service';
+import { CategoryService } from '../../services/category.service';
+import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 import { ImageUploadComponent } from '../components/image-upload.component';
 
 @Component({
@@ -44,10 +47,15 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   saving = false;
   currentFeaturedImage: string | null = null;
   galleries: GalleryEntry[] = [];
+  categories: {value: string, label: string}[] = [];
+  portfolioPages: PortfolioPageConfig[] = [];
+  filteredPortfolioPages: PortfolioPageConfig[] = [];
 
   constructor(
     private fb: FormBuilder,
     private portfolioService: PortfolioService,
+    private categoryService: CategoryService,
+    private portfolioPagesService: PortfolioPagesService,
     private snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<PortfolioEditAdvancedDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { item?: PortfolioItem }
@@ -57,12 +65,71 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.isEdit && this.data.item) {
-      this.populateForm(this.data.item);
-    } else {
-      // Initialize with one empty gallery for new items
-      this.galleries = [this.portfolioService.createEmptyGallery()];
-    }
+    console.log('Advanced dialog - ngOnInit started');
+    
+    // Load categories first
+    this.categoryService.getCategoriesForSelect().subscribe({
+      next: (categories) => {
+        console.log('Advanced dialog - Categories loaded:', categories);
+        this.categories = categories || [];
+        
+        // Load portfolio pages after categories are loaded
+        this.portfolioPagesService.getPortfolioPages().subscribe({
+          next: (portfolioPages) => {
+            console.log('Advanced dialog - Portfolio pages loaded:', portfolioPages);
+            this.portfolioPages = portfolioPages || [];
+            
+            // Set up category change listener to filter portfolio pages
+            this.portfolioForm.get('category')?.valueChanges.subscribe(category => {
+              console.log('Category changed to:', category);
+              this.filterPortfolioPages(category);
+            });
+            
+            if (this.isEdit && this.data.item) {
+              this.populateForm(this.data.item);
+            } else {
+              // Initialize with one empty gallery for new items
+              this.galleries = [this.portfolioService.createEmptyGallery()];
+            }
+          },
+          error: (error) => {
+            console.error('Error loading portfolio pages:', error);
+            this.portfolioPages = [];
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Advanced dialog - Error loading categories:', error);
+        // Fallback categories
+        this.categories = [
+          { value: 'art', label: 'Art' },
+          { value: 'exhibition', label: 'Exhibition' },
+          { value: 'graphic-design', label: 'Graphic Design' },
+          { value: 'branding', label: 'Branding' },
+          { value: 'web-design', label: 'Web Design' },
+          { value: 'photography', label: 'Photography' },
+          { value: 'illustration', label: 'Illustration' }
+        ];
+        this.portfolioPages = [];
+        
+        if (this.isEdit && this.data.item) {
+          this.populateForm(this.data.item);
+        } else {
+          this.galleries = [this.portfolioService.createEmptyGallery()];
+        }
+      }
+    });
+  }
+
+  private filterPortfolioPages(category: string) {
+    console.log('Filtering portfolio pages for category:', category);
+    console.log('Available portfolio pages:', this.portfolioPages);
+    
+    // Show ALL portfolio pages, not just matching category (allows cross-category assignment)
+    this.filteredPortfolioPages = [...this.portfolioPages];
+    console.log('All portfolio pages available for assignment:', this.filteredPortfolioPages);
+    
+    // No need to reset selection since we now allow any page assignment
   }
 
   private createForm(): FormGroup {
@@ -70,19 +137,30 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
       title: ['', Validators.required],
       description: [''],
       category: ['', Validators.required],
+      portfolioPageId: [''], // Optional portfolio page assignment
       order: [0],
       published: [false]
     });
   }
 
   private populateForm(item: PortfolioItem) {
+    console.log('Populating form with item:', item);
     this.portfolioForm.patchValue({
       title: item.title,
       description: item.description,
       category: item.category,
+      portfolioPageId: item.portfolioPageId || '', // Backwards compatible
       order: item.order || 0,
       published: item.published || false
     });
+    
+    console.log('Form populated, category is:', item.category);
+    // Filter portfolio pages based on current category
+    if (item.category) {
+      setTimeout(() => {
+        this.filterPortfolioPages(item.category);
+      }, 100); // Small delay to ensure form is updated
+    }
     
     // Set featured image
     this.currentFeaturedImage = item.featuredImage || null;
@@ -187,6 +265,15 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
         pictures: gallery.pictures.filter(picture => picture.imageUrl) // Only save pictures with images
       }))
     };
+
+    // Handle portfolioPageId assignment
+    if (formValue.portfolioPageId && formValue.portfolioPageId.trim() !== '') {
+      // Explicit page assignment
+      portfolioItem.portfolioPageId = formValue.portfolioPageId;
+    } else {
+      // Auto-assign by category: remove portfolioPageId field completely
+      portfolioItem.portfolioPageId = deleteField() as any;
+    }
 
     console.log('Saving portfolio item:', portfolioItem);
 
