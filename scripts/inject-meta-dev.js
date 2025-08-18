@@ -492,7 +492,7 @@ function generateSitemapXml(siteSettings, portfolioItems) {
   const staticPages = [
     { url: `${baseUrl}/home`, priority: '1.0', changefreq: 'weekly' },
     { url: `${baseUrl}/art`, priority: '0.9', changefreq: 'weekly' },
-    { url: `${baseUrl}/design`, priority: '0.9', changefreq: 'weekly' },
+    { url: `${baseUrl}/exhibition`, priority: '0.9', changefreq: 'weekly' },
     { url: `${baseUrl}/about`, priority: '0.8', changefreq: 'monthly' },
     { url: `${baseUrl}/contact`, priority: '0.7', changefreq: 'monthly' }
   ];
@@ -540,19 +540,10 @@ function generateSitemapXml(siteSettings, portfolioItems) {
   </url>
 `;
     
-    // Add gallery and individual gallery items
+    // Add individual gallery picture items (skip gallery folder URLs)
     if (item.galleries && item.galleries.length > 0) {
       item.galleries.forEach((gallery, galleryIndex) => {
-        // Add gallery page URL
-        xml += `  <url>
-    <loc>${escapeXml(baseUrl)}/portfolio/${escapeXml(item.id || '')}/galleries/${galleryIndex}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-        
-        // Add individual picture URLs
+        // Add individual picture URLs only (skip gallery folder URL)
         if (gallery.pictures && gallery.pictures.length > 0) {
           gallery.pictures.forEach((picture, pictureIndex) => {
             if (picture.imageUrl) {
@@ -765,7 +756,7 @@ ${JSON.stringify(schema, null, 2)}
         <ul class="main-pages">
             <li><a href="/home">Home</a><div class="description">Main landing page</div></li>
             <li><a href="/art">Art Portfolio</a><div class="description">Art and creative works</div></li>
-            <li><a href="/design">Design Portfolio</a><div class="description">Graphic design projects</div></li>
+            <li><a href="/exhibition">Exhibition</a><div class="description">Exhibition works and gallery displays</div></li>
             <li><a href="/about">About</a><div class="description">About the artist</div></li>
             <li><a href="/contact">Contact</a><div class="description">Get in touch</div></li>
         </ul>
@@ -791,12 +782,7 @@ ${JSON.stringify(schema, null, 2)}
         
         item.galleries.forEach((gallery, galleryIndex) => {
           html += `
-                    <div class="gallery">
-                        <strong class="gallery-title">
-                            <a href="/portfolio/${item.id}/galleries/${galleryIndex}">
-                                📁 ${gallery.description || 'Gallery ' + (galleryIndex + 1)}
-                            </a>
-                        </strong>`;
+                    <div class="gallery">`;
           
           if (gallery.pictures && gallery.pictures.length > 0) {
             html += `
