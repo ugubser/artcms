@@ -420,6 +420,13 @@ ${JSON.stringify(visualArtistSchema, null, 2)}
       log('yellow', '⚠️  No artist name provided, skipping Person structured data');
     }
     
+    // Add sitemap link at the bottom of the page
+    const sitemapLink = `  <div style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
+    <a href="/sitemap.html" style="color: #999; text-decoration: none;">Sitemap</a>
+  </div>
+`;
+    content = content.replace('</body>', `${sitemapLink}</body>`);
+    
     return content;
   } catch (error) {
     log('red', `❌ Error reading template file ${templatePath}: ${error.message}`);
@@ -451,6 +458,15 @@ function generateSitemapXml(siteSettings, portfolioItems) {
   
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+
+  // Add sitemap.html entry first with high priority
+  xml += `  <url>
+    <loc>${escapeXml(baseUrl)}/sitemap.html</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
 `;
 
   // Add static pages
@@ -814,7 +830,8 @@ ${JSON.stringify(schema, null, 2)}
         
         <div class="footer">
             <div class="description">
-                Last updated: ${new Date(lastUpdated).toLocaleString()}
+                Last updated: ${new Date(lastUpdated).toLocaleString()}<br>
+                <a href="/sitemap.xml">XML Sitemap</a>
             </div>
         </div>
     </div>
