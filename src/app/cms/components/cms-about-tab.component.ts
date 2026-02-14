@@ -10,6 +10,7 @@ import { AboutService } from '../../services/about.service';
 import { NotificationService } from '../../services/notification.service';
 import { AboutEditDialogComponent } from '../dialogs/about-edit-dialog.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'cms-about-tab',
@@ -20,7 +21,8 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatCardModule,
     MatIconModule,
     MatDialogModule,
-    ResolveStorageUrlPipe
+    ResolveStorageUrlPipe,
+    ImgLoadingDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../styles/cms-shared.scss'],
@@ -40,7 +42,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
             <mat-card-title>{{ section.title }}</mat-card-title>
             <mat-card-subtitle>Order: {{ section.order }}</mat-card-subtitle>
           </mat-card-header>
-          <img mat-card-image [src]="section.image | resolveStorageUrl | async" [alt]="section.title" *ngIf="section.image" loading="lazy">
+          <img appImgLoading mat-card-image [src]="section.image | resolveStorageUrl | async" [alt]="section.title" *ngIf="section.image" loading="lazy">
           <mat-card-content>
             <div [innerHTML]="sanitizeHtml(section.content)"></div>
           </mat-card-content>

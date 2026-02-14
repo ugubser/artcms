@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { PortfolioItem } from '../../services/portfolio.service';
 import { CategoryService } from '../../services/category.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-portfolio-detail-dialog',
@@ -15,7 +16,8 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    ResolveStorageUrlPipe
+    ResolveStorageUrlPipe,
+    ImgLoadingDirective
   ],
   templateUrl: './portfolio-detail-dialog.component.html',
   styleUrl: './portfolio-detail-dialog.component.scss',

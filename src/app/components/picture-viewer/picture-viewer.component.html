@@ -70,7 +70,7 @@
           </button>
           
           <div class="image-container">
-            <img [src]="currentImage!.url | resolveStorageUrl | async" [alt]="currentImage?.alt || portfolioItem?.title">
+            <img appImgLoading [src]="currentImage!.url | resolveStorageUrl | async" [alt]="currentImage?.alt || portfolioItem?.title">
           </div>
           
           <button mat-icon-button 

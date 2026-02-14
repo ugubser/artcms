@@ -11,12 +11,13 @@ import { SettingsService } from '../../services/settings.service';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe],
+  imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe, ImgLoadingDirective],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

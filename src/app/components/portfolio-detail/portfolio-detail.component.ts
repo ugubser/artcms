@@ -9,6 +9,7 @@ import { CategoryService } from '../../services/category.service';
 import { MetaService } from '../../services/meta.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-portfolio-detail',
@@ -18,7 +19,8 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatButtonModule,
     MatIconModule,
     PageHeaderComponent,
-    ResolveStorageUrlPipe
+    ResolveStorageUrlPipe,
+    ImgLoadingDirective
   ],
   templateUrl: './portfolio-detail.component.html',
   styleUrl: './portfolio-detail.component.scss',

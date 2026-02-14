@@ -5,12 +5,13 @@ import { Observable, tap } from 'rxjs';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { CategoryService } from '../../services/category.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-portfolio-grid',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ResolveStorageUrlPipe],
+  imports: [CommonModule, ResolveStorageUrlPipe, ImgLoadingDirective],
   templateUrl: './portfolio-grid.component.html',
   styleUrls: ['./portfolio-grid.component.scss']
 })

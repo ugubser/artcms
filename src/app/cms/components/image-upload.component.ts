@@ -7,6 +7,7 @@ import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angula
 import { StorageUrlService } from '../../services/storage-url.service';
 import { NotificationService } from '../../services/notification.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-image-upload',
@@ -16,14 +17,15 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
-    ResolveStorageUrlPipe
+    ResolveStorageUrlPipe,
+    ImgLoadingDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="image-upload-container">
       <!-- Current Image Preview -->
       <div class="current-image" *ngIf="currentImageUrl && !uploading">
-        <img [src]="currentImageUrl | resolveStorageUrl | async" [alt]="alt" class="preview-image">
+        <img appImgLoading [src]="currentImageUrl | resolveStorageUrl | async" [alt]="alt" class="preview-image">
         <div class="image-overlay">
           <button mat-icon-button color="warn" (click)="removeImage()" 
                   [disabled]="uploading" title="Remove image">

@@ -5,12 +5,13 @@ import { Observable, tap } from 'rxjs';
 import { AboutService, AboutSection } from '../../services/about.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-about',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe],
+  imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe, ImgLoadingDirective],
   template: `
     <div class="about-container">
       <app-page-header></app-page-header>
@@ -27,7 +28,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
             <div class="section-text" [innerHTML]="formatContent(section.content)"></div>
           </div>
           <div *ngIf="section.image" class="section-image">
-            <img [src]="section.image | resolveStorageUrl | async" [alt]="section.title" loading="lazy" />
+            <img appImgLoading [src]="section.image | resolveStorageUrl | async" [alt]="section.title" loading="lazy" />
           </div>
         </section>
         

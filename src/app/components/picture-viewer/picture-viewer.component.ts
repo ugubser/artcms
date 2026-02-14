@@ -8,6 +8,7 @@ import { PortfolioService, PortfolioItem } from '../../services/portfolio.servic
 import { CategoryService } from '../../services/category.service';
 import { MetaService } from '../../services/meta.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'app-picture-viewer',
@@ -17,7 +18,8 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     RouterModule,
     MatButtonModule,
     MatIconModule,
-    ResolveStorageUrlPipe
+    ResolveStorageUrlPipe,
+    ImgLoadingDirective
   ],
   templateUrl: './picture-viewer.component.html',
   styleUrl: './picture-viewer.component.scss',

@@ -9,6 +9,7 @@ import { PortfolioPagesService } from '../../services/portfolio-pages.service';
 import { NotificationService } from '../../services/notification.service';
 import { PortfolioPagesEditDialogComponent } from '../dialogs/portfolio-pages-edit-dialog.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
+import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'cms-portfolio-pages-tab',
@@ -19,7 +20,8 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatCardModule,
     MatIconModule,
     MatDialogModule,
-    ResolveStorageUrlPipe
+    ResolveStorageUrlPipe,
+    ImgLoadingDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../styles/cms-shared.scss'],
@@ -39,7 +41,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
             <mat-card-title>{{ page.title }}</mat-card-title>
             <mat-card-subtitle>{{ page.slug }}</mat-card-subtitle>
           </mat-card-header>
-          <img mat-card-image [src]="page.featuredImage | resolveStorageUrl | async" [alt]="page.title" *ngIf="page.featuredImage" loading="lazy">
+          <img appImgLoading mat-card-image [src]="page.featuredImage | resolveStorageUrl | async" [alt]="page.title" *ngIf="page.featuredImage" loading="lazy">
           <mat-card-content>
             <p>{{ page.excerpt }}</p>
             <p><strong>Status:</strong> {{ page.published ? 'Published' : 'Draft' }}</p>
