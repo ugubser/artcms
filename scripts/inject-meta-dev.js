@@ -954,7 +954,7 @@ async function main() {
   console.log(`   🌐 Static Sitemaps: Available at /sitemap.html and /sitemap.xml (crawler-friendly)`);
   
   log('green', '🎉 Development SEO file generation completed successfully!');
-  
+
   // Clean up Firebase connection if it exists
   if (db) {
     try {
@@ -963,6 +963,9 @@ async function main() {
       // Ignore cleanup errors
     }
   }
+
+  // Force exit since Firebase SDK may keep connections alive
+  process.exit(0);
 }
 
 // Run the script

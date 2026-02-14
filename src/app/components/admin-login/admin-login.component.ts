@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
     MatIconModule,
     MatProgressSpinnerModule
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="login-container">
       <mat-card class="login-card">
@@ -110,7 +111,8 @@ export class AdminLoginComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   async signInWithGoogle() {
@@ -125,6 +127,7 @@ export class AdminLoginComponent {
       this.errorMessage = error.message || 'Authentication failed. Please try again.';
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 }

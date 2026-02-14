@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,6 +19,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
   ],
   templateUrl: './portfolio-detail-dialog.component.html',
   styleUrl: './portfolio-detail-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
 })
 export class PortfolioDetailDialogComponent {

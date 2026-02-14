@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -6,9 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AboutService } from '../../services/about.service';
+import { NotificationService } from '../../services/notification.service';
 import { ImageUploadComponent } from '../components/image-upload.component';
+import { BaseEditDialogComponent } from './base-edit-dialog.component';
 
 export interface AboutSection {
   id?: string;
@@ -30,19 +31,19 @@ export interface AboutSection {
     MatInputModule,
     MatFormFieldModule,
     MatIconModule,
-    MatSnackBarModule,
     ImageUploadComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dialog-container">
       <h2 mat-dialog-title>{{ isEdit ? 'Edit' : 'Add' }} About Section</h2>
       
       <mat-dialog-content>
-        <form [formGroup]="aboutForm" class="about-form">
+        <form [formGroup]="form" class="about-form">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Section Title</mat-label>
             <input matInput formControlName="title" placeholder="About the Artist">
-            <mat-error *ngIf="aboutForm.get('title')?.hasError('required')">
+            <mat-error *ngIf="form.get('title')?.hasError('required')">
               Title is required
             </mat-error>
           </mat-form-field>
@@ -59,7 +60,7 @@ export interface AboutSection {
             <app-image-upload
               [currentImageUrl]="currentImage"
               [storagePath]="'about'"
-              [alt]="aboutForm.get('title')?.value || 'About section image'"
+              [alt]="form.get('title')?.value || 'About section image'"
               [maxSizeMB]="3"
               [recommendedSize]="'600x400px'"
               [allowUrlInput]="true"
@@ -80,7 +81,7 @@ export interface AboutSection {
         <button mat-button (click)="onCancel()">Cancel</button>
         <button mat-raised-button color="primary" 
                 (click)="onSave()" 
-                [disabled]="aboutForm.invalid || saving">
+                [disabled]="form.invalid || saving">
           <mat-icon *ngIf="saving">hourglass_empty</mat-icon>
           {{ saving ? 'Saving...' : (isEdit ? 'Update' : 'Create') }}
         </button>
@@ -120,30 +121,35 @@ export interface AboutSection {
     }
   `]
 })
-export class AboutEditDialogComponent implements OnInit {
-  aboutForm: FormGroup;
-  isEdit: boolean;
-  saving = false;
+export class AboutEditDialogComponent extends BaseEditDialogComponent<{ section?: AboutSection }, AboutSection> implements OnInit {
   currentImage: string | null = null;
 
   constructor(
-    private fb: FormBuilder,
-    private aboutService: AboutService,
-    private snackBar: MatSnackBar,
-    private dialogRef: MatDialogRef<AboutEditDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { section?: AboutSection }
+    fb: FormBuilder,
+    notify: NotificationService,
+    dialogRef: MatDialogRef<AboutEditDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: { section?: AboutSection },
+    private aboutService: AboutService
   ) {
-    this.isEdit = !!data?.section;
-    this.aboutForm = this.createForm();
+    super(fb, notify, dialogRef, data, 'about section');
+  }
+
+  protected override checkIsEdit(data: { section?: AboutSection }): boolean {
+    return !!data?.section;
   }
 
   ngOnInit() {
     if (this.isEdit && this.data.section) {
-      this.populateForm(this.data.section);
+      this.form.patchValue({
+        title: this.data.section.title,
+        content: this.data.section.content,
+        order: this.data.section.order || 0
+      });
+      this.currentImage = this.data.section.image || null;
     }
   }
 
-  private createForm(): FormGroup {
+  protected createForm(): FormGroup {
     return this.fb.group({
       title: ['', Validators.required],
       content: [''],
@@ -151,58 +157,26 @@ export class AboutEditDialogComponent implements OnInit {
     });
   }
 
-  private populateForm(section: AboutSection) {
-    this.aboutForm.patchValue({
-      title: section.title,
-      content: section.content,
-      order: section.order || 0
-    });
-    
-    this.currentImage = section.image || null;
+  protected buildEntity(): AboutSection {
+    const v = this.form.value;
+    return { title: v.title, content: v.content, image: this.currentImage || '', order: v.order };
   }
 
-  // Image handling methods
+  protected async saveEntity(entity: AboutSection): Promise<void> {
+    if (this.isEdit && this.data.section?.id) {
+      await this.aboutService.updateAboutSection(this.data.section.id, entity);
+      this.notify.updated('About section');
+    } else {
+      await this.aboutService.createAboutSection(entity);
+      this.notify.created('About section');
+    }
+  }
+
   onImageUploaded(imageUrl: string) {
     this.currentImage = imageUrl;
   }
 
   onImageRemoved() {
     this.currentImage = null;
-  }
-
-  onCancel() {
-    this.dialogRef.close();
-  }
-
-  async onSave() {
-    if (this.aboutForm.invalid) {
-      return;
-    }
-
-    this.saving = true;
-    const formValue = this.aboutForm.value;
-    
-    const aboutSection: AboutSection = {
-      title: formValue.title,
-      content: formValue.content,
-      image: this.currentImage || '',
-      order: formValue.order
-    };
-
-    try {
-      if (this.isEdit && this.data.section?.id) {
-        await this.aboutService.updateAboutSection(this.data.section.id, aboutSection);
-        this.snackBar.open('About section updated successfully', 'Close', { duration: 3000 });
-      } else {
-        await this.aboutService.createAboutSection(aboutSection);
-        this.snackBar.open('About section created successfully', 'Close', { duration: 3000 });
-      }
-      
-      this.dialogRef.close(true);
-    } catch (error) {
-      this.snackBar.open('Error saving about section. Please try again.', 'Close', { duration: 5000 });
-    } finally {
-      this.saving = false;
-    }
   }
 }

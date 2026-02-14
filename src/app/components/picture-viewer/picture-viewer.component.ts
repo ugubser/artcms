@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,10 +20,12 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     ResolveStorageUrlPipe
   ],
   templateUrl: './picture-viewer.component.html',
-  styleUrl: './picture-viewer.component.scss'
+  styleUrl: './picture-viewer.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PictureViewerComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   portfolioItem: PortfolioItem | null = null;
   currentImage: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string; galleryIndex: number; pictureIndex: number } | null = null;
   currentImageIndex = 0;
@@ -74,6 +76,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
         this.setCurrentImage();
         this.updateMetaTags();
         this.isLoading = false;
+        this.cdr.markForCheck();
       } else {
         this.goToPortfolio();
       }

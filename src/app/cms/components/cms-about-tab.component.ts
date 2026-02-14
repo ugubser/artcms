@@ -1,13 +1,13 @@
-import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AboutService } from '../../services/about.service';
+import { NotificationService } from '../../services/notification.service';
 import { AboutEditDialogComponent } from '../dialogs/about-edit-dialog.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
@@ -19,10 +19,10 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatButtonModule,
     MatCardModule,
     MatIconModule,
-    MatSnackBarModule,
     MatDialogModule,
     ResolveStorageUrlPipe
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../styles/cms-shared.scss'],
   template: `
     <div class="tab-content">
@@ -70,12 +70,13 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 })
 export class CmsAboutTabComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   sections: any[] = [];
 
   constructor(
     private aboutService: AboutService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private notify: NotificationService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -85,7 +86,7 @@ export class CmsAboutTabComponent implements OnInit {
 
   loadData() {
     this.aboutService.getAboutSections().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (sections) => this.sections = sections,
+      next: (sections) => { this.sections = sections; this.cdr.markForCheck(); },
       error: () => {}
     });
   }
@@ -111,7 +112,7 @@ export class CmsAboutTabComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadData();
-        this.snackBar.open('About section created successfully', 'Close', { duration: 3000 });
+        this.notify.created('About section');
       }
     });
   }
@@ -134,9 +135,9 @@ export class CmsAboutTabComponent implements OnInit {
       try {
         await this.aboutService.deleteAboutSection(id);
         this.loadData();
-        this.snackBar.open('About section deleted successfully', 'Close', { duration: 3000 });
+        this.notify.deleted('About section');
       } catch (error) {
-        this.snackBar.open('Error deleting about section', 'Close', { duration: 5000 });
+        this.notify.deleteError('about section');
       }
     }
   }

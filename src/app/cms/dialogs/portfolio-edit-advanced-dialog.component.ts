@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, Inject, OnInit, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -9,7 +9,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
@@ -17,6 +16,7 @@ import { deleteField } from 'firebase/firestore';
 import { PortfolioService, PortfolioItem, GalleryEntry, Picture } from '../../services/portfolio.service';
 import { CategoryService } from '../../services/category.service';
 import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
+import { NotificationService } from '../../services/notification.service';
 import { ImageUploadComponent } from '../components/image-upload.component';
 
 @Component({
@@ -33,12 +33,12 @@ import { ImageUploadComponent } from '../components/image-upload.component';
     MatFormFieldModule,
     MatCheckboxModule,
     MatIconModule,
-    MatSnackBarModule,
     MatTabsModule,
     MatExpansionModule,
     MatCardModule,
     ImageUploadComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './portfolio-edit-advanced-dialog.component.html',
   styleUrl: './portfolio-edit-advanced-dialog.component.scss'
 })
@@ -53,12 +53,14 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   portfolioPages: PortfolioPageConfig[] = [];
   filteredPortfolioPages: PortfolioPageConfig[] = [];
 
+  private cdr = inject(ChangeDetectorRef);
+
   constructor(
     private fb: FormBuilder,
     private portfolioService: PortfolioService,
     private categoryService: CategoryService,
     private portfolioPagesService: PortfolioPagesService,
-    private snackBar: MatSnackBar,
+    private notify: NotificationService,
     private dialogRef: MatDialogRef<PortfolioEditAdvancedDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { item?: PortfolioItem }
   ) {
@@ -71,11 +73,13 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
     this.categoryService.getCategoriesForSelect().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (categories) => {
         this.categories = categories || [];
+        this.cdr.markForCheck();
 
         // Load portfolio pages after categories are loaded
         this.portfolioPagesService.getPortfolioPages().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (portfolioPages) => {
             this.portfolioPages = portfolioPages || [];
+            this.cdr.markForCheck();
 
             // Set up category change listener to filter portfolio pages
             this.portfolioForm.get('category')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(category => {
@@ -263,16 +267,16 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
     try {
       if (this.isEdit && this.data.item?.id) {
         await this.portfolioService.updatePortfolioItem(this.data.item.id, portfolioItem);
-        this.snackBar.open('Portfolio item updated successfully', 'Close', { duration: 3000 });
+        this.notify.updated('Portfolio item');
       } else {
         portfolioItem.createdAt = new Date();
         await this.portfolioService.createPortfolioItem(portfolioItem);
-        this.snackBar.open('Portfolio item created successfully', 'Close', { duration: 3000 });
+        this.notify.created('Portfolio item');
       }
 
       this.dialogRef.close(true);
     } catch (error) {
-      this.snackBar.open(`Error saving portfolio item: ${error}`, 'Close', { duration: 5000 });
+      this.notify.saveError('portfolio item', error);
     } finally {
       this.saving = false;
     }

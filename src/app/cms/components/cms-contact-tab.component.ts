@@ -1,4 +1,4 @@
-import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -18,6 +18,7 @@ import { ContactEditDialogComponent } from '../dialogs/contact-edit-dialog.compo
     MatIconModule,
     MatDialogModule
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../styles/cms-shared.scss'],
   template: `
     <div class="tab-content">
@@ -66,6 +67,7 @@ import { ContactEditDialogComponent } from '../dialogs/contact-edit-dialog.compo
 })
 export class CmsContactTabComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   contactInfo: any = null;
 
   constructor(
@@ -79,7 +81,7 @@ export class CmsContactTabComponent implements OnInit {
 
   loadData() {
     this.contactService.getContactInfo().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (contactArray) => this.contactInfo = contactArray.length > 0 ? contactArray[0] : null,
+      next: (contactArray) => { this.contactInfo = contactArray.length > 0 ? contactArray[0] : null; this.cdr.markForCheck(); },
       error: () => {}
     });
   }

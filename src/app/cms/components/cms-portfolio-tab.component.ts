@@ -1,12 +1,12 @@
-import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService } from '../../services/portfolio.service';
+import { NotificationService } from '../../services/notification.service';
 import { PortfolioEditAdvancedDialogComponent } from '../dialogs/portfolio-edit-advanced-dialog.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
@@ -18,10 +18,10 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatButtonModule,
     MatCardModule,
     MatIconModule,
-    MatSnackBarModule,
     MatDialogModule,
     ResolveStorageUrlPipe
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../styles/cms-shared.scss'],
   template: `
     <div class="tab-content">
@@ -73,12 +73,13 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 })
 export class CmsPortfolioTabComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   items: any[] = [];
 
   constructor(
     private portfolioService: PortfolioService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private notify: NotificationService
   ) {}
 
   ngOnInit() {
@@ -87,7 +88,7 @@ export class CmsPortfolioTabComponent implements OnInit {
 
   loadData() {
     this.portfolioService.getAllPortfolio().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (items) => this.items = items,
+      next: (items) => { this.items = items; this.cdr.markForCheck(); },
       error: () => {}
     });
   }
@@ -114,7 +115,7 @@ export class CmsPortfolioTabComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadData();
-        this.snackBar.open('Portfolio item created successfully', 'Close', { duration: 3000 });
+        this.notify.created('Portfolio item');
       }
     });
   }
@@ -139,9 +140,9 @@ export class CmsPortfolioTabComponent implements OnInit {
       try {
         await this.portfolioService.deletePortfolioItem(id);
         this.loadData();
-        this.snackBar.open('Portfolio item deleted successfully', 'Close', { duration: 3000 });
+        this.notify.deleted('Portfolio item');
       } catch (error) {
-        this.snackBar.open('Error deleting portfolio item', 'Close', { duration: 5000 });
+        this.notify.deleteError('portfolio item');
       }
     }
   }

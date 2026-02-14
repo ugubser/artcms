@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -21,10 +21,12 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     ResolveStorageUrlPipe
   ],
   templateUrl: './portfolio-detail.component.html',
-  styleUrl: './portfolio-detail.component.scss'
+  styleUrl: './portfolio-detail.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PortfolioDetailComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   portfolioItem: PortfolioItem | null = null;
   selectedImageUrl: string | null = null;
   currentImageIndex = 0;
@@ -64,6 +66,7 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
         this.setupImageData();
         this.metaService.setPageTitle(item.title);
         this.isLoading = false;
+        this.cdr.markForCheck();
       } else {
         this.router.navigate(['/home']);
       }

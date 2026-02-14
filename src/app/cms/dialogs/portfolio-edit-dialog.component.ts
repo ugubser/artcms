@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,12 +8,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Observable } from 'rxjs';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { CategoryService } from '../../services/category.service';
 import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
+import { NotificationService } from '../../services/notification.service';
 import { ImageUploadComponent } from '../components/image-upload.component';
 
 @Component({
@@ -30,10 +30,10 @@ import { ImageUploadComponent } from '../components/image-upload.component';
     MatFormFieldModule,
     MatCheckboxModule,
     MatIconModule,
-    MatSnackBarModule,
     MatTabsModule,
     ImageUploadComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './portfolio-edit-dialog.component.html',
   styleUrl: './portfolio-edit-dialog.component.scss'
 })
@@ -52,7 +52,8 @@ export class PortfolioEditDialogComponent implements OnInit {
     private fb: FormBuilder,
     private portfolioService: PortfolioService,
     private categoryService: CategoryService,
-    private snackBar: MatSnackBar,
+    private notify: NotificationService,
+    private cdr: ChangeDetectorRef,
     private dialogRef: MatDialogRef<PortfolioEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { item?: PortfolioItem }
   ) {
@@ -66,7 +67,8 @@ export class PortfolioEditDialogComponent implements OnInit {
     this.categoryService.getCategoriesForSelect().subscribe({
       next: (categories) => {
         this.categories = categories;
-        
+        this.cdr.markForCheck();
+
         if (this.isEdit && this.data.item) {
           this.populateForm(this.data.item);
         } else {
@@ -184,16 +186,16 @@ export class PortfolioEditDialogComponent implements OnInit {
     try {
       if (this.isEdit && this.data.item?.id) {
         await this.portfolioService.updatePortfolioItem(this.data.item.id, portfolioItem);
-        this.snackBar.open('Portfolio item updated successfully', 'Close', { duration: 3000 });
+        this.notify.updated('Portfolio item');
       } else {
         portfolioItem.createdAt = new Date();
         await this.portfolioService.createPortfolioItem(portfolioItem);
-        this.snackBar.open('Portfolio item created successfully', 'Close', { duration: 3000 });
+        this.notify.created('Portfolio item');
       }
 
       this.dialogRef.close(true);
     } catch (error) {
-      this.snackBar.open(`Error saving portfolio item: ${error}`, 'Close', { duration: 5000 });
+      this.notify.saveError('portfolio item', error);
     } finally {
       this.saving = false;
     }

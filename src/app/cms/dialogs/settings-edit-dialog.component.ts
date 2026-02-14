@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -7,10 +7,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { NotificationService } from '../../services/notification.service';
 import { ImageUploadComponent } from '../components/image-upload.component';
 
 @Component({
@@ -26,11 +26,11 @@ import { ImageUploadComponent } from '../components/image-upload.component';
     MatFormFieldModule,
     MatCheckboxModule,
     MatIconModule,
-    MatSnackBarModule,
     MatTabsModule,
     MatChipsModule,
     ImageUploadComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings-edit-dialog.component.html',
   styleUrl: './settings-edit-dialog.component.scss'
 })
@@ -45,7 +45,7 @@ export class SettingsEditDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private settingsService: SettingsService,
-    private snackBar: MatSnackBar,
+    private notify: NotificationService,
     private dialogRef: MatDialogRef<SettingsEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { settings?: SiteSettings }
   ) {
@@ -184,10 +184,10 @@ export class SettingsEditDialogComponent implements OnInit {
 
     try {
       await this.settingsService.updateSiteSettings(settingsData);
-      this.snackBar.open('Site settings updated successfully', 'Close', { duration: 3000 });
+      this.notify.updated('Site settings');
       this.dialogRef.close(true);
     } catch (error) {
-      this.snackBar.open(`Error saving settings: ${error}`, 'Close', { duration: 5000 });
+      this.notify.saveError('settings', error);
     } finally {
       this.saving = false;
     }

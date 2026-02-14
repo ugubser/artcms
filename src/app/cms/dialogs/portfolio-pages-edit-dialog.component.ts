@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -7,10 +7,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 import { CategoryService } from '../../services/category.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-portfolio-pages-edit-dialog',
@@ -25,9 +25,9 @@ import { CategoryService } from '../../services/category.service';
     MatSelectModule,
     MatFormFieldModule,
     MatIconModule,
-    MatSnackBarModule,
     MatTabsModule
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './portfolio-pages-edit-dialog.component.html',
   styleUrl: './portfolio-pages-edit-dialog.component.scss'
 })
@@ -41,7 +41,8 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
     private fb: FormBuilder,
     private portfolioPagesService: PortfolioPagesService,
     private categoryService: CategoryService,
-    private snackBar: MatSnackBar,
+    private notify: NotificationService,
+    private cdr: ChangeDetectorRef,
     public dialogRef: MatDialogRef<PortfolioPagesEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -131,9 +132,11 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       }
       
       this.isLoading = false;
+      this.cdr.markForCheck();
     } catch (error) {
-      this.snackBar.open('Error loading portfolio pages', 'Close', { duration: 3000 });
+      this.notify.error('Error loading portfolio pages');
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -143,7 +146,7 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
 
   async onSave() {
     if (this.portfolioPagesForm.invalid) {
-      this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000 });
+      this.notify.error('Please fill in all required fields');
       return;
     }
 
@@ -161,20 +164,20 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
         };
         
         await this.portfolioPagesService.updatePortfolioPage(pageConfig);
-        this.snackBar.open(`Portfolio page ${this.isEdit ? 'updated' : 'created'} successfully!`, 'Close', { duration: 3000 });
+        this.isEdit ? this.notify.updated('Portfolio page') : this.notify.created('Portfolio page');
       } else {
         // Multi-page mode (legacy)
         const pages = this.pagesArray.value as PortfolioPageConfig[];
-        
+
         for (const page of pages) {
           await this.portfolioPagesService.updatePortfolioPage(page);
         }
-        this.snackBar.open('Portfolio pages updated successfully!', 'Close', { duration: 3000 });
+        this.notify.updated('Portfolio pages');
       }
-      
+
       this.dialogRef.close(true);
     } catch (error) {
-      this.snackBar.open('Error updating portfolio pages', 'Close', { duration: 3000 });
+      this.notify.saveError('portfolio pages');
     } finally {
       this.isLoading = false;
     }

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable, tap } from 'rxjs';
@@ -14,10 +14,12 @@ import { Firestore, collection, addDoc } from '@angular/fire/firestore';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
   templateUrl: './contact.component.html',
-  styleUrl: './contact.component.scss'
+  styleUrl: './contact.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ContactComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   contactInfo$: Observable<ContactInfo[]>;
   isLoading = true;
   settingsContactEmail = signal<string>('');
@@ -104,10 +106,12 @@ export class ContactComponent implements OnInit {
         this.submitMessage = 'Sorry, there was an error sending your message. Please try again.';
       } finally {
         this.isSubmitting = false;
-        
+        this.cdr.markForCheck();
+
         // Clear message after 5 seconds
         setTimeout(() => {
           this.submitMessage = '';
+          this.cdr.markForCheck();
         }, 5000);
       }
     }

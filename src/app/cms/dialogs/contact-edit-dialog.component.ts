@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -6,8 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ContactService } from '../../services/contact.service';
+import { NotificationService } from '../../services/notification.service';
+import { BaseEditDialogComponent } from './base-edit-dialog.component';
 
 export interface ContactInfo {
   id?: string;
@@ -32,22 +33,22 @@ export interface ContactInfo {
     MatButtonModule,
     MatInputModule,
     MatFormFieldModule,
-    MatIconModule,
-    MatSnackBarModule
+    MatIconModule
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dialog-container">
       <h2 mat-dialog-title>Edit Contact Information</h2>
       
       <mat-dialog-content>
-        <form [formGroup]="contactForm" class="contact-form">
+        <form [formGroup]="form" class="contact-form">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email</mat-label>
             <input matInput type="email" formControlName="email" placeholder="contact@tribecaconcepts.com">
-            <mat-error *ngIf="contactForm.get('email')?.hasError('required')">
+            <mat-error *ngIf="form.get('email')?.hasError('required')">
               Email is required
             </mat-error>
-            <mat-error *ngIf="contactForm.get('email')?.hasError('email')">
+            <mat-error *ngIf="form.get('email')?.hasError('email')">
               Please enter a valid email
             </mat-error>
           </mat-form-field>
@@ -91,7 +92,7 @@ export interface ContactInfo {
         <button mat-button (click)="onCancel()">Cancel</button>
         <button mat-raised-button color="primary" 
                 (click)="onSave()" 
-                [disabled]="contactForm.invalid || saving">
+                [disabled]="form.invalid || saving">
           <mat-icon *ngIf="saving">hourglass_empty</mat-icon>
           {{ saving ? 'Saving...' : 'Save Changes' }}
         </button>
@@ -133,27 +134,35 @@ export interface ContactInfo {
     }
   `]
 })
-export class ContactEditDialogComponent implements OnInit {
-  contactForm: FormGroup;
-  saving = false;
-
+export class ContactEditDialogComponent extends BaseEditDialogComponent<{ contactInfo?: ContactInfo }, ContactInfo> implements OnInit {
   constructor(
-    private fb: FormBuilder,
-    private contactService: ContactService,
-    private snackBar: MatSnackBar,
-    private dialogRef: MatDialogRef<ContactEditDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { contactInfo?: ContactInfo }
+    fb: FormBuilder,
+    notify: NotificationService,
+    dialogRef: MatDialogRef<ContactEditDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: { contactInfo?: ContactInfo },
+    private contactService: ContactService
   ) {
-    this.contactForm = this.createForm();
+    super(fb, notify, dialogRef, data, 'contact information');
+  }
+
+  protected override checkIsEdit(data: { contactInfo?: ContactInfo }): boolean {
+    return !!data?.contactInfo;
   }
 
   ngOnInit() {
     if (this.data.contactInfo) {
-      this.populateForm(this.data.contactInfo);
+      this.form.patchValue({
+        email: this.data.contactInfo.email || '',
+        phone: this.data.contactInfo.phone || '',
+        address: this.data.contactInfo.address || '',
+        instagram: this.data.contactInfo.socialMedia?.instagram || '',
+        linkedin: this.data.contactInfo.socialMedia?.linkedin || '',
+        twitter: this.data.contactInfo.socialMedia?.twitter || ''
+      });
     }
   }
 
-  private createForm(): FormGroup {
+  protected createForm(): FormGroup {
     return this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
@@ -164,48 +173,18 @@ export class ContactEditDialogComponent implements OnInit {
     });
   }
 
-  private populateForm(contactInfo: ContactInfo) {
-    this.contactForm.patchValue({
-      email: contactInfo.email || '',
-      phone: contactInfo.phone || '',
-      address: contactInfo.address || '',
-      instagram: contactInfo.socialMedia?.instagram || '',
-      linkedin: contactInfo.socialMedia?.linkedin || '',
-      twitter: contactInfo.socialMedia?.twitter || ''
-    });
-  }
-
-  onCancel() {
-    this.dialogRef.close();
-  }
-
-  async onSave() {
-    if (this.contactForm.invalid) {
-      return;
-    }
-
-    this.saving = true;
-    const formValue = this.contactForm.value;
-    
-    const contactInfo: ContactInfo = {
-      email: formValue.email,
-      phone: formValue.phone,
-      address: formValue.address,
-      socialMedia: {
-        instagram: formValue.instagram,
-        linkedin: formValue.linkedin,
-        twitter: formValue.twitter
-      }
+  protected buildEntity(): ContactInfo {
+    const v = this.form.value;
+    return {
+      email: v.email,
+      phone: v.phone,
+      address: v.address,
+      socialMedia: { instagram: v.instagram, linkedin: v.linkedin, twitter: v.twitter }
     };
+  }
 
-    try {
-      await this.contactService.updateContactInfo(contactInfo);
-      this.snackBar.open('Contact information updated successfully', 'Close', { duration: 3000 });
-      this.dialogRef.close(true);
-    } catch (error) {
-      this.snackBar.open('Error saving contact information. Please try again.', 'Close', { duration: 5000 });
-    } finally {
-      this.saving = false;
-    }
+  protected async saveEntity(entity: ContactInfo): Promise<void> {
+    await this.contactService.updateContactInfo(entity);
+    this.notify.updated('Contact information');
   }
 }

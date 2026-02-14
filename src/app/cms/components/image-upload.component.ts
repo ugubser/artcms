@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { StorageUrlService } from '../../services/storage-url.service';
+import { NotificationService } from '../../services/notification.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
@@ -16,9 +16,9 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
-    MatSnackBarModule,
     ResolveStorageUrlPipe
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="image-upload-container">
       <!-- Current Image Preview -->
@@ -187,8 +187,9 @@ export class ImageUploadComponent implements OnInit {
 
   constructor(
     private storage: Storage,
-    private snackBar: MatSnackBar,
-    private storageUrlService: StorageUrlService
+    private notify: NotificationService,
+    private storageUrlService: StorageUrlService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -240,13 +241,14 @@ export class ImageUploadComponent implements OnInit {
       this.currentImageUrl = filePath; // Store object path
       this.imageUploaded.emit(filePath); // Emit object path
       
-      this.snackBar.open('Image uploaded successfully!', 'Close', { duration: 3000 });
-      
+      this.notify.success('Image uploaded successfully!');
+
     } catch (error) {
-      this.snackBar.open('Failed to upload image. Please try again.', 'Close', { duration: 5000 });
+      this.notify.error('Failed to upload image. Please try again.');
     } finally {
       this.uploading = false;
       this.uploadProgress = 0;
+      this.cdr.markForCheck();
       // Reset file input
       event.target.value = '';
     }
@@ -254,7 +256,7 @@ export class ImageUploadComponent implements OnInit {
 
   async setImageFromUrl(url: string) {
     if (!url.trim()) {
-      this.snackBar.open('Please enter a valid URL', 'Close', { duration: 3000 });
+      this.notify.error('Please enter a valid URL');
       return;
     }
 
@@ -273,9 +275,9 @@ export class ImageUploadComponent implements OnInit {
         this.imageUploaded.emit(url);
       }
       
-      this.snackBar.open('Image URL set successfully!', 'Close', { duration: 3000 });
+      this.notify.success('Image URL set successfully!');
     } catch {
-      this.snackBar.open('Invalid URL format', 'Close', { duration: 3000 });
+      this.notify.error('Invalid URL format');
     }
   }
 
@@ -289,20 +291,20 @@ export class ImageUploadComponent implements OnInit {
 
     this.currentImageUrl = null;
     this.imageRemoved.emit();
-    this.snackBar.open('Image removed', 'Close', { duration: 2000 });
+    this.notify.success('Image removed', 2000);
   }
 
   private validateFile(file: File): boolean {
     // Check file type
     if (!file.type.startsWith('image/')) {
-      this.snackBar.open('Please select a valid image file', 'Close', { duration: 3000 });
+      this.notify.error('Please select a valid image file');
       return false;
     }
 
     // Check file size
     const maxSizeBytes = this.maxSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      this.snackBar.open(`File size must be less than ${this.maxSizeMB}MB`, 'Close', { duration: 3000 });
+      this.notify.error(`File size must be less than ${this.maxSizeMB}MB`);
       return false;
     }
 
