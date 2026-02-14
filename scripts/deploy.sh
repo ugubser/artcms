@@ -145,6 +145,10 @@ fi
 echo -e "${GREEN}✅ Build validation passed${NC}"
 
 echo ""
+echo -e "${BLUE}🌐 Injecting Firestore data (sitemap.xml + index.html meta)...${NC}"
+node scripts/generate-sitemaps.js
+
+echo ""
 echo -e "${BLUE}🚀 Deploying to Firebase...${NC}"
 
 # Deploy Firestore rules

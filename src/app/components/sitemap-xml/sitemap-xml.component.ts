@@ -4,6 +4,7 @@ import { Observable, combineLatest } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 
 @Component({
   selector: 'app-sitemap-xml',
@@ -22,7 +23,8 @@ export class SitemapXmlComponent implements OnInit {
 
   constructor(
     private portfolioService: PortfolioService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private portfolioPagesService: PortfolioPagesService
   ) {
     this.portfolio$ = new Observable<PortfolioItem[]>();
   }
@@ -30,27 +32,30 @@ export class SitemapXmlComponent implements OnInit {
   ngOnInit() {
     this.portfolio$ = this.portfolioService.getPublishedPortfolio();
 
-    // Combine both streams so we regenerate XML when either changes
+    // Combine all streams so we regenerate XML when any changes
     combineLatest([
       this.portfolio$,
-      this.settingsService.getSiteSettings()
-    ]).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([portfolioItems, settings]) => {
+      this.settingsService.getSiteSettings(),
+      this.portfolioPagesService.getPortfolioPages()
+    ]).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([portfolioItems, settings, pages]) => {
       this.siteSettings = settings;
-      this.generateXmlSitemap(portfolioItems);
+      this.generateXmlSitemap(portfolioItems, pages);
     });
   }
 
-  private generateXmlSitemap(portfolioItems: PortfolioItem[]) {
+  private generateXmlSitemap(portfolioItems: PortfolioItem[], portfolioPages: PortfolioPageConfig[] = []) {
     const baseUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://tribecaconcepts.com');
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    
+
     const now = new Date().toISOString();
-    
+
     // Static pages with priorities
     const staticPages = [
       { url: `${cleanBaseUrl}/home`, priority: '1.0', changefreq: 'weekly' },
-      { url: `${cleanBaseUrl}/art`, priority: '0.9', changefreq: 'weekly' },
-      { url: `${cleanBaseUrl}/design`, priority: '0.9', changefreq: 'weekly' },
+      // Dynamic portfolio pages sorted by order
+      ...portfolioPages
+        .filter(p => p.slug && p.order != null)
+        .map(p => ({ url: `${cleanBaseUrl}/${p.slug}`, priority: '0.9', changefreq: 'weekly' })),
       { url: `${cleanBaseUrl}/about`, priority: '0.8', changefreq: 'monthly' },
       { url: `${cleanBaseUrl}/contact`, priority: '0.7', changefreq: 'monthly' }
     ];

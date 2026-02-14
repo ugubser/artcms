@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
+import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 
 @Component({
@@ -21,8 +22,10 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
       <h2>Main Pages</h2>
       <ul class="main-pages">
         <li><a routerLink="/home">Home</a><div class="description">Main landing page</div></li>
-        <li><a routerLink="/art">Art Portfolio</a><div class="description">Art and creative works</div></li>
-        <li><a routerLink="/design">Design Portfolio</a><div class="description">Graphic design projects</div></li>
+        <li *ngFor="let page of portfolioPages">
+          <a [routerLink]="'/' + page.slug">{{ page.title }}</a>
+          <div class="description">{{ page.subtitle }}</div>
+        </li>
         <li><a routerLink="/about">About</a><div class="description">About the artist</div></li>
         <li><a routerLink="/contact">Contact</a><div class="description">Get in touch</div></li>
       </ul>
@@ -197,6 +200,7 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   portfolio$: Observable<PortfolioItem[]>;
   siteSettings: SiteSettings | null = null;
+  portfolioPages: PortfolioPageConfig[] = [];
   lastUpdated = new Date();
 
   private cdr = inject(ChangeDetectorRef);
@@ -204,6 +208,7 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
   constructor(
     private portfolioService: PortfolioService,
     private settingsService: SettingsService,
+    private portfolioPagesService: PortfolioPagesService,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.portfolio$ = new Observable<PortfolioItem[]>();
@@ -216,6 +221,12 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
     // Load site settings
     this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
       this.siteSettings = settings;
+      this.cdr.markForCheck();
+    });
+
+    // Load portfolio pages for dynamic nav links
+    this.portfolioPagesService.getPortfolioPages().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(pages => {
+      this.portfolioPages = pages.filter(p => p.slug && p.order != null);
       this.cdr.markForCheck();
     });
 
