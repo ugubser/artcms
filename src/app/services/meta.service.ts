@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/common';
 import { SettingsService, SiteSettings } from './settings.service';
+import { StorageUrlService } from './storage-url.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class MetaService {
     private titleService: Title,
     private metaService: Meta,
     private settingsService: SettingsService,
+    private storageUrlService: StorageUrlService,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.settingsService.getSiteSettings().subscribe(settings => {
@@ -40,16 +42,20 @@ export class MetaService {
   }
 
   private updateFavicon(faviconUrl: string): void {
-    // Remove existing favicon links
-    const existingLinks = this.document.querySelectorAll('link[rel*="icon"]');
-    existingLinks.forEach(link => link.remove());
-    
-    // Add new favicon link
-    const link = this.document.createElement('link');
-    link.rel = 'icon';
-    link.type = 'image/x-icon';
-    link.href = faviconUrl;
-    this.document.head.appendChild(link);
+    this.storageUrlService.resolveUrl(faviconUrl).subscribe(resolvedUrl => {
+      if (!resolvedUrl) return;
+
+      // Remove existing favicon links
+      const existingLinks = this.document.querySelectorAll('link[rel*="icon"]');
+      existingLinks.forEach(link => link.remove());
+
+      // Add new favicon link
+      const link = this.document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/x-icon';
+      link.href = resolvedUrl;
+      this.document.head.appendChild(link);
+    });
   }
 
   setPageTitle(pageTitle: string): void {
