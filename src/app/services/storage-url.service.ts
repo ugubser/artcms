@@ -33,8 +33,8 @@ export class StorageUrlService {
   getDownloadUrl(path: string): Observable<string> {
     const storageRef = ref(this.storage, path);
     return from(getDownloadURL(storageRef)).pipe(
-      catchError(() => {
-        // Return a placeholder or empty string on error
+      catchError((error) => {
+        console.error(`[StorageUrlService] Failed to resolve "${path}":`, error?.message || error);
         return of('');
       })
     );
