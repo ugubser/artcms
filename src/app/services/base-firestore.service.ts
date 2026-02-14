@@ -1,5 +1,8 @@
+import { Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, query, orderBy, CollectionReference, QueryConstraint } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { first, finalize } from 'rxjs/operators';
 
 export interface FirestoreDocument {
   id?: string;
@@ -7,19 +10,29 @@ export interface FirestoreDocument {
 
 export abstract class BaseFirestoreService<T extends FirestoreDocument> {
   protected collectionRef: CollectionReference;
+  private pendingTasks = inject(PendingTasks);
 
   constructor(
     protected firestore: Firestore,
-    protected collectionName: string
+    protected collectionName: string,
+    @Inject(PLATFORM_ID) protected platformId: Object
   ) {
     this.collectionRef = collection(this.firestore, this.collectionName);
+  }
+
+  protected completeOnServer<U>(obs$: Observable<U>): Observable<U> {
+    if (isPlatformServer(this.platformId)) {
+      const done = this.pendingTasks.add();
+      return obs$.pipe(first(), finalize(() => done()));
+    }
+    return obs$;
   }
 
   getAll(...constraints: QueryConstraint[]): Observable<T[]> {
     const q = constraints.length > 0
       ? query(this.collectionRef, ...constraints)
       : this.collectionRef;
-    return collectionData(q, { idField: 'id' }) as Observable<T[]>;
+    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<T[]>);
   }
 
   getAllOrdered(field: string, direction: 'asc' | 'desc' = 'asc'): Observable<T[]> {

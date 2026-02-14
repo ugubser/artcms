@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, setDoc, addDoc, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, first, finalize } from 'rxjs/operators';
 
 export interface PortfolioPageConfig {
   id?: string;
@@ -18,9 +19,21 @@ export interface PortfolioPageConfig {
 })
 export class PortfolioPagesService {
   private portfolioPagesCollection;
+  private pendingTasks = inject(PendingTasks);
 
-  constructor(private firestore: Firestore) {
+  constructor(
+    private firestore: Firestore,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     this.portfolioPagesCollection = collection(this.firestore, 'portfolio-pages');
+  }
+
+  private completeOnServer<T>(obs$: Observable<T>): Observable<T> {
+    if (isPlatformServer(this.platformId)) {
+      const done = this.pendingTasks.add();
+      return obs$.pipe(first(), finalize(() => done()));
+    }
+    return obs$;
   }
 
   private toJsDate(value: any): Date | null {
@@ -32,17 +45,19 @@ export class PortfolioPagesService {
   }
 
   getPortfolioPages(): Observable<PortfolioPageConfig[]> {
-    return collectionData(this.portfolioPagesCollection, { idField: 'id' }).pipe(
-      map((pages: any[]) => {
-        return pages.map(p => ({
-          ...p,
-          updatedAt: this.toJsDate(p.updatedAt)
-        } as PortfolioPageConfig)).sort((a, b) => {
-          const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
-          const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
-          return orderA - orderB;
-        });
-      })
+    return this.completeOnServer(
+      collectionData(this.portfolioPagesCollection, { idField: 'id' }).pipe(
+        map((pages: any[]) => {
+          return pages.map(p => ({
+            ...p,
+            updatedAt: this.toJsDate(p.updatedAt)
+          } as PortfolioPageConfig)).sort((a, b) => {
+            const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+            const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+            return orderA - orderB;
+          });
+        })
+      )
     );
   }
 

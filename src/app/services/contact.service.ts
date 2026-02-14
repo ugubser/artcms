@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Firestore, doc, addDoc, updateDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { BaseFirestoreService, FirestoreDocument } from './base-firestore.service';
@@ -21,8 +21,8 @@ export interface ContactInfo extends FirestoreDocument {
 })
 export class ContactService extends BaseFirestoreService<ContactInfo> {
 
-  constructor(firestore: Firestore) {
-    super(firestore, 'contact');
+  constructor(firestore: Firestore, @Inject(PLATFORM_ID) platformId: Object) {
+    super(firestore, 'contact', platformId);
   }
 
   getContactInfo(): Observable<ContactInfo[]> {

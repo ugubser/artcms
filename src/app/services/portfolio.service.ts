@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { Observable, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, first, finalize } from 'rxjs/operators';
 
 export interface Picture {
   id?: string;
@@ -48,12 +49,22 @@ export interface PortfolioItem {
 })
 export class PortfolioService {
   private portfolioCollection;
+  private pendingTasks = inject(PendingTasks);
 
   constructor(
     private firestore: Firestore,
-    private storage: Storage
+    private storage: Storage,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.portfolioCollection = collection(this.firestore, 'portfolio');
+  }
+
+  private completeOnServer<T>(obs$: Observable<T>): Observable<T> {
+    if (isPlatformServer(this.platformId)) {
+      const done = this.pendingTasks.add();
+      return obs$.pipe(first(), finalize(() => done()));
+    }
+    return obs$;
   }
 
   // Get all published portfolio items
@@ -63,8 +74,8 @@ export class PortfolioService {
       where('published', '==', true),
       orderBy('order', 'asc')
     );
-    
-    return collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>;
+
+    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
   }
 
   // Get portfolio items by category
@@ -75,8 +86,8 @@ export class PortfolioService {
       where('published', '==', true),
       orderBy('order', 'asc')
     );
-    
-    return collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>;
+
+    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
   }
 
   // Get portfolio items by portfolio page ID (new method)
@@ -87,8 +98,8 @@ export class PortfolioService {
       where('published', '==', true),
       orderBy('order', 'asc')
     );
-    
-    return collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>;
+
+    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
   }
 
   // Get portfolio items for a specific page with backwards compatibility
@@ -111,7 +122,7 @@ export class PortfolioService {
   // Get all portfolio items (for admin)
   getAllPortfolio(): Observable<PortfolioItem[]> {
     const q = query(this.portfolioCollection, orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>;
+    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
   }
 
   // Add new portfolio item

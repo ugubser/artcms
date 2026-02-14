@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, setDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, first, finalize } from 'rxjs/operators';
 
 export interface SiteSettings {
   id?: string;
@@ -38,9 +39,21 @@ export interface SiteSettings {
 export class SettingsService {
   private settingsCollection;
   private readonly SETTINGS_DOC_ID = 'main-settings';
+  private pendingTasks = inject(PendingTasks);
 
-  constructor(private firestore: Firestore) {
+  constructor(
+    private firestore: Firestore,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     this.settingsCollection = collection(this.firestore, 'settings');
+  }
+
+  private completeOnServer<T>(obs$: Observable<T>): Observable<T> {
+    if (isPlatformServer(this.platformId)) {
+      const done = this.pendingTasks.add();
+      return obs$.pipe(first(), finalize(() => done()));
+    }
+    return obs$;
   }
 
   private toJsDate(value: any): Date | null {
@@ -53,15 +66,17 @@ export class SettingsService {
 
   // Get site settings
   getSiteSettings(): Observable<SiteSettings | null> {
-    return collectionData(this.settingsCollection, { idField: 'id' }).pipe(
-      map((settings: any[]) => {
-        if (settings.length === 0) return null;
-        const s = settings[0];
-        return {
-          ...s,
-          updatedAt: this.toJsDate(s.updatedAt)
-        } as SiteSettings;
-      })
+    return this.completeOnServer(
+      collectionData(this.settingsCollection, { idField: 'id' }).pipe(
+        map((settings: any[]) => {
+          if (settings.length === 0) return null;
+          const s = settings[0];
+          return {
+            ...s,
+            updatedAt: this.toJsDate(s.updatedAt)
+          } as SiteSettings;
+        })
+      )
     );
   }
 

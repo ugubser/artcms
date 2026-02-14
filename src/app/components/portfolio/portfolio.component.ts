@@ -57,7 +57,10 @@ export class PortfolioComponent implements OnInit {
           this.pageTitle.set('Portfolio');
           this.pageSubtitle.set('Portfolio not found.');
         }
-        this.metaService.setPageTitle(this.pageTitle());
+        this.metaService.setPageMeta({
+          title: this.pageTitle(),
+          description: this.pageSubtitle()
+        });
       });
     } else {
       // Legacy: Load page content based on category (backwards compatible)
@@ -78,8 +81,10 @@ export class PortfolioComponent implements OnInit {
           this.portfolioPageId = undefined;
         }
         
-        // Set meta title
-        this.metaService.setPageTitle(this.pageTitle());
+        this.metaService.setPageMeta({
+          title: this.pageTitle(),
+          description: this.pageSubtitle()
+        });
       });
     }
   }

@@ -1,6 +1,6 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { SettingsService, SiteSettings } from './settings.service';
 import { StorageUrlService } from './storage-url.service';
 
@@ -15,7 +15,8 @@ export class MetaService {
     private metaService: Meta,
     private settingsService: SettingsService,
     private storageUrlService: StorageUrlService,
-    @Inject(DOCUMENT) private document: Document
+    @Inject(DOCUMENT) private document: Document,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.settingsService.getSiteSettings().subscribe(settings => {
       if (settings) {
@@ -27,21 +28,24 @@ export class MetaService {
 
   private updateMetaTags(settings: SiteSettings): void {
     this.titleService.setTitle(settings.siteName);
-    
+
     this.metaService.updateTag({ name: 'description', content: settings.siteDescription });
     this.metaService.updateTag({ name: 'keywords', content: settings.siteKeywords.join(', ') });
     this.metaService.updateTag({ name: 'author', content: settings.siteName });
     this.metaService.updateTag({ property: 'og:title', content: settings.siteName });
     this.metaService.updateTag({ property: 'og:description', content: settings.siteDescription });
     this.metaService.updateTag({ property: 'og:type', content: 'website' });
-    
-    // Update favicon if provided
+    this.metaService.updateTag({ property: 'og:site_name', content: settings.siteName });
+
+    // Update favicon if provided (browser only)
     if (settings.faviconUrl) {
       this.updateFavicon(settings.faviconUrl);
     }
   }
 
   private updateFavicon(faviconUrl: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
     this.storageUrlService.resolveUrl(faviconUrl).subscribe(resolvedUrl => {
       if (!resolvedUrl) return;
 
@@ -64,6 +68,22 @@ export class MetaService {
     } else {
       this.titleService.setTitle(pageTitle);
     }
+  }
+
+  setPageMeta(options: { title: string; description?: string; image?: string; type?: string }): void {
+    const siteName = this.currentSettings?.siteName || 'Tribecaconcepts';
+    const fullTitle = `${options.title} | ${siteName}`;
+    this.titleService.setTitle(fullTitle);
+    this.metaService.updateTag({ property: 'og:title', content: fullTitle });
+    this.metaService.updateTag({ property: 'og:site_name', content: siteName });
+    if (options.description) {
+      this.metaService.updateTag({ name: 'description', content: options.description });
+      this.metaService.updateTag({ property: 'og:description', content: options.description });
+    }
+    if (options.image) {
+      this.metaService.updateTag({ property: 'og:image', content: options.image });
+    }
+    this.metaService.updateTag({ property: 'og:type', content: options.type || 'website' });
   }
 
   getSiteSettings(): SiteSettings | null {

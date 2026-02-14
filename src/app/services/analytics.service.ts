@@ -1,5 +1,5 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { SettingsService } from './settings.service';
 
 declare let gtag: Function;
@@ -13,6 +13,7 @@ export class AnalyticsService {
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private document: Document,
     private settingsService: SettingsService
   ) {
     if (isPlatformBrowser(this.platformId)) {
@@ -31,12 +32,12 @@ export class AnalyticsService {
   }
 
   private loadGoogleAnalytics(analyticsId: string): void {
-    const script = document.createElement('script');
+    const script = this.document.createElement('script');
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${analyticsId}`;
-    document.head.appendChild(script);
+    this.document.head.appendChild(script);
 
-    const configScript = document.createElement('script');
+    const configScript = this.document.createElement('script');
     configScript.innerHTML = `
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -46,7 +47,7 @@ export class AnalyticsService {
         page_location: window.location.href
       });
     `;
-    document.head.appendChild(configScript);
+    this.document.head.appendChild(configScript);
   }
 
   trackEvent(eventName: string, parameters?: any): void {

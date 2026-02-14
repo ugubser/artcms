@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, inject, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Observable, combineLatest } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
@@ -24,7 +24,8 @@ export class SitemapXmlComponent implements OnInit {
   constructor(
     private portfolioService: PortfolioService,
     private settingsService: SettingsService,
-    private portfolioPagesService: PortfolioPagesService
+    private portfolioPagesService: PortfolioPagesService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.portfolio$ = new Observable<PortfolioItem[]>();
   }
@@ -44,7 +45,7 @@ export class SitemapXmlComponent implements OnInit {
   }
 
   private generateXmlSitemap(portfolioItems: PortfolioItem[], portfolioPages: PortfolioPageConfig[] = []) {
-    const baseUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://tribecaconcepts.com');
+    const baseUrl = isPlatformBrowser(this.platformId) ? window.location.origin : 'https://tribecaconcepts.com';
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
     const now = new Date().toISOString();

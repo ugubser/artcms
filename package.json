@@ -6,8 +6,10 @@
     "prebuild": "node scripts/inject-env-dev.js && node scripts/inject-meta-simple.js",
     "build": "ng build --configuration development",
     "watch": "ng build --watch --configuration development",
+    "dev": "ng serve",
     "emulator": "firebase emulators:start --import=./emulator_data --export-on-exit=./emulator_data",
-    "test": "ng test"
+    "test": "ng test",
+    "serve:ssr:tribeca-concepts-clone": "node dist/tribeca-concepts-clone/server/server.mjs"
   },
   "prettier": {
     "overrides": [
@@ -29,7 +31,10 @@
     "@angular/forms": "^20.1.0",
     "@angular/material": "^20.1.0",
     "@angular/platform-browser": "^20.1.0",
+    "@angular/platform-server": "^20.1.0",
     "@angular/router": "^20.1.0",
+    "@angular/ssr": "^20.1.0",
+    "express": "^4.21.0",
     "firebase": "^11.10.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
@@ -39,7 +44,9 @@
     "@angular/build": "^20.1.0",
     "@angular/cli": "^20.1.0",
     "@angular/compiler-cli": "^20.1.0",
+    "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.17.19",
     "firebase-admin": "^13.4.0",
     "jasmine-core": "~5.8.0",
     "karma": "~6.4.0",

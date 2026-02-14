@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, HostListener, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, HostListener, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,7 +34,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
   totalImages = 0;
   allImages: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string; galleryIndex: number; pictureIndex: number }[] = [];
   isLoading = true;
-  
+
   // URL parameters
   portfolioId: string = '';
   galleryIndex: number = 0;
@@ -45,18 +45,22 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
     private router: Router,
     private portfolioService: PortfolioService,
     private categoryService: CategoryService,
-    private metaService: MetaService
+    private metaService: MetaService,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   ngOnInit() {
     // Prevent body scrolling when component loads
-    document.body.style.overflow = 'hidden';
-    
+    if (isPlatformBrowser(this.platformId)) {
+      this.document.body.style.overflow = 'hidden';
+    }
+
     // Get route parameters
     this.portfolioId = this.route.snapshot.paramMap.get('id') || '';
     this.galleryIndex = parseInt(this.route.snapshot.paramMap.get('galleryIndex') || '0', 10);
     this.pictureIndex = parseInt(this.route.snapshot.paramMap.get('pictureIndex') || '0', 10);
-    
+
     if (this.portfolioId) {
       this.loadPortfolioItem(this.portfolioId);
     } else {
@@ -66,7 +70,9 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     // Restore body scrolling when component is destroyed
-    document.body.style.overflow = 'auto';
+    if (isPlatformBrowser(this.platformId)) {
+      this.document.body.style.overflow = 'auto';
+    }
   }
 
   private loadPortfolioItem(id: string) {
@@ -90,7 +96,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
 
     this.allImages = [];
     let globalIndex = 0;
-    
+
     // Build array of all images with their gallery/picture indices
     if (this.portfolioItem.galleries) {
       this.portfolioItem.galleries.forEach((gallery, galIdx) => {
@@ -112,7 +118,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
               galleryIndex: galIdx,
               pictureIndex: picIdx
             });
-            
+
             // Check if this is our target image
             if (galIdx === this.galleryIndex && picIdx === this.pictureIndex) {
               this.currentImageIndex = globalIndex;
@@ -122,7 +128,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
         }
       });
     }
-    
+
     this.totalImages = this.allImages.length;
   }
 
@@ -138,7 +144,11 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
   private updateMetaTags() {
     if (this.currentImage && this.portfolioItem) {
       const title = `${this.currentImage.description || 'Image'} - ${this.portfolioItem.title}`;
-      this.metaService.setPageTitle(title);
+      this.metaService.setPageMeta({
+        title,
+        description: this.currentImage.description || this.portfolioItem.description,
+        image: this.currentImage.url
+      });
     }
   }
 

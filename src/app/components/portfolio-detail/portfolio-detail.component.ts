@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, DestroyRef, inject, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, DOCUMENT, isPlatformBrowser, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -43,7 +43,10 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
     private router: Router,
     private portfolioService: PortfolioService,
     private categoryService: CategoryService,
-    private metaService: MetaService
+    private metaService: MetaService,
+    private location: Location,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   ngOnInit() {
@@ -57,7 +60,9 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     // Restore body scrolling if modal was open
-    document.body.style.overflow = 'auto';
+    if (isPlatformBrowser(this.platformId)) {
+      this.document.body.style.overflow = 'auto';
+    }
   }
 
   private loadPortfolioItem(id: string) {
@@ -66,7 +71,11 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
       if (item) {
         this.portfolioItem = item;
         this.setupImageData();
-        this.metaService.setPageTitle(item.title);
+        this.metaService.setPageMeta({
+          title: item.title,
+          description: item.description,
+          image: item.featuredImage
+        });
         this.isLoading = false;
         this.cdr.markForCheck();
       } else {
@@ -80,7 +89,7 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
 
     this.allImages = [];
     this.allImageData = [];
-    
+
     // Only include gallery images, not the featured image
     if (this.portfolioItem.galleries) {
       this.portfolioItem.galleries.forEach(gallery => {
@@ -105,7 +114,7 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
         }
       });
     }
-    
+
     this.totalImages = this.allImages.length;
   }
 
@@ -118,14 +127,18 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
     this.currentImageIndex = index;
     this.currentImageData = this.allImageData[index] || null;
     // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    if (isPlatformBrowser(this.platformId)) {
+      this.document.body.style.overflow = 'hidden';
+    }
   }
 
   closeImageViewer() {
     this.selectedImageUrl = null;
     this.currentImageData = null;
     // Restore body scrolling
-    document.body.style.overflow = 'auto';
+    if (isPlatformBrowser(this.platformId)) {
+      this.document.body.style.overflow = 'auto';
+    }
   }
 
   previousImage() {
@@ -145,12 +158,12 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    window.history.back();
+    this.location.back();
   }
 
   getImageIndex(galleryIndex: number, imageIndex: number): number {
     let totalIndex = 0;
-    
+
     if (this.portfolioItem?.galleries) {
       // Count images in all previous galleries
       for (let i = 0; i < galleryIndex; i++) {
@@ -162,7 +175,7 @@ export class PortfolioDetailComponent implements OnInit, OnDestroy {
       // Add the current image index within the current gallery
       totalIndex += imageIndex;
     }
-    
+
     return totalIndex;
   }
 }

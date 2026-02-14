@@ -43,13 +43,6 @@ if [ ! -f ".env.production" ]; then
     exit 1
 fi
 
-# Load environment variables from .env.production first
-if [ ! -f ".env.production" ]; then
-    echo -e "${RED}❌ .env.production file not found${NC}"
-    echo "Please run ./scripts/setup-firebase.sh first"
-    exit 1
-fi
-
 echo -e "${BLUE}📋 Loading environment variables...${NC}"
 set -a
 source .env.production
@@ -110,9 +103,9 @@ echo -e "${BLUE}🎨 Generating index.html and robots.txt from templates...${NC}
 node scripts/inject-meta-simple.js
 
 echo ""
-echo -e "${BLUE}🏗️  Building for production...${NC}"
+echo -e "${BLUE}🏗️  Building for production (SSR)...${NC}"
 
-# Build with production configuration
+# Build with production configuration (now includes SSR)
 ng build --configuration production
 
 echo -e "${GREEN}✅ Build completed successfully${NC}"
@@ -120,13 +113,24 @@ echo -e "${GREEN}✅ Build completed successfully${NC}"
 echo ""
 echo -e "${BLUE}🔍 Validating build output...${NC}"
 if [ ! -d "dist/tribeca-concepts-clone/browser" ]; then
-    echo -e "${RED}❌ Build output directory not found${NC}"
+    echo -e "${RED}❌ Browser build output directory not found${NC}"
+    exit 1
+fi
+
+if [ ! -d "dist/tribeca-concepts-clone/server" ]; then
+    echo -e "${RED}❌ Server build output directory not found${NC}"
     exit 1
 fi
 
 # Check if critical files exist
 if [ ! -f "dist/tribeca-concepts-clone/browser/index.html" ]; then
     echo -e "${RED}❌ Critical file missing: index.html${NC}"
+    exit 1
+fi
+
+# Check if server entry exists
+if [ ! -f "dist/tribeca-concepts-clone/server/server.mjs" ]; then
+    echo -e "${RED}❌ Critical file missing: server.mjs${NC}"
     exit 1
 fi
 
@@ -149,23 +153,15 @@ echo -e "${BLUE}🌐 Injecting Firestore data (sitemap.xml + index.html meta)...
 node scripts/generate-sitemaps.js
 
 echo ""
+echo -e "${BLUE}📦 Installing Cloud Functions dependencies...${NC}"
+cd functions && npm install && cd ..
+
+echo ""
 echo -e "${BLUE}🚀 Deploying to Firebase...${NC}"
 
-# Deploy Firestore rules
-echo -e "${BLUE}📋 Deploying Firestore rules...${NC}"
-firebase deploy --only firestore:rules
-
-# Deploy Storage rules
-echo -e "${BLUE}📁 Deploying Storage rules...${NC}"
-firebase deploy --only storage
-
-# Deploy Firestore indexes
-echo -e "${BLUE}🔍 Deploying Firestore indexes...${NC}"
-firebase deploy --only firestore:indexes
-
-# Deploy hosting
-echo -e "${BLUE}🌐 Deploying hosting...${NC}"
-firebase deploy --only hosting
+# Deploy everything
+echo -e "${BLUE}📋 Deploying Firestore rules, Storage rules, indexes, hosting, and functions...${NC}"
+firebase deploy --only hosting,functions,firestore:rules,storage,firestore:indexes
 
 echo ""
 echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"

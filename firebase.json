@@ -6,6 +6,9 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "functions": {
+    "source": "functions"
+  },
   "hosting": {
     "public": "dist/tribeca-concepts-clone/browser",
     "ignore": [
@@ -27,7 +30,10 @@
     "rewrites": [
       {
         "source": "**",
-        "destination": "/index.html"
+        "function": {
+          "functionId": "ssr",
+          "region": "europe-west6"
+        }
       }
     ]
   },
@@ -47,6 +53,10 @@
     "hosting": {
       "host": "0.0.0.0",
       "port": 5050
+    },
+    "functions": {
+      "host": "0.0.0.0",
+      "port": 5001
     },
     "ui": {
       "enabled": true,

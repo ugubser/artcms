@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Inject, DestroyRef, inject } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Inject, DestroyRef, inject, PLATFORM_ID } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -209,7 +209,8 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
     private portfolioService: PortfolioService,
     private settingsService: SettingsService,
     private portfolioPagesService: PortfolioPagesService,
-    @Inject(DOCUMENT) private document: Document
+    @Inject(DOCUMENT) private document: Document,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.portfolio$ = new Observable<PortfolioItem[]>();
   }
@@ -237,49 +238,42 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
   }
 
   private generateStructuredData(portfolioItems: PortfolioItem[]) {
-    if (!portfolioItems || portfolioItems.length === 0) {
-      return;
-    }
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (!portfolioItems || portfolioItems.length === 0) return;
 
     const artworkSchemas: any[] = [];
-    
+
     portfolioItems.forEach(item => {
       if (item.galleries && item.galleries.length > 0) {
         item.galleries.forEach((gallery: any, galleryIndex: number) => {
           if (gallery.pictures && gallery.pictures.length > 0) {
             gallery.pictures.forEach((picture: any, pictureIndex: number) => {
               if (picture.imageUrl) {
-                // Create structured data for all pictures with images
                 const artworkSchema: any = {
                   "@context": "https://schema.org",
-                  "@type": "Painting", // Default type - could be made more specific based on artMedium
+                  "@type": "Painting",
                   "name": picture.description || picture.alt || `Artwork from ${item.title}`,
                   "creator": {
                     "@type": "Person",
                     "name": this.siteSettings?.artistName || "Artist",
-                    "url": (typeof window !== 'undefined' ? window.location.origin : 'https://tribecaconcepts.com')
+                    "url": window.location.origin
                   },
                   "image": picture.imageUrl
                 };
-                
-                // Add optional fields if they exist
+
                 if (picture.dateCreated) {
                   artworkSchema.dateCreated = picture.dateCreated;
                 }
-                
                 if (picture.artMedium) {
                   artworkSchema.artMedium = picture.artMedium;
                 }
-                
                 if (picture.genre) {
                   artworkSchema.genre = picture.genre;
                 }
-                
-                // Add description if available
                 if (picture.description && picture.description.trim() !== '') {
                   artworkSchema.description = picture.description;
                 }
-                
+
                 artworkSchemas.push(artworkSchema);
               }
             });
@@ -287,10 +281,10 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
         });
       }
     });
-    
+
     // Remove any existing structured data scripts first
     this.removeExistingStructuredData();
-    
+
     // Inject script tags into document head
     if (artworkSchemas.length > 0) {
       artworkSchemas.forEach((schema, index) => {
@@ -309,7 +303,7 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
   }
 
   private removeExistingStructuredData() {
-    // Remove any existing structured data scripts created by this component
+    if (!isPlatformBrowser(this.platformId)) return;
     const existingScripts = this.document.querySelectorAll('script[data-sitemap-structured-data="true"]');
     existingScripts.forEach(script => script.remove());
   }

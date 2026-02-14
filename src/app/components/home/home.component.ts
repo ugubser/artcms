@@ -56,7 +56,10 @@ export class HomeComponent implements OnInit {
         this.siteName.set(settings.siteName);
         this.siteDescription.set(settings.siteDescription);
         this.footerText.set(settings.footerText);
-        this.metaService.setPageTitle('Home');
+        this.metaService.setPageMeta({
+          title: 'Home',
+          description: settings.siteDescription
+        });
       }
     });
   }

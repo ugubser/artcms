@@ -57,7 +57,10 @@ export class ContactComponent implements OnInit {
       }
     });
     
-    this.metaService.setPageTitle('Contact');
+    this.metaService.setPageMeta({
+      title: 'Contact',
+      description: 'Get in touch with us'
+    });
   }
 
   private loadContactInfo() {
