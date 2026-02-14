@@ -2,7 +2,14 @@
 
 A Swiss design-inspired portfolio website built with Angular and powered by Firebase for seamless content management. This project demonstrates modern web development practices with secure deployment, real-time content management, and elegant Swiss design principles.
 
-**✨ Version 2.0 Features:**
+**✨ Version 3.0 Features:**
+- **Performance & UX**: Lazy-loaded routes, image loading directive with fade-in, OnPush change detection
+- **Modular CMS Architecture**: CMS split into sub-components with shared styles and base dialog class
+- **Angular Material M3 Theming**: Custom `--mat-sys-*` design tokens for proper component rendering
+- **Simplified Build Pipeline**: SEO/meta generation decoupled from database at build time
+- **Favicon Fix**: Dynamic favicon resolution through Firebase Storage URL service
+
+**Version 2.0 Features:**
 - **Flexible Portfolio Management**: Cross-category assignments with centralized category system
 - **Enhanced SEO & Schema.org**: Complete structured data implementation for search engines
 - **Advanced Picture Management**: Individual artwork metadata with pricing, dimensions, and detailed information
@@ -104,14 +111,19 @@ const newsCollection = buildCollection({
 - Branding assets (logos, favicons)
 - Global site configuration
 
-### CMS Configuration Details
+### CMS Architecture (v3.0)
 
-The CMS is configured through `src/app/cms/cms.config.ts` which defines:
+The CMS uses a modular sub-component architecture:
 
-- **Portfolio Collection**: Manage portfolio items with categories and image galleries
-- **About Collection**: Edit about page content with markdown support
-- **Contact Collection**: Manage contact information and social media links
-- **Settings Collection**: Control site-wide settings like SEO metadata
+- **`cms.component.ts`**: Main shell with tab navigation
+- **`cms-portfolio-tab.component.ts`**: Portfolio management tab
+- **`cms-about-tab.component.ts`**: About page management tab
+- **`cms-contact-tab.component.ts`**: Contact information tab
+- **`cms-portfolio-pages-tab.component.ts`**: Portfolio pages settings tab
+- **`cms-settings-tab.component.ts`**: Site settings tab
+- **`image-upload.component.ts`**: Reusable image upload with Storage integration
+- **`base-edit-dialog.component.ts`**: Abstract base class for all edit dialogs
+- **`cms-shared.scss`** / **`cms-dialog-shared.scss`**: Extracted shared styles
 
 Each collection supports:
 - **Custom Validation**: Field-level validation rules
@@ -207,11 +219,12 @@ The project uses a template-based configuration system to securely manage enviro
 
 ### Meta Data Injection
 
-Site metadata (title, description, keywords) is automatically injected from Firestore settings:
+Site metadata (title, description, keywords) is generated at build time without database access:
 
 - **Template**: `src/index.html.template` contains placeholders for metadata
-- **Injection**: `scripts/inject-meta.js` fetches settings from Firestore and generates `src/index.html`
-- **Dynamic Updates**: Site metadata can be updated through the CMS without code changes
+- **Injection**: `scripts/inject-meta-simple.js` generates `src/index.html` with hardcoded defaults (no Firestore connection needed)
+- **Runtime Updates**: `MetaService` overwrites meta tags at runtime from Firestore settings
+- **Favicon Resolution**: Favicons uploaded via CMS are resolved through `StorageUrlService` at runtime
 
 ### Firebase Rules Generation
 
@@ -235,11 +248,11 @@ Admin access is controlled through email whitelisting for enhanced security:
 ```
 src/
 ├── app/
-│   ├── cms/                           # FireCMS configuration & admin interface
-│   │   ├── cms.config.ts              # Content schema definitions
-│   │   ├── cms.component.ts           # Custom admin interface component
-│   │   ├── components/                # CMS custom components
-│   │   └── dialogs/                   # CMS edit dialogs
+│   ├── cms/                           # Custom Angular Material admin interface
+│   │   ├── cms.component.ts           # Main CMS shell with tab navigation
+│   │   ├── components/                # Tab sub-components (portfolio, about, contact, etc.)
+│   │   ├── dialogs/                   # Edit dialogs with BaseEditDialogComponent
+│   │   └── styles/                    # Shared SCSS (cms-shared, cms-dialog-shared)
 │   ├── components/                    # Public-facing components
 │   │   ├── about/                     # About page component
 │   │   ├── admin-login/               # Admin authentication component
@@ -249,6 +262,8 @@ src/
 │   │   ├── portfolio-detail/          # Portfolio item detail pages
 │   │   ├── portfolio-grid/            # Portfolio grid display component
 │   │   └── shared/                    # Shared UI components
+│   ├── directives/                    # **NEW v3.0**: Angular directives
+│   │   └── img-loading.directive.ts   # **NEW v3.0**: Image fade-in & error placeholder
 │   ├── guards/                        # Route protection guards
 │   │   └── auth.guard.ts              # Admin route protection
 │   ├── services/                      # Firebase integration services
@@ -258,11 +273,12 @@ src/
 │   │   ├── category.service.ts        # **NEW v2.0**: Dynamic category management
 │   │   ├── contact.service.ts         # Contact content management
 │   │   ├── firebase.service.ts        # Firebase utilities
-│   │   ├── meta.service.ts            # Meta tag management
+│   │   ├── meta.service.ts            # **ENHANCED v3.0**: Meta tags with storage URL favicon resolution
+│   │   ├── notification.service.ts    # **NEW v3.0**: Centralized snackbar notifications
 │   │   ├── portfolio-pages.service.ts # Portfolio page settings
 │   │   ├── portfolio.service.ts       # **ENHANCED v2.0**: Portfolio content with flexible assignments
 │   │   ├── settings.service.ts       # Site settings management
-│   │   └── storage-url.service.ts     # **NEW v2.0**: Storage URL resolution system
+│   │   └── storage-url.service.ts     # Storage URL resolution system
 │   ├── app.config.ts                 # Angular application configuration
 │   ├── app.routes.ts                 # Application routing configuration
 │   └── app.ts                        # Main application component
@@ -281,14 +297,13 @@ scripts/                              # Deployment and setup scripts
 ├── deploy.sh                         # Production deployment script
 ├── generate-rules.js                 # Firebase rules generation
 ├── inject-env.js                     # Environment variable injection
-├── inject-meta.js                    # **ENHANCED v2.0**: Production metadata & sitemap generation
-├── inject-meta-dev.js                # **NEW v2.0**: Development metadata & sitemap generation
+├── inject-meta-simple.js             # **NEW v3.0**: Lightweight meta injection (no DB required)
 ├── setup-firebase.sh                 # Firebase project setup
-├── sync-all-production-data.sh       # **NEW v2.0**: Complete production data sync
-├── sync-production-gcloud.sh         # **NEW v2.0**: Firestore data sync
-├── sync-storage-data.sh              # **NEW v2.0**: Firebase Storage sync
-├── upload-to-emulator.js             # **NEW v2.0**: Storage upload to emulator
-└── upload-storage-to-emulator.sh     # **NEW v2.0**: Storage sync wrapper
+├── sync-all-production-data.sh       # Complete production data sync
+├── sync-production-gcloud.sh         # Firestore data sync
+├── sync-storage-data.sh              # Firebase Storage sync
+├── upload-to-emulator.js             # Storage upload to emulator
+└── upload-storage-to-emulator.sh     # Storage sync wrapper
 ```
 
 ### Deployment Process Details
@@ -309,13 +324,15 @@ The deployment process automates several important steps:
 The application follows a modular structure with clear separation of concerns:
 
 - **Standalone Components**: Modern Angular approach using standalone components
-- **Lazy Loading**: Routes are lazy-loaded for improved performance
+- **Lazy Loading**: Routes are lazy-loaded for improved performance (admin route lazy-loaded in v3.0)
+- **OnPush Change Detection**: **NEW v3.0** - All components use OnPush for optimal rendering performance
 - **Services**: Firebase integration is encapsulated in dedicated services
 - **Guards**: Route protection using Angular guards
-- **CMS Integration**: Custom FireCMS implementation for content management
-- **Picture Viewer Component**: **NEW v2.0** - Individual artwork viewing with navigation
-- **Flexible Routing**: **NEW v2.0** - Dual routing system supporting both ID-based and category routes
-- **Dynamic Categories**: **NEW v2.0** - Category management through external configuration
+- **Modular CMS**: **NEW v3.0** - CMS split into sub-components with shared base dialog class
+- **Image Loading Directive**: **NEW v3.0** - Prevents broken image flash with fade-in transitions
+- **Picture Viewer Component**: Individual artwork viewing with navigation
+- **Flexible Routing**: Dual routing system supporting both ID-based and category routes
+- **Dynamic Categories**: Category management through external configuration
 
 ### Authentication and Authorization System
 
@@ -349,6 +366,38 @@ ng build --configuration production
 # Deploy to Firebase
 firebase deploy
 ```
+
+## What's New in v3.0
+
+### Performance & Image Loading
+- **Lazy-Loaded Admin Route**: CMS module loaded on demand, reducing initial bundle size
+- **Image Loading Directive** (`ImgLoadingDirective`): Standalone directive applied to all dynamic images that hides them until loaded, fades in with CSS transition, and shows a neutral SVG placeholder on error — eliminates broken image flash from async pipe
+- **OnPush Change Detection**: All components migrated to OnPush strategy for optimal rendering
+- **Native Lazy Loading**: `loading="lazy"` added to all portfolio and gallery images
+
+### CMS Architecture Refactor
+- **Sub-Component Architecture**: Monolithic `cms.component.ts` (638 lines removed) split into dedicated tab components (`cms-portfolio-tab`, `cms-about-tab`, `cms-contact-tab`, `cms-portfolio-pages-tab`, `cms-settings-tab`)
+- **BaseEditDialogComponent**: Abstract base class for edit dialogs, eliminating duplicated save/cancel/error logic
+- **NotificationService**: Centralized snackbar notification service replacing scattered `MatSnackBar` usage
+- **Shared Styles**: Extracted `cms-shared.scss` and `cms-dialog-shared.scss` for consistent CMS styling
+- **Dialog Sizing**: All dialogs now use caller-controlled width via `dialog.open()` with consistent `maxWidth: 95vw` / `maxHeight: 90vh`
+
+### Angular Material M3 Theming
+- **Custom Design Tokens**: Full set of `--mat-sys-*` CSS custom properties defined in `styles.scss`, providing a neutral black/white palette without importing a prebuilt theme
+- **Fixed Transparent Overlays**: Select dropdown panels, autocomplete, and menu overlays now render with proper white backgrounds
+- **Dialog Scrollbar Fix**: Eliminated double scrollbars by setting `overflow: hidden` on dialog surface
+- **Form Field Padding**: Proper vertical padding on Material form field inputs
+
+### Build Pipeline Simplification
+- **Database-Free Meta Injection**: Replaced `inject-meta.js` (949 lines, required Firestore connection) and `inject-meta-dev.js` (972 lines) with `inject-meta-simple.js` (79 lines) that generates `index.html` from templates with hardcoded defaults
+- **Runtime Meta Updates**: `MetaService` overwrites meta tags at runtime from Firestore settings, so build-time values are just initial defaults
+- **Favicon Resolution Fix**: `MetaService.updateFavicon()` now resolves Firebase Storage object paths to download URLs via `StorageUrlService` before setting the `<link>` href
+
+### Bug Fixes
+- Fixed favicon disappearing when CMS settings loaded (storage path was set as href instead of resolved URL)
+- Fixed broken image flash on all dynamic images across the site
+- Added error logging to `StorageUrlService` for failed URL resolutions
+- Fixed deploy.sh echo message to reflect no-database meta injection
 
 ## What's New in v2.0
 
@@ -532,7 +581,8 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## Version History
 
-- **v2.0** (Current) - Major portfolio management overhaul with SEO enhancements
+- **v3.0** (Current) - Performance, CMS refactor, Material theming, and build simplification
+- **v2.0** - Major portfolio management overhaul with SEO enhancements
 - **v1.x** - Initial FireCMS implementation with Swiss design principles
 
 ## Support

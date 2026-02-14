@@ -108,6 +108,8 @@ export class CmsAboutTabComponent implements OnInit {
   addNew() {
     const dialogRef = this.dialog.open(AboutEditDialogComponent, {
       width: '700px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { section: null }
     });
 
@@ -122,6 +124,8 @@ export class CmsAboutTabComponent implements OnInit {
   edit(section: any) {
     const dialogRef = this.dialog.open(AboutEditDialogComponent, {
       width: '700px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { section }
     });
 

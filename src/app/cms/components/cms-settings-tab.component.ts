@@ -87,6 +87,8 @@ export class CmsSettingsTabComponent implements OnInit {
   edit() {
     const dialogRef = this.dialog.open(SettingsEditDialogComponent, {
       width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { settings: this.siteSettings }
     });
 

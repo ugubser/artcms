@@ -101,8 +101,7 @@ export interface ContactInfo {
   `,
   styles: [`
     .dialog-container {
-      width: 500px;
-      max-width: 90vw;
+      width: 100%;
     }
     
     .contact-form {

@@ -90,8 +90,7 @@ export interface AboutSection {
   `,
   styles: [`
     .dialog-container {
-      width: 600px;
-      max-width: 90vw;
+      width: 100%;
     }
     
     .about-form {

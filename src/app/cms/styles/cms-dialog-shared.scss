@@ -1,8 +1,7 @@
 // Shared CMS dialog styles
 
 .dialog-container {
-  max-width: 90vw;
-  max-height: 80vh;
+  width: 100%;
 }
 
 .full-width {
@@ -53,7 +52,6 @@ mat-dialog-actions {
 
 @media (max-width: 768px) {
   .dialog-container {
-    width: 95vw;
-    max-width: 95vw;
+    width: 100%;
   }
 }

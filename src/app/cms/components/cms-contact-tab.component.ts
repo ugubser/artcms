@@ -89,6 +89,8 @@ export class CmsContactTabComponent implements OnInit {
   edit() {
     const dialogRef = this.dialog.open(ContactEditDialogComponent, {
       width: '600px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { contactInfo: this.contactInfo }
     });
 
