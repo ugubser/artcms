@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { AboutService, AboutSection } from '../../services/about.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
@@ -26,7 +26,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
             <div class="section-text" [innerHTML]="formatContent(section.content)"></div>
           </div>
           <div *ngIf="section.image" class="section-image">
-            <img [src]="section.image | resolveStorageUrl | async" [alt]="section.title" />
+            <img [src]="section.image | resolveStorageUrl | async" [alt]="section.title" loading="lazy" />
           </div>
         </section>
         
@@ -229,12 +229,9 @@ export class AboutComponent implements OnInit {
 
   private loadAboutSections() {
     this.isLoading = true;
-    this.aboutSections$ = this.aboutService.getAboutSections();
-    
-    // Set loading to false after a short delay
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+    this.aboutSections$ = this.aboutService.getAboutSections().pipe(
+      tap(() => this.isLoading = false)
+    );
   }
 
   trackByFn(index: number, section: AboutSection): string {

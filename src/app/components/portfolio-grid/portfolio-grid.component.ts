@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { CategoryService } from '../../services/category.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
@@ -35,21 +35,17 @@ export class PortfolioGridComponent implements OnInit {
 
   private loadPortfolio() {
     this.isLoading = true;
+    let source$: Observable<PortfolioItem[]>;
+
     if (this.portfolioPageId) {
-      // Load portfolios assigned to specific portfolio page (regardless of mode)
-      this.portfolio$ = this.portfolioService.getPortfolioForPage(this.portfolioPageId);
+      source$ = this.portfolioService.getPortfolioForPage(this.portfolioPageId);
     } else if (this.category) {
-      // Load portfolios by category (backwards compatible + auto-assigned items)
-      this.portfolio$ = this.portfolioService.getPortfolioForPage(undefined, this.category);
+      source$ = this.portfolioService.getPortfolioForPage(undefined, this.category);
     } else {
-      // Load all published portfolios
-      this.portfolio$ = this.portfolioService.getPublishedPortfolio();
+      source$ = this.portfolioService.getPublishedPortfolio();
     }
-    
-    // Set loading to false after a short delay to show the loading state
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+
+    this.portfolio$ = source$.pipe(tap(() => this.isLoading = false));
   }
 
   selectItem(item: PortfolioItem) {

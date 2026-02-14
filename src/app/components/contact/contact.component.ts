@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
@@ -60,12 +60,9 @@ export class ContactComponent implements OnInit {
 
   private loadContactInfo() {
     this.isLoading = true;
-    this.contactInfo$ = this.contactService.getContactInfo();
-    
-    // Set loading to false after a short delay
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+    this.contactInfo$ = this.contactService.getContactInfo().pipe(
+      tap(() => this.isLoading = false)
+    );
   }
 
   trackByFn(index: number, contact: ContactInfo): string {
