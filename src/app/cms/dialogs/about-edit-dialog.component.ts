@@ -200,7 +200,6 @@ export class AboutEditDialogComponent implements OnInit {
       
       this.dialogRef.close(true);
     } catch (error) {
-      console.error('Error saving about section:', error);
       this.snackBar.open('Error saving about section. Please try again.', 'Close', { duration: 5000 });
     } finally {
       this.saving = false;

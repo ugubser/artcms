@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 
@@ -11,10 +12,11 @@ import { SettingsService, SiteSettings } from '../../services/settings.service';
   template: `<pre>{{ xmlContent }}</pre>`,
 })
 export class SitemapXmlComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   xmlContent = '';
   portfolio$: Observable<PortfolioItem[]>;
   siteSettings: SiteSettings | null = null;
-  
+
   constructor(
     private portfolioService: PortfolioService,
     private settingsService: SettingsService
@@ -23,28 +25,16 @@ export class SitemapXmlComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Load portfolio items using the same pattern as other components
     this.portfolio$ = this.portfolioService.getPublishedPortfolio();
 
-    // Load site settings using the same pattern as home component
-    this.settingsService.getSiteSettings().subscribe(settings => {
+    // Combine both streams so we regenerate XML when either changes
+    combineLatest([
+      this.portfolio$,
+      this.settingsService.getSiteSettings()
+    ]).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([portfolioItems, settings]) => {
       this.siteSettings = settings;
-      this.updateXmlSitemap();
-    });
-
-    // Subscribe to portfolio changes to generate XML
-    this.portfolio$.subscribe(portfolioItems => {
       this.generateXmlSitemap(portfolioItems);
     });
-  }
-
-  private updateXmlSitemap() {
-    if (this.siteSettings) {
-      // Regenerate XML when settings are loaded
-      this.portfolio$.subscribe(portfolioItems => {
-        this.generateXmlSitemap(portfolioItems);
-      });
-    }
   }
 
   private generateXmlSitemap(portfolioItems: PortfolioItem[]) {

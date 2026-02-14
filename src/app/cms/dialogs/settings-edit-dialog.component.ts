@@ -154,7 +154,6 @@ export class SettingsEditDialogComponent implements OnInit {
 
   async onSave() {
     if (this.settingsForm.invalid) {
-      console.log('Form is invalid:', this.settingsForm.errors);
       return;
     }
 
@@ -183,14 +182,11 @@ export class SettingsEditDialogComponent implements OnInit {
       artistBiography: formValue.artistBiography
     };
 
-    console.log('Saving settings:', settingsData);
-
     try {
       await this.settingsService.updateSiteSettings(settingsData);
       this.snackBar.open('Site settings updated successfully', 'Close', { duration: 3000 });
       this.dialogRef.close(true);
     } catch (error) {
-      console.error('Error saving settings:', error);
       this.snackBar.open(`Error saving settings: ${error}`, 'Close', { duration: 5000 });
     } finally {
       this.saving = false;

@@ -122,7 +122,6 @@ export class AdminLoginComponent {
       // If successful, redirect to admin
       this.router.navigate(['/admin']);
     } catch (error: any) {
-      console.error('Login error:', error);
       this.errorMessage = error.message || 'Authentication failed. Please try again.';
     } finally {
       this.isLoading = false;

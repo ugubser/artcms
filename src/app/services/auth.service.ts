@@ -32,7 +32,6 @@ export class AuthService {
     try {
       await signInWithEmailAndPassword(this.auth, email, password);
     } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     }
   }
@@ -48,7 +47,6 @@ export class AuthService {
         throw new Error('Unauthorized: Admin access required');
       }
     } catch (error) {
-      console.error('Google sign in error:', error);
       throw error;
     }
   }
@@ -57,7 +55,6 @@ export class AuthService {
     try {
       await signOut(this.auth);
     } catch (error) {
-      console.error('Sign out error:', error);
       throw error;
     }
   }

@@ -35,9 +35,6 @@ export class PortfolioGridComponent implements OnInit {
 
   private loadPortfolio() {
     this.isLoading = true;
-    
-    console.log('Loading portfolio - Mode:', this.mode, 'PageId:', this.portfolioPageId, 'Category:', this.category);
-    
     if (this.portfolioPageId) {
       // Load portfolios assigned to specific portfolio page (regardless of mode)
       this.portfolio$ = this.portfolioService.getPortfolioForPage(this.portfolioPageId);
@@ -56,8 +53,6 @@ export class PortfolioGridComponent implements OnInit {
   }
 
   selectItem(item: PortfolioItem) {
-    console.log('Selected portfolio item:', item);
-    
     // Navigate to portfolio detail page
     this.router.navigate(['/portfolio', item.id]);
   }
@@ -75,7 +70,6 @@ export class PortfolioGridComponent implements OnInit {
       await this.portfolioService.initializeSampleData();
       this.loadPortfolio();
     } catch (error) {
-      console.error('Error initializing sample data:', error);
     }
   }
 }

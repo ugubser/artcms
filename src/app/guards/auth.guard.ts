@@ -16,22 +16,21 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(): Observable<boolean> | Promise<boolean> | boolean {
-    // In development mode, allow access for testing
-    if (!environment.production && environment.useEmulators) {
-      console.log('Development mode: allowing admin access');
+    // Development emulator bypass - double-check this cannot leak into production.
+    // The guard only bypasses when BOTH flags are set AND we are explicitly
+    // NOT in production mode. Even if useEmulators were accidentally true in
+    // a production build, the production flag would block this path.
+    if (environment.production === false && environment.useEmulators === true) {
       return true;
     }
-    
-    // Production mode: check authentication immediately
+
     const currentUser = this.authService.getCurrentUser();
-    
+
     if (currentUser && this.authService.isAdminUser(currentUser)) {
-      console.log('Authenticated admin user, allowing access');
       return true;
-    } else {
-      console.log('Access denied: requires authenticated admin user');
-      this.router.navigate(['/admin/login']);
-      return false;
     }
+
+    this.router.navigate(['/admin/login']);
+    return false;
   }
 }

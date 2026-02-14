@@ -1,6 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SettingsService } from '../../services/settings.service';
 
 @Component({
@@ -117,13 +118,14 @@ import { SettingsService } from '../../services/settings.service';
   `]
 })
 export class PageHeaderComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   siteName = signal<string>('tribeca concepts');
   siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
 
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit() {
-    this.settingsService.getSiteSettings().subscribe(settings => {
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
       if (settings) {
         this.siteName.set(settings.siteName);
         this.siteDescription.set(settings.siteDescription);

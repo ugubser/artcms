@@ -47,7 +47,6 @@ export class SettingsService {
   getSiteSettings(): Observable<SiteSettings | null> {
     return collectionData(this.settingsCollection, { idField: 'id' }).pipe(
       map((settings: any[]) => {
-        console.log('Loaded site settings:', settings);
         return settings.length > 0 ? settings[0] as SiteSettings : null;
       })
     );
@@ -55,8 +54,6 @@ export class SettingsService {
 
   // Update or create site settings
   async updateSiteSettings(settings: Partial<SiteSettings>): Promise<void> {
-    console.log('Updating site settings:', settings);
-    
     const settingsData = {
       ...settings,
       updatedAt: new Date()
@@ -66,9 +63,7 @@ export class SettingsService {
     
     try {
       await setDoc(docRef, settingsData, { merge: true });
-      console.log('Site settings updated successfully');
     } catch (error) {
-      console.error('Error updating site settings:', error);
       throw error;
     }
   }
@@ -115,11 +110,9 @@ export class SettingsService {
       });
 
       if (!currentSettings) {
-        console.log('No settings found, initializing with defaults');
         await this.updateSiteSettings(this.getDefaultSettings());
       }
     } catch (error) {
-      console.error('Error initializing default settings:', error);
     }
   }
 }

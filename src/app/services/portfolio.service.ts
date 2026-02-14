@@ -127,8 +127,6 @@ export class PortfolioService {
 
   // Create portfolio item (alias for addPortfolioItem)
   async createPortfolioItem(item: Partial<PortfolioItem>): Promise<string> {
-    console.log('Creating portfolio item with data:', item);
-    
     const portfolioItem = {
       title: item.title || '',
       description: item.description || '',
@@ -140,14 +138,10 @@ export class PortfolioService {
       createdAt: item.createdAt || new Date()
     } as Omit<PortfolioItem, 'id'>;
     
-    console.log('Processed portfolio item for Firestore:', portfolioItem);
-    
     try {
       const docRef = await addDoc(this.portfolioCollection, portfolioItem);
-      console.log('Successfully added document with ID:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('Error adding document to Firestore:', error);
       throw error;
     }
   }

@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { CategoryService } from '../../services/category.service';
 import { MetaService } from '../../services/meta.service';
@@ -19,6 +20,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   featuredPortfolio$: Observable<PortfolioItem[]>;
   contactInfo$: Observable<ContactInfo[]>;
   siteName = signal<string>('tribeca concepts');
@@ -47,7 +49,7 @@ export class HomeComponent implements OnInit {
     this.contactInfo$ = this.contactService.getContactInfo();
 
     // Load site settings for dynamic content
-    this.settingsService.getSiteSettings().subscribe(settings => {
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
       if (settings) {
         this.siteName.set(settings.siteName);
         this.siteDescription.set(settings.siteDescription);

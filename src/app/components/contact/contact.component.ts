@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ContactService, ContactInfo } from '../../services/contact.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 import { MetaService } from '../../services/meta.service';
@@ -16,6 +17,7 @@ import { Firestore, collection, addDoc } from '@angular/fire/firestore';
   styleUrl: './contact.component.scss'
 })
 export class ContactComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   contactInfo$: Observable<ContactInfo[]>;
   isLoading = true;
   settingsContactEmail = signal<string>('');
@@ -46,7 +48,7 @@ export class ContactComponent implements OnInit {
     this.loadContactInfo();
     
     // Load site settings for contact email and site name
-    this.settingsService.getSiteSettings().subscribe(settings => {
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
       if (settings) {
         this.settingsContactEmail.set(settings.contactEmail);
         this.siteName.set(settings.siteName);
@@ -75,7 +77,6 @@ export class ContactComponent implements OnInit {
       await this.contactService.initializeSampleData();
       this.loadContactInfo();
     } catch (error) {
-      console.error('Error initializing sample data:', error);
     }
   }
 
@@ -102,7 +103,6 @@ export class ContactComponent implements OnInit {
         this.contactForm.reset();
         
       } catch (error) {
-        console.error('Error sending message:', error);
         this.submitSuccess = false;
         this.submitMessage = 'Sorry, there was an error sending your message. Please try again.';
       } finally {

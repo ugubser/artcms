@@ -132,7 +132,6 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       
       this.isLoading = false;
     } catch (error) {
-      console.error('Error loading portfolio pages:', error);
       this.snackBar.open('Error loading portfolio pages', 'Close', { duration: 3000 });
       this.isLoading = false;
     }
@@ -175,7 +174,6 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       
       this.dialogRef.close(true);
     } catch (error) {
-      console.error('Error updating portfolio pages:', error);
       this.snackBar.open('Error updating portfolio pages', 'Close', { duration: 3000 });
     } finally {
       this.isLoading = false;

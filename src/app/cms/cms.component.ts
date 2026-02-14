@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -12,6 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PortfolioService } from '../services/portfolio.service';
 import { AboutService } from '../services/about.service';
 import { ContactService } from '../services/contact.service';
@@ -166,7 +168,7 @@ import { ResolveStorageUrlPipe } from '../pipes/resolve-storage-url.pipe';
                 </mat-card-header>
                 <img mat-card-image [src]="section.image | resolveStorageUrl | async" [alt]="section.title" *ngIf="section.image">
                 <mat-card-content>
-                  <div [innerHTML]="section.content"></div>
+                  <div [innerHTML]="sanitizeHtml(section.content)"></div>
                 </mat-card-content>
                 <mat-card-actions>
                   <button mat-button (click)="editAboutSection(section)">
@@ -422,6 +424,7 @@ import { ResolveStorageUrlPipe } from '../pipes/resolve-storage-url.pipe';
   `]
 })
 export class CMSComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   loading = false;
   portfolioItems: any[] = [];
   aboutSections: any[] = [];
@@ -436,7 +439,8 @@ export class CMSComponent implements OnInit {
     private settingsService: SettingsService,
     private portfolioPagesService: PortfolioPagesService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit() {
@@ -444,84 +448,66 @@ export class CMSComponent implements OnInit {
   }
   
   private loadData() {
-    console.log('Loading CMS data...');
     this.loading = true;
-    
+
     // Load ALL portfolio items (not just published ones) for admin interface
-    this.portfolioService.getAllPortfolio().subscribe({
+    this.portfolioService.getAllPortfolio().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (items) => {
-        console.log('Loaded portfolio items count:', items.length);
-        console.log('Portfolio items detail:', items);
-        items.forEach((item, index) => {
-          console.log(`Item ${index}:`, {
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            category: item.category,
-            published: item.published
-          });
-        });
         this.portfolioItems = items;
-        console.log('CMS portfolioItems array updated:', this.portfolioItems);
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error loading portfolio items:', error);
+      error: () => {
         this.loading = false;
       }
     });
-    
+
     // Load about sections
-    this.aboutService.getAboutSections().subscribe({
+    this.aboutService.getAboutSections().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (sections) => {
-        console.log('Loaded about sections:', sections);
         this.aboutSections = sections;
       },
-      error: (error) => {
-        console.error('Error loading about sections:', error);
-      }
+      error: () => {}
     });
-    
+
     // Load contact info
-    this.contactService.getContactInfo().subscribe({
+    this.contactService.getContactInfo().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (contactArray) => {
-        console.log('Loaded contact info:', contactArray);
         this.contactInfo = contactArray.length > 0 ? contactArray[0] : null;
       },
-      error: (error) => {
-        console.error('Error loading contact info:', error);
-      }
+      error: () => {}
     });
-    
+
     // Load site settings
-    this.settingsService.getSiteSettings().subscribe({
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (settings) => {
-        console.log('Loaded site settings:', settings);
         this.siteSettings = settings;
       },
-      error: (error) => {
-        console.error('Error loading site settings:', error);
-      }
+      error: () => {}
     });
-    
+
     // Load portfolio pages
-    this.portfolioPagesService.getPortfolioPages().subscribe({
+    this.portfolioPagesService.getPortfolioPages().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (pages) => {
-        console.log('Loaded portfolio pages:', pages);
         this.portfolioPages = pages;
       },
-      error: (error) => {
-        console.error('Error loading portfolio pages:', error);
-      }
+      error: () => {}
     });
   }
 
   onTabChange(event: any) {
-    console.log('Tab changed to:', event.index);
   }
 
   trackByFn(index: number, item: any) {
     return item.id || index;
+  }
+
+  sanitizeHtml(content: string): SafeHtml {
+    if (!content) return '';
+    // Strip script tags and event handlers, then sanitize
+    const cleaned = content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '');
+    return this.sanitizer.bypassSecurityTrustHtml(cleaned);
   }
 
   getTotalPicturesCount(item: any): number {
@@ -570,7 +556,6 @@ export class CMSComponent implements OnInit {
         this.loadData(); // Reload data after deletion
         this.snackBar.open('Portfolio item deleted successfully', 'Close', { duration: 3000 });
       } catch (error) {
-        console.error('Error deleting portfolio item:', error);
         this.snackBar.open('Error deleting portfolio item', 'Close', { duration: 5000 });
       }
     }
@@ -611,7 +596,6 @@ export class CMSComponent implements OnInit {
         this.loadData(); // Reload data after deletion
         this.snackBar.open('About section deleted successfully', 'Close', { duration: 3000 });
       } catch (error) {
-        console.error('Error deleting about section:', error);
         this.snackBar.open('Error deleting about section', 'Close', { duration: 5000 });
       }
     }
@@ -670,7 +654,6 @@ export class CMSComponent implements OnInit {
         this.loadData(); // Reload data after deletion
         this.snackBar.open('Portfolio page deleted successfully', 'Close', { duration: 3000 });
       } catch (error) {
-        console.error('Error deleting portfolio page:', error);
         this.snackBar.open('Error deleting portfolio page', 'Close', { duration: 5000 });
       }
     }

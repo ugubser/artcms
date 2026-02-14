@@ -25,15 +25,12 @@ export class CategoryService {
   }
 
   private loadCategories(): void {
-    console.log('Loading categories from /assets/data/categories.json');
     this.http.get<CategoryData>('/assets/data/categories.json').subscribe({
       next: (data) => {
-        console.log('Categories loaded successfully:', data);
         const sortedCategories = data.categories.sort((a, b) => a.order - b.order);
         this.categoriesSubject.next(sortedCategories);
       },
-      error: (error) => {
-        console.error('Error loading categories:', error);
+      error: () => {
         this.categoriesSubject.next([]);
       }
     });

@@ -44,10 +44,20 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Mail collection - allow public write for contact form submissions
-    match /mail/{document=**} {
+    // Mail collection - allow public write for contact form submissions with validation
+    match /mail/{document} {
       allow read: if isAdmin();
-      allow write: if true;
+      allow create: if request.resource.data.keys().hasAll(['to', 'message'])
+                    && request.resource.data.message is map
+                    && request.resource.data.message.keys().hasAny(['subject'])
+                    && request.resource.data.message.subject is string
+                    && request.resource.data.message.subject.size() > 0
+                    && request.resource.data.message.subject.size() <= 200
+                    && (
+                      (request.resource.data.message.keys().hasAny(['text']) && request.resource.data.message.text is string && request.resource.data.message.text.size() <= 5000)
+                      || (request.resource.data.message.keys().hasAny(['html']) && request.resource.data.message.html is string && request.resource.data.message.html.size() <= 5000)
+                    );
+      allow update, delete: if isAdmin();
     }
   }
 }

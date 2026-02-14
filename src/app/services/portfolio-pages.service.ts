@@ -26,7 +26,6 @@ export class PortfolioPagesService {
   getPortfolioPages(): Observable<PortfolioPageConfig[]> {
     return collectionData(this.portfolioPagesCollection, { idField: 'id' }).pipe(
       map((pages: any[]) => {
-        console.log('Loaded portfolio pages:', pages);
         return pages as PortfolioPageConfig[];
       })
     );
@@ -39,8 +38,6 @@ export class PortfolioPagesService {
   }
 
   async updatePortfolioPage(config: Partial<PortfolioPageConfig>): Promise<string> {
-    console.log('Updating portfolio page:', config);
-    
     const configData = {
       ...config,
       updatedAt: new Date()
@@ -51,16 +48,13 @@ export class PortfolioPagesService {
         // Update existing page
         const docRef = doc(this.firestore, 'portfolio-pages', config.id);
         await setDoc(docRef, configData, { merge: true });
-        console.log('Portfolio page updated successfully');
         return config.id;
       } else {
         // Create new page
         const docRef = await addDoc(this.portfolioPagesCollection, configData);
-        console.log('Portfolio page created successfully with ID:', docRef.id);
         return docRef.id;
       }
     } catch (error) {
-      console.error('Error updating portfolio page:', error);
       throw error;
     }
   }
@@ -93,15 +87,10 @@ export class PortfolioPagesService {
   }
 
   async deletePortfolioPage(category: string): Promise<void> {
-    console.log('Deleting portfolio page:', category);
-    
     const docRef = doc(this.firestore, 'portfolio-pages', category);
-    
     try {
       await deleteDoc(docRef);
-      console.log('Portfolio page deleted successfully');
     } catch (error) {
-      console.error('Error deleting portfolio page:', error);
       throw error;
     }
   }
@@ -116,7 +105,6 @@ export class PortfolioPagesService {
       });
 
       if (currentPages.length === 0) {
-        console.log('No portfolio pages found, initializing with defaults');
         const defaultPages = this.getDefaultPortfolioPages();
         
         for (const page of defaultPages) {
@@ -124,7 +112,6 @@ export class PortfolioPagesService {
         }
       }
     } catch (error) {
-      console.error('Error initializing default portfolio pages:', error);
     }
   }
 }

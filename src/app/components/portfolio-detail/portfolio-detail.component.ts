@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
@@ -22,7 +23,8 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
   templateUrl: './portfolio-detail.component.html',
   styleUrl: './portfolio-detail.component.scss'
 })
-export class PortfolioDetailComponent implements OnInit {
+export class PortfolioDetailComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
   portfolioItem: PortfolioItem | null = null;
   selectedImageUrl: string | null = null;
   currentImageIndex = 0;
@@ -49,8 +51,13 @@ export class PortfolioDetailComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {
+    // Restore body scrolling if modal was open
+    document.body.style.overflow = 'auto';
+  }
+
   private loadPortfolioItem(id: string) {
-    this.portfolioService.getPublishedPortfolio().subscribe(items => {
+    this.portfolioService.getPublishedPortfolio().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(items => {
       const item = items.find(p => p.id === id);
       if (item) {
         this.portfolioItem = item;

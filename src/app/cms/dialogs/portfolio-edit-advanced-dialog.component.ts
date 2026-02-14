@@ -1,6 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -42,6 +43,7 @@ import { ImageUploadComponent } from '../components/image-upload.component';
   styleUrl: './portfolio-edit-advanced-dialog.component.scss'
 })
 export class PortfolioEditAdvancedDialogComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   portfolioForm: FormGroup;
   isEdit: boolean;
   saving = false;
@@ -65,23 +67,18 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log('Advanced dialog - ngOnInit started');
-    
     // Load categories first
-    this.categoryService.getCategoriesForSelect().subscribe({
+    this.categoryService.getCategoriesForSelect().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (categories) => {
-        console.log('Advanced dialog - Categories loaded:', categories);
         this.categories = categories || [];
-        
+
         // Load portfolio pages after categories are loaded
-        this.portfolioPagesService.getPortfolioPages().subscribe({
+        this.portfolioPagesService.getPortfolioPages().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (portfolioPages) => {
-            console.log('Advanced dialog - Portfolio pages loaded:', portfolioPages);
             this.portfolioPages = portfolioPages || [];
-            
+
             // Set up category change listener to filter portfolio pages
-            this.portfolioForm.get('category')?.valueChanges.subscribe(category => {
-              console.log('Category changed to:', category);
+            this.portfolioForm.get('category')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(category => {
               this.filterPortfolioPages(category);
             });
             
@@ -92,14 +89,12 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
               this.galleries = [this.portfolioService.createEmptyGallery()];
             }
           },
-          error: (error) => {
-            console.error('Error loading portfolio pages:', error);
+          error: () => {
             this.portfolioPages = [];
           }
         });
       },
-      error: (error) => {
-        console.error('Advanced dialog - Error loading categories:', error);
+      error: () => {
         // Fallback categories
         this.categories = [
           { value: 'art', label: 'Art' },
@@ -122,14 +117,8 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   }
 
   private filterPortfolioPages(category: string) {
-    console.log('Filtering portfolio pages for category:', category);
-    console.log('Available portfolio pages:', this.portfolioPages);
-    
     // Show ALL portfolio pages, not just matching category (allows cross-category assignment)
     this.filteredPortfolioPages = [...this.portfolioPages];
-    console.log('All portfolio pages available for assignment:', this.filteredPortfolioPages);
-    
-    // No need to reset selection since we now allow any page assignment
   }
 
   private createForm(): FormGroup {
@@ -144,7 +133,6 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
   }
 
   private populateForm(item: PortfolioItem) {
-    console.log('Populating form with item:', item);
     this.portfolioForm.patchValue({
       title: item.title,
       description: item.description,
@@ -153,8 +141,6 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
       order: item.order || 0,
       published: item.published || false
     });
-    
-    console.log('Form populated, category is:', item.category);
     // Filter portfolio pages based on current category
     if (item.category) {
       setTimeout(() => {
@@ -246,7 +232,6 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
 
   async onSave() {
     if (this.portfolioForm.invalid) {
-      console.log('Form is invalid:', this.portfolioForm.errors);
       return;
     }
 
@@ -275,23 +260,18 @@ export class PortfolioEditAdvancedDialogComponent implements OnInit {
       portfolioItem.portfolioPageId = deleteField() as any;
     }
 
-    console.log('Saving portfolio item:', portfolioItem);
-
     try {
       if (this.isEdit && this.data.item?.id) {
         await this.portfolioService.updatePortfolioItem(this.data.item.id, portfolioItem);
-        console.log('Portfolio item updated successfully');
         this.snackBar.open('Portfolio item updated successfully', 'Close', { duration: 3000 });
       } else {
         portfolioItem.createdAt = new Date();
-        const result = await this.portfolioService.createPortfolioItem(portfolioItem);
-        console.log('Portfolio item created successfully with ID:', result);
+        await this.portfolioService.createPortfolioItem(portfolioItem);
         this.snackBar.open('Portfolio item created successfully', 'Close', { duration: 3000 });
       }
-      
+
       this.dialogRef.close(true);
     } catch (error) {
-      console.error('Error saving portfolio item:', error);
       this.snackBar.open(`Error saving portfolio item: ${error}`, 'Close', { duration: 5000 });
     } finally {
       this.saving = false;

@@ -9,6 +9,7 @@ declare let gtag: Function;
 })
 export class AnalyticsService {
   private isInitialized = false;
+  private analyticsId: string | null = null;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -22,6 +23,7 @@ export class AnalyticsService {
   private initializeAnalytics(): void {
     this.settingsService.getSiteSettings().subscribe(settings => {
       if (settings && settings.enableAnalytics && settings.analyticsId && !this.isInitialized) {
+        this.analyticsId = settings.analyticsId;
         this.loadGoogleAnalytics(settings.analyticsId);
         this.isInitialized = true;
       }
@@ -54,8 +56,8 @@ export class AnalyticsService {
   }
 
   trackPageView(url: string, title?: string): void {
-    if (isPlatformBrowser(this.platformId) && this.isInitialized && typeof gtag !== 'undefined') {
-      gtag('config', 'GA_MEASUREMENT_ID', {
+    if (isPlatformBrowser(this.platformId) && this.isInitialized && this.analyticsId && typeof gtag !== 'undefined') {
+      gtag('config', this.analyticsId, {
         page_path: url,
         page_title: title
       });

@@ -203,7 +203,6 @@ export class ContactEditDialogComponent implements OnInit {
       this.snackBar.open('Contact information updated successfully', 'Close', { duration: 3000 });
       this.dialogRef.close(true);
     } catch (error) {
-      console.error('Error saving contact info:', error);
       this.snackBar.open('Error saving contact information. Please try again.', 'Close', { duration: 5000 });
     } finally {
       this.saving = false;

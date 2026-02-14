@@ -65,7 +65,6 @@ export class PortfolioEditDialogComponent implements OnInit {
     // Load categories and populate form
     this.categoryService.getCategoriesForSelect().subscribe({
       next: (categories) => {
-        console.log('Categories loaded for select:', categories);
         this.categories = categories;
         
         if (this.isEdit && this.data.item) {
@@ -75,8 +74,7 @@ export class PortfolioEditDialogComponent implements OnInit {
           this.galleryImages = [null];
         }
       },
-      error: (error) => {
-        console.error('Error loading categories:', error);
+      error: () => {
         // Fallback categories
         this.categories = [
           { value: 'art', label: 'Art' },
@@ -152,13 +150,8 @@ export class PortfolioEditDialogComponent implements OnInit {
 
   async onSave() {
     if (this.portfolioForm.invalid) {
-      console.log('Form is invalid:', this.portfolioForm.errors);
       return;
     }
-
-    console.log('Dialog state - isEdit:', this.isEdit);
-    console.log('Dialog data:', this.data);
-    console.log('Data item ID:', this.data?.item?.id);
 
     this.saving = true;
     const formValue = this.portfolioForm.value;
@@ -188,26 +181,18 @@ export class PortfolioEditDialogComponent implements OnInit {
       }] : []
     };
 
-    console.log('Saving portfolio item:', portfolioItem);
-
     try {
-      let result;
       if (this.isEdit && this.data.item?.id) {
-        console.log('Taking UPDATE path for item ID:', this.data.item.id);
         await this.portfolioService.updatePortfolioItem(this.data.item.id, portfolioItem);
-        console.log('Portfolio item updated successfully');
         this.snackBar.open('Portfolio item updated successfully', 'Close', { duration: 3000 });
       } else {
-        console.log('Taking CREATE path - isEdit:', this.isEdit, 'item ID:', this.data?.item?.id);
         portfolioItem.createdAt = new Date();
-        result = await this.portfolioService.createPortfolioItem(portfolioItem);
-        console.log('Portfolio item created successfully with ID:', result);
+        await this.portfolioService.createPortfolioItem(portfolioItem);
         this.snackBar.open('Portfolio item created successfully', 'Close', { duration: 3000 });
       }
-      
+
       this.dialogRef.close(true);
     } catch (error) {
-      console.error('Error saving portfolio item:', error);
       this.snackBar.open(`Error saving portfolio item: ${error}`, 'Close', { duration: 5000 });
     } finally {
       this.saving = false;

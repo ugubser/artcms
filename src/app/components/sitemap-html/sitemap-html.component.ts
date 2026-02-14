@@ -1,7 +1,9 @@
-import { Component, OnInit, OnDestroy, Inject, DOCUMENT } from '@angular/core';
-import { CommonModule, DOCUMENT as COMMON_DOCUMENT } from '@angular/common';
+import { Component, OnInit, OnDestroy, Inject, DestroyRef, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
 import { SettingsService, SiteSettings } from '../../services/settings.service';
 import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
@@ -191,6 +193,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
   `]
 })
 export class SitemapHtmlComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
   portfolio$: Observable<PortfolioItem[]>;
   siteSettings: SiteSettings | null = null;
   lastUpdated = new Date();
@@ -207,13 +210,13 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
     // Load portfolio items using the same pattern as other components
     this.portfolio$ = this.portfolioService.getPublishedPortfolio();
 
-    // Load site settings using the same pattern as home component
-    this.settingsService.getSiteSettings().subscribe(settings => {
+    // Load site settings
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
       this.siteSettings = settings;
     });
 
     // Subscribe to portfolio changes to generate structured data
-    this.portfolio$.subscribe(portfolioItems => {
+    this.portfolio$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(portfolioItems => {
       this.generateStructuredData(portfolioItems);
     });
   }

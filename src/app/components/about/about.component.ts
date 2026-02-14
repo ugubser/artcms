@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Observable } from 'rxjs';
 import { AboutService, AboutSection } from '../../services/about.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
@@ -213,7 +214,12 @@ export class AboutComponent implements OnInit {
   aboutSections$: Observable<AboutSection[]>;
   isLoading = true;
 
-  constructor(private aboutService: AboutService) {
+  private sanitizedContentCache = new Map<string, SafeHtml>();
+
+  constructor(
+    private aboutService: AboutService,
+    private sanitizer: DomSanitizer
+  ) {
     this.aboutSections$ = new Observable<AboutSection[]>();
   }
 
@@ -235,19 +241,29 @@ export class AboutComponent implements OnInit {
     return section.id || index.toString();
   }
 
-  formatContent(content: string): string {
+  formatContent(content: string): SafeHtml {
+    if (!content) return '';
+
+    // Return cached result if content hasn't changed
+    const cached = this.sanitizedContentCache.get(content);
+    if (cached) return cached;
+
     // Convert markdown-style formatting to HTML
     let html = content;
-    
+
+    // Strip any script tags and event handlers before processing
+    html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    html = html.replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '');
+
     // Handle bold text
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+
     // Split content into blocks (separated by double newlines)
     const blocks = html.split(/\n\s*\n/);
     const processedBlocks = blocks.map(block => {
       const trimmedBlock = block.trim();
       if (!trimmedBlock) return '';
-      
+
       // Check if block contains ordered list items
       if (/^\s*\d+\.\s/.test(trimmedBlock)) {
         const items = trimmedBlock.split('\n')
@@ -255,7 +271,7 @@ export class AboutComponent implements OnInit {
           .map(line => '<li>' + line.replace(/^\s*\d+\.\s+/, '') + '</li>');
         return '<ol>' + items.join('') + '</ol>';
       }
-      
+
       // Check if block contains unordered list items
       if (/^\s*[-*]\s/.test(trimmedBlock)) {
         const items = trimmedBlock.split('\n')
@@ -263,12 +279,15 @@ export class AboutComponent implements OnInit {
           .map(line => '<li>' + line.replace(/^\s*[-*]\s+/, '') + '</li>');
         return '<ul>' + items.join('') + '</ul>';
       }
-      
+
       // Regular paragraph
       return '<p>' + trimmedBlock.replace(/\n/g, '<br>') + '</p>';
     });
-    
-    return processedBlocks.filter(block => block).join('');
+
+    const rawHtml = processedBlocks.filter(block => block).join('');
+    const sanitized = this.sanitizer.bypassSecurityTrustHtml(rawHtml);
+    this.sanitizedContentCache.set(content, sanitized);
+    return sanitized;
   }
 
   async initializeSampleData() {
@@ -276,7 +295,6 @@ export class AboutComponent implements OnInit {
       await this.aboutService.initializeSampleData();
       this.loadAboutSections();
     } catch (error) {
-      console.error('Error initializing sample data:', error);
     }
   }
 }

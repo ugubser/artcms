@@ -33,8 +33,7 @@ export class StorageUrlService {
   getDownloadUrl(path: string): Observable<string> {
     const storageRef = ref(this.storage, path);
     return from(getDownloadURL(storageRef)).pipe(
-      catchError((error) => {
-        console.error(`Failed to get download URL for path: ${path}`, error);
+      catchError(() => {
         // Return a placeholder or empty string on error
         return of('');
       })
@@ -55,7 +54,6 @@ export class StorageUrlService {
       const storageRef = ref(this.storage, pathOrUrl);
       return await getDownloadURL(storageRef);
     } catch (error) {
-      console.error(`Failed to get download URL for path: ${pathOrUrl}`, error);
       return '';
     }
   }
@@ -83,7 +81,6 @@ export class StorageUrlService {
       
       return url;
     } catch (error) {
-      console.error('Failed to extract path from URL:', url, error);
       return url;
     }
   }

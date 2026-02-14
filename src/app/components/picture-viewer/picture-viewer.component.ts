@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortfolioService, PortfolioItem } from '../../services/portfolio.service';
@@ -22,6 +23,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
   styleUrl: './picture-viewer.component.scss'
 })
 export class PictureViewerComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
   portfolioItem: PortfolioItem | null = null;
   currentImage: { url: string; description?: string; alt?: string; galleryTitle?: string; galleryDescription?: string; dimensions?: { width: number; height: number }; price?: number; sold?: boolean; showPrice?: boolean; dateCreated?: string; artMedium?: string; genre?: string; galleryIndex: number; pictureIndex: number } | null = null;
   currentImageIndex = 0;
@@ -64,7 +66,7 @@ export class PictureViewerComponent implements OnInit, OnDestroy {
   }
 
   private loadPortfolioItem(id: string) {
-    this.portfolioService.getPublishedPortfolio().subscribe(items => {
+    this.portfolioService.getPublishedPortfolio().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(items => {
       const item = items.find(p => p.id === id);
       if (item) {
         this.portfolioItem = item;

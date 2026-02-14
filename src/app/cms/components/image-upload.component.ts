@@ -243,7 +243,6 @@ export class ImageUploadComponent implements OnInit {
       this.snackBar.open('Image uploaded successfully!', 'Close', { duration: 3000 });
       
     } catch (error) {
-      console.error('Upload error:', error);
       this.snackBar.open('Failed to upload image. Please try again.', 'Close', { duration: 5000 });
     } finally {
       this.uploading = false;
@@ -285,7 +284,6 @@ export class ImageUploadComponent implements OnInit {
       try {
         await this.deleteOldImage(this.currentImageUrl);
       } catch (error) {
-        console.error('Error deleting image:', error);
       }
     }
 
@@ -316,7 +314,6 @@ export class ImageUploadComponent implements OnInit {
       const imageRef = ref(this.storage, imageUrl);
       await deleteObject(imageRef);
     } catch (error) {
-      console.error('Error deleting old image:', error);
       // Don't throw error as it's not critical
     }
   }

@@ -1,6 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialogModule } from '@angular/material/dialog';
 import { PortfolioGridComponent } from '../portfolio-grid/portfolio-grid.component';
 import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
@@ -15,6 +16,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
   styleUrl: './portfolio.component.scss'
 })
 export class PortfolioComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   category?: string;
   portfolioPageId?: string;
   mode: 'page' | 'category' = 'category';
@@ -33,8 +35,6 @@ export class PortfolioComponent implements OnInit {
     this.category = this.route.snapshot.data['category'];
     this.portfolioPageId = this.route.snapshot.paramMap.get('pageId') || undefined;
     
-    console.log('Portfolio component - Mode:', this.mode, 'Category:', this.category, 'PageId:', this.portfolioPageId);
-    
     this.loadPageContent();
   }
 
@@ -44,7 +44,7 @@ export class PortfolioComponent implements OnInit {
     
     if (this.mode === 'page' && this.portfolioPageId) {
       // Load content by specific portfolio page ID
-      this.portfolioPagesService.getPortfolioPages().subscribe(pages => {
+      this.portfolioPagesService.getPortfolioPages().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(pages => {
         const pageConfig = pages.find(page => page.id === this.portfolioPageId);
         if (pageConfig) {
           this.pageTitle.set(pageConfig.title);
@@ -62,7 +62,7 @@ export class PortfolioComponent implements OnInit {
       // Legacy: Load page content based on category (backwards compatible)
       const categoryKey = this.category || 'portfolio';
       
-      this.portfolioPagesService.getPortfolioPageByCategory(categoryKey).subscribe(pageConfig => {
+      this.portfolioPagesService.getPortfolioPageByCategory(categoryKey).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(pageConfig => {
         if (pageConfig) {
           this.pageTitle.set(pageConfig.title);
           this.pageSubtitle.set(pageConfig.subtitle);
