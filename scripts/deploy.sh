@@ -104,9 +104,9 @@ echo -e "${BLUE}🔧 Injecting environment variables...${NC}"
 node scripts/inject-env.js
 
 echo ""
-echo -e "${BLUE}🎨 Injecting meta data from Firestore...${NC}"
+echo -e "${BLUE}🎨 Generating index.html and robots.txt from templates...${NC}"
 
-# Inject site settings from Firestore into index.html
+# Generate index.html and robots.txt with default meta data
 node scripts/inject-meta-simple.js
 
 echo ""
