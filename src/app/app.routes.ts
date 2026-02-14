@@ -26,5 +26,7 @@ export const routes: Routes = [
   { path: 'contact', loadComponent: () => import('./components/contact/contact.component').then(m => m.ContactComponent) },
   { path: 'admin/login', loadComponent: () => import('./components/admin-login/admin-login.component').then(m => m.AdminLoginComponent) },
   { path: 'admin', loadComponent: () => import('./cms/cms.component').then(m => m.CMSComponent), canActivate: [AuthGuard] },
+  { path: 'sitemap.xml', loadComponent: () => import('./components/sitemap-xml/sitemap-xml.component').then(m => m.SitemapXmlComponent) },
+  { path: 'sitemap.html', loadComponent: () => import('./components/sitemap-html/sitemap-html.component').then(m => m.SitemapHtmlComponent) },
   { path: '**', redirectTo: '/home' }
 ];

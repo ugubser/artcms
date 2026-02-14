@@ -107,7 +107,7 @@ echo ""
 echo -e "${BLUE}🎨 Injecting meta data from Firestore...${NC}"
 
 # Inject site settings from Firestore into index.html
-node scripts/inject-meta.js
+node scripts/inject-meta-simple.js
 
 echo ""
 echo -e "${BLUE}🏗️  Building for production...${NC}"

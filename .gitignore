@@ -76,8 +76,6 @@ src/environments/environment.prod.ts
 # Generated HTML files (created from templates at build time)
 src/index.html
 src/robots.txt
-src/sitemap.xml
-src/sitemap.html
 
 # Firebase rules files (generated at build time)
 firestore.rules
