@@ -1,0 +1,59 @@
+// Shared CMS dialog styles
+
+.dialog-container {
+  max-width: 90vw;
+  max-height: 80vh;
+}
+
+.full-width {
+  width: 100%;
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.checkbox-field {
+  margin: 1.5rem 0;
+}
+
+mat-dialog-actions {
+  padding: 1.5rem 0 0 0;
+  gap: 1rem;
+
+  button {
+    min-width: 100px;
+  }
+}
+
+// Common form layout
+%dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+// Common tab layout
+%dialog-tabs {
+  min-height: 400px;
+}
+
+%dialog-tab-content {
+  padding: 2rem 1.5rem;
+}
+
+// Common section with border separator
+%dialog-section {
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .dialog-container {
+    width: 95vw;
+    max-width: 95vw;
+  }
+}

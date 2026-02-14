@@ -1,4 +1,4 @@
-import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, combineLatest } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,6 +8,7 @@ import { SettingsService, SiteSettings } from '../../services/settings.service';
 @Component({
   selector: 'app-sitemap-xml',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   template: `<pre>{{ xmlContent }}</pre>`,
 })
@@ -16,6 +17,8 @@ export class SitemapXmlComponent implements OnInit {
   xmlContent = '';
   portfolio$: Observable<PortfolioItem[]>;
   siteSettings: SiteSettings | null = null;
+
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
     private portfolioService: PortfolioService,
@@ -127,6 +130,7 @@ export class SitemapXmlComponent implements OnInit {
 
     xml += `</urlset>`;
     this.xmlContent = xml;
+    this.cdr.markForCheck();
   }
 
   private escapeXml(unsafe: string): string {

@@ -1,29 +1,19 @@
+@import '../styles/cms-dialog-shared';
+
 .dialog-container {
   width: 600px;
-  max-width: 90vw;
-  max-height: 80vh;
 }
 
 .portfolio-tabs {
-  min-height: 400px;
+  @extend %dialog-tabs;
 }
 
 .tab-content {
-  padding: 2rem 1.5rem;
+  @extend %dialog-tab-content;
 }
 
 .portfolio-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.checkbox-field {
-  margin: 1.5rem 0;
+  @extend %dialog-form;
 }
 
 .gallery-uploads {
@@ -40,15 +30,4 @@
 
 .add-gallery-btn {
   align-self: flex-start;
-}
-
-h3 {
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin: 0 0 1rem 0;
-  color: #333;
-}
-
-mat-dialog-actions {
-  padding: 1rem 0 0 0;
 }

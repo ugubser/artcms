@@ -1,7 +1,7 @@
+@import '../styles/cms-dialog-shared';
+
 .dialog-container {
-  width: 600px; // Reduced from 800px for better fit
-  max-width: 90vw;
-  max-height: 80vh;
+  width: 600px;
 }
 
 .settings-tabs {
@@ -9,40 +9,28 @@
 }
 
 .tab-content {
-  padding: 2rem; // Increased from 1.5rem 1rem for more breathing room
+  padding: 2rem;
 }
 
 .settings-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; // Increased from 1rem for better spacing
-}
-
-.full-width {
-  width: 100%;
+  @extend %dialog-form;
 }
 
 .checkbox-field {
-  margin: 1rem 0;
-  
   mat-checkbox {
-    padding: 0.5rem 0; // Add padding to checkbox for better spacing
+    padding: 0.5rem 0;
   }
 }
 
-.keywords-section, 
-.analytics-section, 
-.branding-section, 
+.keywords-section,
+.analytics-section,
+.branding-section,
 .color-section,
 .artist-section {
-  margin-bottom: 2rem;
+  @extend %dialog-section;
 }
 
 h3 {
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin: 0 0 1rem 0;
-  color: #333;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.5rem;
 }
@@ -64,93 +52,72 @@ h3 {
 
 .color-inputs {
   display: flex;
-  gap: 1.5rem; // Increased gap for better spacing
-  
+  gap: 1.5rem;
+
   mat-form-field {
     flex: 1;
-    min-width: 0; // Ensures flex items can shrink
+    min-width: 0;
   }
 }
 
-// Form field improvements
 mat-form-field {
   &.full-width {
-    margin-bottom: 0.5rem; // Add some bottom margin for better spacing
+    margin-bottom: 0.5rem;
   }
-  
-  // Ensure proper padding inside form fields
+
   .mat-mdc-form-field-infix {
-    padding: 1rem 0.75rem; // Better internal padding
+    padding: 1rem 0.75rem;
   }
 }
 
-// Dialog actions styling
 mat-dialog-actions {
-  padding: 1.5rem 0 0 0; // Increased top padding
-  gap: 1rem; // Add gap between buttons
-  
-  button {
-    min-width: 100px; // Consistent button width
-    
-    &[mat-raised-button] {
-      padding: 0.75rem 1.5rem; // Better button padding
-    }
+  button[mat-raised-button] {
+    padding: 0.75rem 1.5rem;
   }
 }
 
-// Icon prefix styling
 mat-icon[matPrefix] {
   margin-right: 0.5rem;
   color: #666;
 }
 
-// Improved tab content layout
 .mat-mdc-tab-body-content {
-  padding: 0 !important; // Remove default padding since we handle it in .tab-content
+  padding: 0 !important;
 }
 
-// Analytics section specific improvements
 .analytics-section {
   .checkbox-field {
-    margin-bottom: 1.5rem; // Better spacing after checkbox
+    margin-bottom: 1.5rem;
   }
 }
 
-// Branding section improvements
 .branding-section {
   app-image-upload {
     display: block;
-    margin: 1rem 0; // Better spacing around image upload components
+    margin: 1rem 0;
   }
 }
 
-// Better spacing for form groups
 div[formGroupName="socialMedia"] {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; // Consistent spacing between social media fields
+  gap: 1.5rem;
 }
 
-// Responsive adjustments
 @media (max-width: 768px) {
-  .dialog-container {
-    width: 95vw;
-    max-width: 95vw;
-  }
-  
   .tab-content {
-    padding: 1.5rem 1rem; // Reduce padding on mobile
+    padding: 1.5rem 1rem;
   }
-  
+
   .color-inputs {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .keywords-input {
     flex-direction: column;
     align-items: stretch;
-    
+
     button {
       margin-top: 1rem;
     }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Inject, DestroyRef, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -11,6 +11,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 @Component({
   selector: 'app-sitemap-html',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterModule, ResolveStorageUrlPipe],
   template: `
     <div class="sitemap-container">
@@ -198,6 +199,8 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
   siteSettings: SiteSettings | null = null;
   lastUpdated = new Date();
 
+  private cdr = inject(ChangeDetectorRef);
+
   constructor(
     private portfolioService: PortfolioService,
     private settingsService: SettingsService,
@@ -213,6 +216,7 @@ export class SitemapHtmlComponent implements OnInit, OnDestroy {
     // Load site settings
     this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
       this.siteSettings = settings;
+      this.cdr.markForCheck();
     });
 
     // Subscribe to portfolio changes to generate structured data

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -15,6 +15,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 @Component({
   selector: 'app-home',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,6 +11,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
 @Component({
   selector: 'app-portfolio',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, MatDialogModule, PortfolioGridComponent, PageHeaderComponent],
   templateUrl: './portfolio.component.html',
   styleUrl: './portfolio.component.scss'

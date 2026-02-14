@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Observable, tap } from 'rxjs';
@@ -9,6 +9,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 @Component({
   selector: 'app-about',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, PageHeaderComponent, ResolveStorageUrlPipe],
   template: `
     <div class="about-container">

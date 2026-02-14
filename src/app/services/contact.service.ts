@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, doc, addDoc, updateDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { BaseFirestoreService, FirestoreDocument } from './base-firestore.service';
 
-export interface ContactInfo {
+export interface ContactInfo extends FirestoreDocument {
   id?: string;
   email: string;
   phone?: string;
@@ -18,53 +19,42 @@ export interface ContactInfo {
 @Injectable({
   providedIn: 'root'
 })
-export class ContactService {
-  private contactCollection;
+export class ContactService extends BaseFirestoreService<ContactInfo> {
 
-  constructor(private firestore: Firestore) {
-    this.contactCollection = collection(this.firestore, 'contact');
+  constructor(firestore: Firestore) {
+    super(firestore, 'contact');
   }
 
-  // Get contact information
   getContactInfo(): Observable<ContactInfo[]> {
-    return collectionData(this.contactCollection, { idField: 'id' }) as Observable<ContactInfo[]>;
+    return this.getAll();
   }
 
-  // Add contact info
   async addContactInfo(contact: Omit<ContactInfo, 'id'>): Promise<string> {
-    const docRef = await addDoc(this.contactCollection, contact);
-    return docRef.id;
+    return this.add(contact);
   }
 
-  // Update contact info
   async updateContactInfo(contact: ContactInfo): Promise<void> {
-    // For simplicity, we'll use a fixed document ID for contact info
     const contactId = 'main-contact';
     const docRef = doc(this.firestore, 'contact', contactId);
-    
-    // Convert to plain object for Firestore
+
     const updateData = {
       email: contact.email,
       phone: contact.phone,
       address: contact.address,
       socialMedia: contact.socialMedia
     };
-    
+
     try {
       await updateDoc(docRef, updateData);
     } catch (error) {
-      // If document doesn't exist, create it
-      await addDoc(this.contactCollection, { ...updateData, id: contactId });
+      await addDoc(this.collectionRef, { ...updateData, id: contactId });
     }
   }
 
-  // Delete contact info
   async deleteContactInfo(id: string): Promise<void> {
-    const docRef = doc(this.firestore, 'contact', id);
-    await deleteDoc(docRef);
+    return this.delete(id);
   }
 
-  // Get sample contact data
   getSampleContactData(): ContactInfo {
     return {
       id: 'contact-1',
@@ -81,7 +71,6 @@ Bahnhofstrasse 123
     };
   }
 
-  // Initialize with sample data
   async initializeSampleData(): Promise<void> {
     const sampleData = this.getSampleContactData();
     const { id, ...contactData } = sampleData;

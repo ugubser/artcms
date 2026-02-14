@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
@@ -9,6 +9,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
 @Component({
   selector: 'app-portfolio-grid',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ResolveStorageUrlPipe],
   templateUrl: './portfolio-grid.component.html',
   styleUrls: ['./portfolio-grid.component.scss']

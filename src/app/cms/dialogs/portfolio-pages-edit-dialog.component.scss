@@ -1,7 +1,7 @@
+@import '../styles/cms-dialog-shared';
+
 .dialog-container {
   width: 600px;
-  max-width: 90vw;
-  max-height: 80vh;
 }
 
 .dialog-description {
@@ -26,25 +26,17 @@
   border-radius: 8px;
   padding: 1.5rem;
   background: #fafafa;
-}
 
-.page-section h3 {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #333;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 0.5rem;
+  h3 {
+    margin: 0 0 1.5rem 0;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+  }
 }
 
 .page-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.full-width {
-  width: 100%;
+  @extend %dialog-form;
+  padding: 0;
 }
 
 .loading-state {
@@ -53,24 +45,11 @@
   color: #666;
 }
 
-mat-dialog-actions {
-  padding: 1.5rem 0 0 0;
-  gap: 1rem;
-}
-
-mat-dialog-actions button {
-  min-width: 100px;
-}
-
 @media (max-width: 768px) {
-  .dialog-container {
-    width: 95vw;
-  }
-  
   .page-section {
     padding: 1rem;
   }
-  
+
   .pages-container {
     gap: 1.5rem;
   }
