@@ -54,7 +54,9 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       this.portfolioPagesForm = this.fb.group({
         category: ['', Validators.required],
         title: ['', Validators.required],
-        subtitle: ['', Validators.required]
+        subtitle: ['', Validators.required],
+        slug: ['', Validators.required],
+        order: [null]
       });
     } else {
       // Multi-page mode (legacy)
@@ -82,7 +84,9 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       this.portfolioPagesForm.patchValue({
         category: this.data.page.category,
         title: this.data.page.title,
-        subtitle: this.data.page.subtitle
+        subtitle: this.data.page.subtitle,
+        slug: this.data.page.slug || '',
+        order: this.data.page.order ?? null
       });
     } else if (this.isAddMode) {
       // Adding new page - form is already initialized with empty values
@@ -91,6 +95,23 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
         category: 'portfolio'
       });
     }
+
+    // Auto-generate slug from title when title changes (only if slug is empty or matches previous auto-slug)
+    this.portfolioPagesForm.get('title')?.valueChanges.subscribe(title => {
+      const currentSlug = this.portfolioPagesForm.get('slug')?.value;
+      const autoSlug = this.slugify(title);
+      // Only auto-set if slug is empty or was previously auto-generated
+      if (!currentSlug || currentSlug === this.slugify(this.previousTitle)) {
+        this.portfolioPagesForm.get('slug')?.setValue(autoSlug, { emitEvent: false });
+      }
+      this.previousTitle = title;
+    });
+  }
+
+  private previousTitle = '';
+
+  private slugify(text: string): string {
+    return (text || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   }
 
   private async loadPortfolioPages() {
@@ -156,13 +177,19 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
       if (this.isEdit || this.isAddMode) {
         // Single page mode
         const formValue = this.portfolioPagesForm.value;
-        const pageConfig: PortfolioPageConfig = {
+        const pageConfig: Partial<PortfolioPageConfig> = {
           category: formValue.category,
           title: formValue.title,
           subtitle: formValue.subtitle,
+          slug: formValue.slug,
+          order: formValue.order != null ? Number(formValue.order) : null as any,
           updatedAt: new Date()
         };
-        
+
+        if (this.isEdit && this.data.page?.id) {
+          pageConfig.id = this.data.page.id;
+        }
+
         await this.portfolioPagesService.updatePortfolioPage(pageConfig);
         this.isEdit ? this.notify.updated('Portfolio page') : this.notify.created('Portfolio page');
       } else {
@@ -177,7 +204,8 @@ export class PortfolioPagesEditDialogComponent implements OnInit {
 
       this.dialogRef.close(true);
     } catch (error) {
-      this.notify.saveError('portfolio pages');
+      console.error('Portfolio pages save error:', error);
+      this.notify.saveError('portfolio pages', error);
     } finally {
       this.isLoading = false;
     }

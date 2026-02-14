@@ -44,8 +44,8 @@
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Page Subtitle</mat-label>
-          <textarea matInput 
-                   formControlName="subtitle" 
+          <textarea matInput
+                   formControlName="subtitle"
                    rows="3"
                    placeholder="Brief description of this portfolio section">
           </textarea>
@@ -53,6 +53,23 @@
             Subtitle is required
           </mat-error>
         </mat-form-field>
+
+        <div class="slug-order-row">
+          <mat-form-field appearance="outline" class="slug-field">
+            <mat-label>URL Slug</mat-label>
+            <input matInput formControlName="slug" placeholder="e.g., art">
+            <mat-hint>/{{ portfolioPagesForm.get('slug')?.value || '...' }}</mat-hint>
+            <mat-error *ngIf="portfolioPagesForm.get('slug')?.hasError('required')">
+              Slug is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="order-field">
+            <mat-label>Nav Order</mat-label>
+            <input matInput type="number" formControlName="order" placeholder="e.g., 1">
+            <mat-hint>Navigation sort order</mat-hint>
+          </mat-form-field>
+        </div>
       </div>
 
       <!-- Multi-page mode (legacy) -->

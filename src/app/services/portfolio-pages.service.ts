@@ -23,10 +23,25 @@ export class PortfolioPagesService {
     this.portfolioPagesCollection = collection(this.firestore, 'portfolio-pages');
   }
 
+  private toJsDate(value: any): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value.toDate === 'function') return value.toDate();
+    if (value.seconds != null) return new Date(value.seconds * 1000);
+    return null;
+  }
+
   getPortfolioPages(): Observable<PortfolioPageConfig[]> {
     return collectionData(this.portfolioPagesCollection, { idField: 'id' }).pipe(
       map((pages: any[]) => {
-        return pages as PortfolioPageConfig[];
+        return pages.map(p => ({
+          ...p,
+          updatedAt: this.toJsDate(p.updatedAt)
+        } as PortfolioPageConfig)).sort((a, b) => {
+          const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+          const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+          return orderA - orderB;
+        });
       })
     );
   }
@@ -38,17 +53,18 @@ export class PortfolioPagesService {
   }
 
   async updatePortfolioPage(config: Partial<PortfolioPageConfig>): Promise<string> {
+    const { id, ...rest } = config;
     const configData = {
-      ...config,
+      ...rest,
       updatedAt: new Date()
     };
 
     try {
-      if (config.id) {
+      if (id) {
         // Update existing page
-        const docRef = doc(this.firestore, 'portfolio-pages', config.id);
+        const docRef = doc(this.firestore, 'portfolio-pages', id);
         await setDoc(docRef, configData, { merge: true });
-        return config.id;
+        return id;
       } else {
         // Create new page
         const docRef = await addDoc(this.portfolioPagesCollection, configData);
@@ -69,18 +85,24 @@ export class PortfolioPagesService {
         category: 'art',
         title: 'Art',
         subtitle: 'Contemporary abstract art pieces inspired by Japanese minimalism and Swiss precision.',
+        slug: 'art',
+        order: 1,
         updatedAt: new Date()
       },
       {
         category: 'graphic-design',
         title: 'Design',
         subtitle: 'Graphic design solutions that combine Swiss typography principles with modern aesthetics.',
+        slug: 'design',
+        order: 2,
         updatedAt: new Date()
       },
       {
         category: 'portfolio',
         title: 'Portfolio',
         subtitle: 'A collection of our finest work in graphic design, art, and branding.',
+        slug: 'portfolio',
+        order: 3,
         updatedAt: new Date()
       }
     ];

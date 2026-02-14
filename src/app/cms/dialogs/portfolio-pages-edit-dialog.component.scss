@@ -39,6 +39,19 @@
   padding: 0;
 }
 
+.slug-order-row {
+  display: flex;
+  gap: 1rem;
+
+  .slug-field {
+    flex: 2;
+  }
+
+  .order-field {
+    flex: 1;
+  }
+}
+
 .loading-state {
   text-align: center;
   padding: 2rem;

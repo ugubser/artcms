@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SettingsService } from '../../services/settings.service';
+import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portfolio-pages.service';
 
 @Component({
   selector: 'app-page-header',
@@ -13,21 +14,18 @@ import { SettingsService } from '../../services/settings.service';
     <header class="hero-section">
       <h1>{{ siteName() }}</h1>
       <p class="hero-subtitle">{{ siteDescription() }}</p>
-      
+
       <nav class="main-nav">
         <ul class="nav-links">
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">HOME</a></li>
-          <li class="nav-divider">|</li>
-          <li><a routerLink="/art" routerLinkActive="active">ART</a></li>
-          <li class="nav-divider">|</li>
-          <li><a routerLink="/exhibition" routerLinkActive="active">EXHIBITION</a></li>
+          <ng-container *ngFor="let page of portfolioPages()">
+            <li class="nav-divider">|</li>
+            <li><a [routerLink]="'/' + page.slug" routerLinkActive="active">{{ page.title | uppercase }}</a></li>
+          </ng-container>
           <li class="nav-divider">|</li>
           <li><a routerLink="/about" routerLinkActive="active">ABOUT</a></li>
           <li class="nav-divider">|</li>
           <li><a routerLink="/contact" routerLinkActive="active">CONTACT</a></li>
-          <!-- <li class="nav-divider">|</li>
-          <li><a routerLink="/design" routerLinkActive="active">DESIGN</a></li>
-	        -->
         </ul>
       </nav>
     </header>
@@ -122,8 +120,12 @@ export class PageHeaderComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   siteName = signal<string>('tribeca concepts');
   siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
+  portfolioPages = signal<PortfolioPageConfig[]>([]);
 
-  constructor(private settingsService: SettingsService) {}
+  constructor(
+    private settingsService: SettingsService,
+    private portfolioPagesService: PortfolioPagesService
+  ) {}
 
   ngOnInit() {
     this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
@@ -131,6 +133,11 @@ export class PageHeaderComponent implements OnInit {
         this.siteName.set(settings.siteName);
         this.siteDescription.set(settings.siteDescription);
       }
+    });
+
+    this.portfolioPagesService.getPortfolioPages().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(pages => {
+      // Only show pages that have a slug and order set
+      this.portfolioPages.set(pages.filter(p => p.slug && p.order != null));
     });
   }
 }

@@ -40,9 +40,9 @@ export class AuthService {
     try {
       const result = await signInWithPopup(this.auth, this.googleProvider);
       const user = result.user;
-      
-      // Check if user is authorized admin
-      if (!this.isAdminUser(user)) {
+
+      // Skip admin check in emulator mode (adminEmails is empty)
+      if (this.adminEmails.length > 0 && !this.isAdminUser(user)) {
         await this.signOut();
         throw new Error('Unauthorized: Admin access required');
       }

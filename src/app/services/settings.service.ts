@@ -43,11 +43,24 @@ export class SettingsService {
     this.settingsCollection = collection(this.firestore, 'settings');
   }
 
+  private toJsDate(value: any): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value.toDate === 'function') return value.toDate();
+    if (value.seconds != null) return new Date(value.seconds * 1000);
+    return null;
+  }
+
   // Get site settings
   getSiteSettings(): Observable<SiteSettings | null> {
     return collectionData(this.settingsCollection, { idField: 'id' }).pipe(
       map((settings: any[]) => {
-        return settings.length > 0 ? settings[0] as SiteSettings : null;
+        if (settings.length === 0) return null;
+        const s = settings[0];
+        return {
+          ...s,
+          updatedAt: this.toJsDate(s.updatedAt)
+        } as SiteSettings;
       })
     );
   }

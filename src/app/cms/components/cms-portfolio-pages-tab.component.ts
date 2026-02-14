@@ -8,8 +8,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioPagesService } from '../../services/portfolio-pages.service';
 import { NotificationService } from '../../services/notification.service';
 import { PortfolioPagesEditDialogComponent } from '../dialogs/portfolio-pages-edit-dialog.component';
-import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
-import { ImgLoadingDirective } from '../../directives/img-loading.directive';
 
 @Component({
   selector: 'cms-portfolio-pages-tab',
@@ -20,8 +18,6 @@ import { ImgLoadingDirective } from '../../directives/img-loading.directive';
     MatCardModule,
     MatIconModule,
     MatDialogModule,
-    ResolveStorageUrlPipe,
-    ImgLoadingDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../styles/cms-shared.scss'],
@@ -39,13 +35,12 @@ import { ImgLoadingDirective } from '../../directives/img-loading.directive';
         <mat-card *ngFor="let page of pages; trackBy: trackByFn" class="portfolio-page-card">
           <mat-card-header>
             <mat-card-title>{{ page.title }}</mat-card-title>
-            <mat-card-subtitle>{{ page.slug }}</mat-card-subtitle>
+            <mat-card-subtitle>/{{ page.slug || '—' }}</mat-card-subtitle>
           </mat-card-header>
-          <img appImgLoading mat-card-image [src]="page.featuredImage | resolveStorageUrl | async" [alt]="page.title" *ngIf="page.featuredImage" loading="lazy">
           <mat-card-content>
-            <p>{{ page.excerpt }}</p>
-            <p><strong>Status:</strong> {{ page.published ? 'Published' : 'Draft' }}</p>
-            <p><strong>Order:</strong> {{ page.order }}</p>
+            <p><strong>Category:</strong> {{ page.category }}</p>
+            <p><strong>Subtitle:</strong> {{ page.subtitle }}</p>
+            <p><strong>Nav Order:</strong> {{ page.order != null ? page.order : 'Not set' }}</p>
             <p><strong>Last Updated:</strong> {{ page.updatedAt ? (page.updatedAt | date:'medium') : 'Never' }}</p>
           </mat-card-content>
           <mat-card-actions>
