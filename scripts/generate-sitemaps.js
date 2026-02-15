@@ -139,8 +139,7 @@ function generateSitemapXml(portfolioItems, portfolioPages) {
 
     if (item.galleries && item.galleries.length > 0) {
       item.galleries.forEach((gallery, gIdx) => {
-        xml += `  <url>\n    <loc>${escapeXml(SITE_URL)}/portfolio/${escapeXml(item.id)}/galleries/${gIdx}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
-
+        // Gallery-only URLs are not routable -- only include individual picture URLs
         if (gallery.pictures && gallery.pictures.length > 0) {
           gallery.pictures.forEach((pic, pIdx) => {
             if (pic.imageUrl) {

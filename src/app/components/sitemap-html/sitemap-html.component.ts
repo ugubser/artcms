@@ -42,9 +42,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
           <div class="galleries" *ngIf="item.galleries && item.galleries.length > 0">
             <div class="gallery" *ngFor="let gallery of item.galleries; let galleryIndex = index">
               <strong class="gallery-title">
-                <a [routerLink]="['/portfolio', item.id, 'galleries', galleryIndex]">
-                  📁 {{ gallery.description || 'Gallery ' + (galleryIndex + 1) }}
-                </a>
+                📁 {{ gallery.description || 'Gallery ' + (galleryIndex + 1) }}
               </strong>
               <ul class="pictures" *ngIf="gallery.pictures && gallery.pictures.length > 0">
                 <li *ngFor="let picture of gallery.pictures; let pictureIndex = index">

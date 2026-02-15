@@ -104,19 +104,9 @@ export class SitemapXmlComponent implements OnInit {
   </url>
 `;
       
-      // Add gallery and individual gallery items
+      // Add individual picture URLs (gallery-only URLs are not routable)
       if (item.galleries && item.galleries.length > 0) {
         item.galleries.forEach((gallery: any, galleryIndex: number) => {
-          // Add gallery page URL
-          xml += `  <url>
-    <loc>${this.escapeXml(cleanBaseUrl)}/portfolio/${this.escapeXml(item.id || '')}/galleries/${galleryIndex}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-          
-          // Add individual picture URLs
           if (gallery.pictures && gallery.pictures.length > 0) {
             gallery.pictures.forEach((picture: any, pictureIndex: number) => {
               if (picture.imageUrl) {
