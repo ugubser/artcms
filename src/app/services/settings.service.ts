@@ -1,8 +1,9 @@
-import { Injectable, Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { Injectable, Inject, Injector, PLATFORM_ID, inject, PendingTasks, runInInjectionContext } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, setDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { map, first, finalize } from 'rxjs/operators';
+import { map, first, finalize, timeout, catchError } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
 
 export interface SiteSettings {
   id?: string;
@@ -40,6 +41,7 @@ export class SettingsService {
   private settingsCollection;
   private readonly SETTINGS_DOC_ID = 'main-settings';
   private pendingTasks = inject(PendingTasks);
+  private injector = inject(Injector);
 
   constructor(
     private firestore: Firestore,
@@ -51,7 +53,12 @@ export class SettingsService {
   private completeOnServer<T>(obs$: Observable<T>): Observable<T> {
     if (isPlatformServer(this.platformId)) {
       const done = this.pendingTasks.add();
-      return obs$.pipe(first(), finalize(() => done()));
+      return obs$.pipe(
+        timeout(5000),
+        first(),
+        catchError(() => EMPTY as Observable<T>),
+        finalize(() => done())
+      );
     }
     return obs$;
   }
@@ -67,7 +74,9 @@ export class SettingsService {
   // Get site settings
   getSiteSettings(): Observable<SiteSettings | null> {
     return this.completeOnServer(
-      collectionData(this.settingsCollection, { idField: 'id' }).pipe(
+      runInInjectionContext(this.injector, () =>
+        collectionData(this.settingsCollection, { idField: 'id' })
+      ).pipe(
         map((settings: any[]) => {
           if (settings.length === 0) return null;
           const s = settings[0];

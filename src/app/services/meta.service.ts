@@ -1,6 +1,7 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, DestroyRef, inject } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SettingsService, SiteSettings } from './settings.service';
 import { StorageUrlService } from './storage-url.service';
 
@@ -9,6 +10,7 @@ import { StorageUrlService } from './storage-url.service';
 })
 export class MetaService {
   private currentSettings: SiteSettings | null = null;
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private titleService: Title,
@@ -18,7 +20,9 @@ export class MetaService {
     @Inject(DOCUMENT) private document: Document,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this.settingsService.getSiteSettings().subscribe(settings => {
+    this.settingsService.getSiteSettings().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(settings => {
       if (settings) {
         this.currentSettings = settings;
         this.updateMetaTags(settings);

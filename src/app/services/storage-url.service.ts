@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
 import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
 import { Observable, from, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -7,6 +7,7 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class StorageUrlService {
+  private injector = inject(Injector);
 
   constructor(private storage: Storage) {}
 
@@ -32,7 +33,7 @@ export class StorageUrlService {
    */
   getDownloadUrl(path: string): Observable<string> {
     const storageRef = ref(this.storage, path);
-    return from(getDownloadURL(storageRef)).pipe(
+    return from(runInInjectionContext(this.injector, () => getDownloadURL(storageRef))).pipe(
       catchError((error) => {
         console.error(`[StorageUrlService] Failed to resolve "${path}":`, error?.message || error);
         return of('');
@@ -52,7 +53,7 @@ export class StorageUrlService {
 
     try {
       const storageRef = ref(this.storage, pathOrUrl);
-      return await getDownloadURL(storageRef);
+      return await runInInjectionContext(this.injector, () => getDownloadURL(storageRef));
     } catch (error) {
       return '';
     }

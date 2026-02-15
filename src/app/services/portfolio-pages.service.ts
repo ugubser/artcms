@@ -1,8 +1,9 @@
-import { Injectable, Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { Injectable, Inject, Injector, PLATFORM_ID, inject, PendingTasks, runInInjectionContext } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, setDoc, addDoc, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { map, first, finalize } from 'rxjs/operators';
+import { map, first, finalize, timeout, catchError } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
 
 export interface PortfolioPageConfig {
   id?: string;
@@ -20,6 +21,7 @@ export interface PortfolioPageConfig {
 export class PortfolioPagesService {
   private portfolioPagesCollection;
   private pendingTasks = inject(PendingTasks);
+  private injector = inject(Injector);
 
   constructor(
     private firestore: Firestore,
@@ -31,7 +33,12 @@ export class PortfolioPagesService {
   private completeOnServer<T>(obs$: Observable<T>): Observable<T> {
     if (isPlatformServer(this.platformId)) {
       const done = this.pendingTasks.add();
-      return obs$.pipe(first(), finalize(() => done()));
+      return obs$.pipe(
+        timeout(5000),
+        first(),
+        catchError(() => EMPTY as Observable<T>),
+        finalize(() => done())
+      );
     }
     return obs$;
   }
@@ -46,7 +53,9 @@ export class PortfolioPagesService {
 
   getPortfolioPages(): Observable<PortfolioPageConfig[]> {
     return this.completeOnServer(
-      collectionData(this.portfolioPagesCollection, { idField: 'id' }).pipe(
+      runInInjectionContext(this.injector, () =>
+        collectionData(this.portfolioPagesCollection, { idField: 'id' })
+      ).pipe(
         map((pages: any[]) => {
           return pages.map(p => ({
             ...p,

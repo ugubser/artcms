@@ -1,8 +1,9 @@
-import { Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { Inject, Injector, PLATFORM_ID, inject, PendingTasks, runInInjectionContext } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, query, orderBy, CollectionReference, QueryConstraint } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { first, finalize } from 'rxjs/operators';
+import { first, finalize, timeout, catchError } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
 
 export interface FirestoreDocument {
   id?: string;
@@ -11,6 +12,7 @@ export interface FirestoreDocument {
 export abstract class BaseFirestoreService<T extends FirestoreDocument> {
   protected collectionRef: CollectionReference;
   private pendingTasks = inject(PendingTasks);
+  private injector = inject(Injector);
 
   constructor(
     protected firestore: Firestore,
@@ -23,16 +25,27 @@ export abstract class BaseFirestoreService<T extends FirestoreDocument> {
   protected completeOnServer<U>(obs$: Observable<U>): Observable<U> {
     if (isPlatformServer(this.platformId)) {
       const done = this.pendingTasks.add();
-      return obs$.pipe(first(), finalize(() => done()));
+      return obs$.pipe(
+        timeout(5000),
+        first(),
+        catchError(() => EMPTY as Observable<U>),
+        finalize(() => done())
+      );
     }
     return obs$;
+  }
+
+  protected collectionDataInContext(q: any): Observable<T[]> {
+    return runInInjectionContext(this.injector, () =>
+      collectionData(q, { idField: 'id' }) as Observable<T[]>
+    );
   }
 
   getAll(...constraints: QueryConstraint[]): Observable<T[]> {
     const q = constraints.length > 0
       ? query(this.collectionRef, ...constraints)
       : this.collectionRef;
-    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<T[]>);
+    return this.completeOnServer(this.collectionDataInContext(q));
   }
 
   getAllOrdered(field: string, direction: 'asc' | 'desc' = 'asc'): Observable<T[]> {

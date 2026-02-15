@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { Auth, onAuthStateChanged } from '@angular/fire/auth';
+import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
@@ -10,7 +10,7 @@ import { environment } from '../../environments/environment';
 })
 export class AuthGuard implements CanActivate {
   constructor(
-    private auth: Auth,
+    @Optional() private auth: Auth,
     private router: Router,
     private authService: AuthService
   ) {}

@@ -1,9 +1,10 @@
-import { Injectable, Inject, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
+import { Injectable, Inject, Injector, PLATFORM_ID, inject, PendingTasks, runInInjectionContext } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { Observable, from } from 'rxjs';
-import { map, first, finalize } from 'rxjs/operators';
+import { map, first, finalize, timeout, catchError } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
 
 export interface Picture {
   id?: string;
@@ -50,6 +51,7 @@ export interface PortfolioItem {
 export class PortfolioService {
   private portfolioCollection;
   private pendingTasks = inject(PendingTasks);
+  private injector = inject(Injector);
 
   constructor(
     private firestore: Firestore,
@@ -62,9 +64,20 @@ export class PortfolioService {
   private completeOnServer<T>(obs$: Observable<T>): Observable<T> {
     if (isPlatformServer(this.platformId)) {
       const done = this.pendingTasks.add();
-      return obs$.pipe(first(), finalize(() => done()));
+      return obs$.pipe(
+        timeout(5000),
+        first(),
+        catchError(() => EMPTY as Observable<T>),
+        finalize(() => done())
+      );
     }
     return obs$;
+  }
+
+  private collectionDataInContext(q: any): Observable<PortfolioItem[]> {
+    return runInInjectionContext(this.injector, () =>
+      collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>
+    );
   }
 
   // Get all published portfolio items
@@ -75,7 +88,7 @@ export class PortfolioService {
       orderBy('order', 'asc')
     );
 
-    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
+    return this.completeOnServer(this.collectionDataInContext(q));
   }
 
   // Get portfolio items by category
@@ -87,7 +100,7 @@ export class PortfolioService {
       orderBy('order', 'asc')
     );
 
-    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
+    return this.completeOnServer(this.collectionDataInContext(q));
   }
 
   // Get portfolio items by portfolio page ID (new method)
@@ -99,7 +112,7 @@ export class PortfolioService {
       orderBy('order', 'asc')
     );
 
-    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
+    return this.completeOnServer(this.collectionDataInContext(q));
   }
 
   // Get portfolio items for a specific page with backwards compatibility
@@ -122,7 +135,7 @@ export class PortfolioService {
   // Get all portfolio items (for admin)
   getAllPortfolio(): Observable<PortfolioItem[]> {
     const q = query(this.portfolioCollection, orderBy('createdAt', 'desc'));
-    return this.completeOnServer(collectionData(q, { idField: 'id' }) as Observable<PortfolioItem[]>);
+    return this.completeOnServer(this.collectionDataInContext(q));
   }
 
   // Add new portfolio item

@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, Optional, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -21,11 +22,16 @@ export class AuthService {
     return [];
   }
 
-  constructor(private auth: Auth) {
-    // Monitor auth state changes
-    onAuthStateChanged(this.auth, (user) => {
-      this.currentUserSubject.next(user);
-    });
+  constructor(
+    @Optional() private auth: Auth,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Monitor auth state changes (browser only — Auth not provided on server)
+    if (isPlatformBrowser(this.platformId) && this.auth) {
+      onAuthStateChanged(this.auth, (user) => {
+        this.currentUserSubject.next(user);
+      });
+    }
   }
 
   async signIn(email: string, password: string): Promise<void> {
