@@ -97,6 +97,14 @@ import { ImgLoadingDirective } from '../../directives/img-loading.directive';
     
     .about-section.has-image {
       grid-template-columns: 2fr 1fr;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+
+        .section-image {
+          order: -1;
+        }
+      }
     }
     
     .about-section.no-image {
@@ -116,13 +124,13 @@ import { ImgLoadingDirective } from '../../directives/img-loading.directive';
       
       @media (max-width: 768px) {
         grid-template-columns: 1fr;
-        
+
+        .section-image {
+          order: -1;
+        }
+
         .section-content {
           order: 1;
-        }
-        
-        .section-image {
-          order: 2;
         }
       }
     }
