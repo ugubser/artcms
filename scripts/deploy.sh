@@ -143,10 +143,6 @@ fi
 echo -e "${GREEN}✅ Build validation passed${NC}"
 
 echo ""
-echo -e "${BLUE}🌐 Injecting Firestore data (sitemap.xml + index.html meta)...${NC}"
-node scripts/generate-sitemaps.js
-
-echo ""
 echo -e "${BLUE}📦 Copying SSR build into Cloud Functions...${NC}"
 rm -rf functions/dist
 mkdir -p functions/dist
