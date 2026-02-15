@@ -24,7 +24,11 @@ export class ImgLoadingDirective {
   @HostListener('error')
   onError() {
     if (isPlatformBrowser(this.platformId)) {
-      this.el.nativeElement.src = ImgLoadingDirective.PLACEHOLDER_SVG;
+      // Only show placeholder if src was set to a real URL (not empty/unresolved)
+      const currentSrc = this.el.nativeElement.getAttribute('src');
+      if (currentSrc) {
+        this.el.nativeElement.src = ImgLoadingDirective.PLACEHOLDER_SVG;
+      }
     }
     this.opacity = '1';
   }

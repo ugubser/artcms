@@ -1,26 +1,26 @@
-import { Injectable, Injector, inject, runInInjectionContext, PLATFORM_ID } from '@angular/core';
-import { isPlatformServer } from '@angular/common';
+import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
 import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
 import { Observable, from, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StorageUrlService {
   private injector = inject(Injector);
-  private platformId = inject(PLATFORM_ID);
+  private urlCache = new Map<string, string>();
 
   constructor(private storage: Storage) {}
 
   /**
-   * Resolves a storage path or absolute URL to a download URL
-   * @param pathOrUrl - Either a storage object path (e.g., "portfolio/image.jpg") or absolute URL
-   * @returns Observable<string> - The resolved download URL
+   * Resolves a storage path or absolute URL to a download URL.
+   * In production, constructs the public URL directly (no API call) since all
+   * storage paths have public read access. This avoids getDownloadURL() network
+   * round-trips that can fail or be slow, causing broken images on first load.
    */
   resolveUrl(pathOrUrl: string): Observable<string> {
-    // Skip Storage API calls on server -- images will resolve on the client after hydration
-    if (isPlatformServer(this.platformId)) {
+    if (!pathOrUrl) {
       return of('');
     }
 
@@ -29,7 +29,17 @@ export class StorageUrlService {
       return of(pathOrUrl);
     }
 
-    // If it's an object path, resolve to download URL
+    // In production, construct the public URL directly (works on server and client)
+    if (environment.production) {
+      const encodedPath = encodeURIComponent(pathOrUrl);
+      return of(`https://firebasestorage.googleapis.com/v0/b/${environment.firebase.storageBucket}/o/${encodedPath}?alt=media`);
+    }
+
+    // In development, use getDownloadURL() which works with emulators (with caching)
+    const cached = this.urlCache.get(pathOrUrl);
+    if (cached) {
+      return of(cached);
+    }
     return this.getDownloadUrl(pathOrUrl);
   }
 
@@ -41,6 +51,7 @@ export class StorageUrlService {
   getDownloadUrl(path: string): Observable<string> {
     const storageRef = ref(this.storage, path);
     return from(runInInjectionContext(this.injector, () => getDownloadURL(storageRef))).pipe(
+      tap(url => { if (url) this.urlCache.set(path, url); }),
       catchError((error) => {
         console.error(`[StorageUrlService] Failed to resolve "${path}":`, error?.message || error);
         return of('');
