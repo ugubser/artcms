@@ -8,6 +8,7 @@ This guide walks you through deploying the Tribeca Concepts portfolio website to
 - Firebase CLI installed globally: `npm install -g firebase-tools`
 - Angular CLI installed globally: `npm install -g @angular/cli`
 - A Firebase project created in the Firebase Console
+- **Blaze (pay-as-you-go) plan** enabled on the Firebase project (required for Cloud Functions / SSR)
 
 ## Quick Start
 
@@ -87,6 +88,9 @@ Admin emails are now automatically injected via environment variables. No manual
    
    # Admin emails (comma-separated)
    ADMIN_EMAILS=admin@tribecaconcepts.com,your-google-account@gmail.com
+
+   # Site URL for sitemap generation (base URL used in sitemap.xml)
+   SITE_URL=https://your-domain.com
    ```
 
 2. **Automatic Injection During Deployment**
@@ -121,6 +125,7 @@ If you prefer manual setup:
    FIREBASE_MESSAGING_SENDER_ID=your-sender-id
    FIREBASE_APP_ID=your-app-id
    ADMIN_EMAILS=admin@example.com,another-admin@example.com
+   SITE_URL=https://your-domain.com
    ```
 
 2. **Update `.firebaserc`**:
@@ -251,6 +256,165 @@ The script automatically:
 2. Verify admin email is in all three locations
 3. Test authentication with browser developer tools
 4. Check Firestore and Storage rules in Firebase Console
+
+## Deploying to a New Domain (Fresh Start)
+
+This project is fully portable. You can deploy it to a completely new Firebase project and domain with no content carryover. All site content lives in Firestore and Firebase Storage, so a new project starts empty and you populate it through the CMS.
+
+### What you get out of the box
+
+- The CMS admin panel at `/admin` for managing all content
+- Sample/default data that fills in automatically when collections are empty (site name, placeholder about sections, etc.)
+- Security rules generated from your `ADMIN_EMAILS` environment variable
+- SSR with dynamic meta tags for SEO on every route
+
+### Step-by-step
+
+1. **Create a new Firebase project** in the [Firebase Console](https://console.firebase.google.com):
+   - Enable **Authentication** > Sign-in method > **Google**
+   - Create **Cloud Firestore** database (production mode, pick your region)
+   - Enable **Storage** (production mode, same region)
+   - Enable **Hosting**
+   - Upgrade to **Blaze plan** (required for Cloud Functions)
+   - Register a **Web app** under Project settings > General, and copy the config values
+
+2. **Run the setup script**:
+   ```bash
+   firebase login
+   ./scripts/setup-firebase.sh
+   ```
+   Enter your new project ID, Firebase config values, and admin email addresses when prompted. This generates `.env.production` and `.env.local`.
+
+3. **Set your site URL** in `.env.production`:
+   ```
+   SITE_URL=https://your-new-domain.com
+   ```
+
+4. **Update the sitemap SSR fallback** in `src/app/components/sitemap-xml/sitemap-xml.component.ts` (line 48):
+   ```typescript
+   // Change the fallback domain used when window.location is unavailable (SSR)
+   const baseUrl = isPlatformBrowser(this.platformId)
+     ? window.location.origin
+     : 'https://your-new-domain.com';
+   ```
+
+5. **Deploy**:
+   ```bash
+   ./scripts/deploy.sh
+   ```
+
+6. **Connect your custom domain** in Firebase Console > Hosting > Add custom domain. Add the DNS records (TXT for verification, then A records). SSL is provisioned automatically.
+
+7. **Add your admin domain** to Firebase Console > Authentication > Settings > Authorized domains (add your custom domain).
+
+8. **Populate content** by visiting `https://your-new-domain.com/admin/login`, signing in with Google, and using the CMS to add portfolio items, about sections, contact info, and site settings.
+
+### Optional: Update default fallback values
+
+These are fallback values shown briefly before Firestore data loads. They don't affect functionality but you may want them to match your brand:
+
+| File | Line | Default value |
+|------|------|---------------|
+| `src/app/app.ts` | 17 | `'tribecaconcepts'` |
+| `src/app/components/home/home.component.ts` | 28, 30 | Site name and footer text |
+| `src/app/components/shared/page-header.component.ts` | 184 | `'tribeca concepts'` |
+| `src/app/services/meta.service.ts` | 78 | `'Tribecaconcepts'` |
+| `src/app/services/settings.service.ts` | 110-137 | Default settings (email, colors, etc.) |
+| `src/app/services/contact.service.ts` | 58-72 | Sample contact data and social links |
+
+All of these are overridden at runtime by whatever you save in the CMS.
+
+## Firestore Collections Reference
+
+All content is managed through the CMS admin panel. These are the collections and their expected document structures:
+
+### `settings` (document ID: `main-settings`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `siteName` | string | Display name in header and meta tags |
+| `siteDescription` | string | Subtitle and meta description |
+| `siteKeywords` | string[] | SEO keywords |
+| `contactEmail` | string | Primary contact email |
+| `logoUrl` | string | Firebase Storage path to site logo |
+| `faviconUrl` | string | Firebase Storage path to favicon |
+| `primaryColor` | string | Hex color code |
+| `secondaryColor` | string | Hex color code |
+| `footerText` | string | Footer copyright text |
+| `enableAnalytics` | boolean | Toggle Google Analytics |
+| `analyticsId` | string | Google Analytics ID |
+| `socialMedia` | object | `{ facebook, twitter, instagram, linkedin }` URLs |
+| `artistName` | string | (optional) Artist name for structured data |
+| `artistBiography` | string | (optional) Artist bio |
+| `artistPortraitUrl` | string | (optional) Storage path to portrait |
+| `updatedAt` | timestamp | Last update time |
+
+### `portfolio` (auto-generated IDs)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Portfolio item title |
+| `description` | string | Markdown-formatted description |
+| `category` | string | Category identifier |
+| `portfolioPageId` | string | (optional) Assigned portfolio page |
+| `featuredImage` | string | Storage path to main image |
+| `galleries` | array | Array of gallery objects (each with `id`, `title`, `description`, `order`, `pictures[]`) |
+| `published` | boolean | Visibility on public site |
+| `order` | number | Display order |
+| `createdAt` | timestamp | Creation time |
+
+Each gallery picture contains: `id`, `imageUrl`, `description`, `alt`, `order`, `dateCreated`, `artMedium`, `genre`, `dimensions`, `price`, `sold`, `showPrice`.
+
+### `portfolio-pages` (auto-generated IDs)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `category` | string | Category identifier |
+| `title` | string | Navigation link text |
+| `subtitle` | string | Page subtitle |
+| `slug` | string | URL slug (e.g., `art` for `/art`) |
+| `order` | number | Navigation order |
+| `updatedAt` | timestamp | Last update time |
+
+### `about` (auto-generated IDs)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Section heading |
+| `content` | string | Markdown-formatted body text |
+| `image` | string | (optional) Storage path to section image |
+| `order` | number | Display order |
+
+### `contact` (document ID: `main-contact`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `email` | string | Contact email address |
+| `phone` | string | (optional) Phone number |
+| `address` | string | (optional) Physical address |
+| `socialMedia` | object | `{ instagram, linkedin, twitter, behance }` URLs |
+
+### `mail` (auto-generated IDs, created by contact form)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `to` | string | Recipient email |
+| `message` | object | `{ subject, text, html }` |
+
+## Firebase Storage Structure
+
+All images are uploaded through the CMS and stored under these paths:
+
+| Path | Contents |
+|------|----------|
+| `portfolio/featured/` | Portfolio featured/cover images |
+| `portfolio/gallery/` | Gallery images (named `{portfolioId}_{index}_{filename}`) |
+| `about/` | About page section images |
+| `branding/` | Site logo and favicon |
+| `uploads/` | General file uploads |
+| `temp/` | Temporary CMS upload staging (admin-only read) |
+
+Images are served via Firebase Storage download URLs. No hardcoded bucket URLs exist in the codebase -- all references go through the Firebase SDK.
 
 ## Support
 
