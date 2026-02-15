@@ -1,4 +1,5 @@
-import { Directive, HostBinding, HostListener, ElementRef } from '@angular/core';
+import { Directive, HostBinding, HostListener, ElementRef, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Directive({
   selector: 'img[appImgLoading]',
@@ -11,6 +12,8 @@ export class ImgLoadingDirective {
   private static readonly PLACEHOLDER_SVG =
     `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23e0e0e0'/%3E%3C/svg%3E`;
 
+  private platformId = inject(PLATFORM_ID);
+
   constructor(private el: ElementRef<HTMLImageElement>) {}
 
   @HostListener('load')
@@ -20,7 +23,9 @@ export class ImgLoadingDirective {
 
   @HostListener('error')
   onError() {
-    this.el.nativeElement.src = ImgLoadingDirective.PLACEHOLDER_SVG;
+    if (isPlatformBrowser(this.platformId)) {
+      this.el.nativeElement.src = ImgLoadingDirective.PLACEHOLDER_SVG;
+    }
     this.opacity = '1';
   }
 }

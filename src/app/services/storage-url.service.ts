@@ -1,4 +1,5 @@
-import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, Injector, inject, runInInjectionContext, PLATFORM_ID } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
 import { Observable, from, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -8,6 +9,7 @@ import { catchError } from 'rxjs/operators';
 })
 export class StorageUrlService {
   private injector = inject(Injector);
+  private platformId = inject(PLATFORM_ID);
 
   constructor(private storage: Storage) {}
 
@@ -17,6 +19,11 @@ export class StorageUrlService {
    * @returns Observable<string> - The resolved download URL
    */
   resolveUrl(pathOrUrl: string): Observable<string> {
+    // Skip Storage API calls on server -- images will resolve on the client after hydration
+    if (isPlatformServer(this.platformId)) {
+      return of('');
+    }
+
     // If it's already an absolute URL, return as-is
     if (this.isAbsoluteUrl(pathOrUrl)) {
       return of(pathOrUrl);
