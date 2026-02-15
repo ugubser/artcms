@@ -51,6 +51,7 @@ firestore-debug.log*
 ui-debug.log*
 functions/node_modules/
 functions/lib/
+functions/dist/
 
 # Firebase emulator logs and cache
 firebase-export-*

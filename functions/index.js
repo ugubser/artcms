@@ -3,7 +3,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 let ssrApp;
 async function getApp() {
   if (!ssrApp) {
-    ssrApp = await import('../dist/tribeca-concepts-clone/server/server.mjs');
+    ssrApp = await import('./dist/server/server.mjs');
   }
   return ssrApp.reqHandler;
 }

@@ -5,6 +5,7 @@
     "ng": "ng",
     "prebuild": "node scripts/inject-env-dev.js && node scripts/inject-meta-simple.js",
     "build": "ng build --configuration development",
+    "postbuild": "rm -rf functions/dist && mkdir -p functions/dist && cp -r dist/tribeca-concepts-clone/server functions/dist/server && cp -r dist/tribeca-concepts-clone/browser functions/dist/browser",
     "watch": "ng build --watch --configuration development",
     "dev": "ng serve",
     "emulator": "firebase emulators:start --import=./emulator_data --export-on-exit=./emulator_data",

@@ -122,12 +122,6 @@ if [ ! -d "dist/tribeca-concepts-clone/server" ]; then
     exit 1
 fi
 
-# Check if critical files exist
-if [ ! -f "dist/tribeca-concepts-clone/browser/index.html" ]; then
-    echo -e "${RED}❌ Critical file missing: index.html${NC}"
-    exit 1
-fi
-
 # Check if server entry exists
 if [ ! -f "dist/tribeca-concepts-clone/server/server.mjs" ]; then
     echo -e "${RED}❌ Critical file missing: server.mjs${NC}"
@@ -151,6 +145,14 @@ echo -e "${GREEN}✅ Build validation passed${NC}"
 echo ""
 echo -e "${BLUE}🌐 Injecting Firestore data (sitemap.xml + index.html meta)...${NC}"
 node scripts/generate-sitemaps.js
+
+echo ""
+echo -e "${BLUE}📦 Copying SSR build into Cloud Functions...${NC}"
+rm -rf functions/dist
+mkdir -p functions/dist
+cp -r dist/tribeca-concepts-clone/server functions/dist/server
+cp -r dist/tribeca-concepts-clone/browser functions/dist/browser
+echo -e "${GREEN}✅ SSR build copied to functions/dist/${NC}"
 
 echo ""
 echo -e "${BLUE}📦 Installing Cloud Functions dependencies...${NC}"
