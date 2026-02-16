@@ -25,9 +25,9 @@ export class HomeComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   featuredPortfolio$: Observable<PortfolioItem[]>;
   contactInfo$: Observable<ContactInfo[]>;
-  siteName = signal<string>('tribeca concepts');
-  siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
-  footerText = signal<string>('© 2025 by tribeca concepts');
+  siteName = signal<string>('');
+  siteDescription = signal<string>('');
+  footerText = signal<string>('');
 
   constructor(
     private portfolioService: PortfolioService,

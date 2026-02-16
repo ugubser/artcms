@@ -16,7 +16,7 @@ import { ResolveStorageUrlPipe } from '../../pipes/resolve-storage-url.pipe';
   imports: [CommonModule, RouterModule, ResolveStorageUrlPipe],
   template: `
     <div class="sitemap-container">
-      <h1>Sitemap for {{ siteSettings?.siteName || 'Tribecaconcepts' }}</h1>
+      <h1>Sitemap for {{ siteSettings?.siteName || 'Portfolio' }}</h1>
       <p class="description">{{ siteSettings?.siteDescription || 'Portfolio website' }}</p>
 
       <h2>Main Pages</h2>

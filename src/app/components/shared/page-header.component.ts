@@ -181,8 +181,8 @@ import { PortfolioPagesService, PortfolioPageConfig } from '../../services/portf
 })
 export class PageHeaderComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  siteName = signal<string>('tribeca concepts');
-  siteDescription = signal<string>('Design and Art in Zurich, Switzerland');
+  siteName = signal<string>('');
+  siteDescription = signal<string>('');
   portfolioPages = signal<PortfolioPageConfig[]>([]);
   mobileMenuOpen = false;
 

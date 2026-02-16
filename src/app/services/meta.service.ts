@@ -75,7 +75,7 @@ export class MetaService {
   }
 
   setPageMeta(options: { title: string; description?: string; image?: string; type?: string }): void {
-    const siteName = this.currentSettings?.siteName || 'Tribecaconcepts';
+    const siteName = this.currentSettings?.siteName || 'Portfolio';
     const fullTitle = `${options.title} | ${siteName}`;
     this.titleService.setTitle(fullTitle);
     this.metaService.updateTag({ property: 'og:title', content: fullTitle });

@@ -1,10 +1,12 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../services/auth.service';
+import { SettingsService } from '../../services/settings.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -23,7 +25,7 @@ import { Router } from '@angular/router';
       <mat-card class="login-card">
         <mat-card-header>
           <mat-card-title>Admin Login</mat-card-title>
-          <mat-card-subtitle>Tribeca Concepts CMS</mat-card-subtitle>
+          <mat-card-subtitle>{{ siteName() }} CMS</mat-card-subtitle>
         </mat-card-header>
         
         <mat-card-content>
@@ -105,7 +107,10 @@ import { Router } from '@angular/router';
     }
   `]
 })
-export class AdminLoginComponent {
+export class AdminLoginComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  private settingsService = inject(SettingsService);
+  siteName = signal<string>('');
   isLoading = false;
   errorMessage = '';
 
@@ -114,6 +119,14 @@ export class AdminLoginComponent {
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit() {
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
+      if (settings) {
+        this.siteName.set(settings.siteName);
+      }
+    });
+  }
 
   async signInWithGoogle() {
     this.isLoading = true;

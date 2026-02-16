@@ -13,7 +13,7 @@ describe('App', () => {
 
   beforeEach(async () => {
     // Mock the settings service to return observable with site settings
-    mockSettingsService.getSiteSettings.and.returnValue(of({ siteName: 'tribecaconcepts' }));
+    mockSettingsService.getSiteSettings.and.returnValue(of({ siteName: 'Test Site' }));
 
     await TestBed.configureTestingModule({
       imports: [App],

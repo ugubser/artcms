@@ -1,12 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CmsPortfolioTabComponent } from './components/cms-portfolio-tab.component';
 import { CmsPortfolioPagesTabComponent } from './components/cms-portfolio-pages-tab.component';
 import { CmsAboutTabComponent } from './components/cms-about-tab.component';
 import { CmsContactTabComponent } from './components/cms-contact-tab.component';
 import { CmsSettingsTabComponent } from './components/cms-settings-tab.component';
+import { SettingsService } from '../services/settings.service';
 
 @Component({
   selector: 'app-cms',
@@ -24,7 +26,7 @@ import { CmsSettingsTabComponent } from './components/cms-settings-tab.component
   template: `
     <div class="cms-wrapper">
       <header class="cms-header">
-        <h1>Tribeca Concepts CMS</h1>
+        <h1>{{ siteName() }} CMS</h1>
         <p>Content Management System</p>
       </header>
 
@@ -85,4 +87,16 @@ import { CmsSettingsTabComponent } from './components/cms-settings-tab.component
     }
   `]
 })
-export class CMSComponent {}
+export class CMSComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  private settingsService = inject(SettingsService);
+  siteName = signal<string>('');
+
+  ngOnInit() {
+    this.settingsService.getSiteSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
+      if (settings) {
+        this.siteName.set(settings.siteName);
+      }
+    });
+  }
+}

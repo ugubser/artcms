@@ -8,7 +8,7 @@
           <form [formGroup]="settingsForm" class="settings-form">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Site Name</mat-label>
-              <input matInput formControlName="siteName" placeholder="Tribeca Concepts">
+              <input matInput formControlName="siteName" placeholder="Your Site Name">
               <mat-error *ngIf="settingsForm.get('siteName')?.hasError('required')">
                 Site name is required
               </mat-error>
@@ -32,7 +32,7 @@
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Footer Text</mat-label>
               <input matInput formControlName="footerText" 
-                     placeholder="© 2024 by TribecaConcepts">
+                     placeholder="© 2024 Your Site Name">
             </mat-form-field>
 
             <!-- Artist Information Section -->

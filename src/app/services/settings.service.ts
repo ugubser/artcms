@@ -108,15 +108,15 @@ export class SettingsService {
   // Get default settings
   getDefaultSettings(): SiteSettings {
     return {
-      siteName: 'Tribeca Concepts',
-      siteDescription: 'Swiss-American-Japanese graphic design portfolio showcasing minimalist design principles and creative excellence.',
-      siteKeywords: ['graphic design', 'swiss design', 'minimalist', 'portfolio', 'branding', 'art'],
-      contactEmail: 'info@tribecaconcepts.com',
+      siteName: 'My Portfolio',
+      siteDescription: 'Portfolio website',
+      siteKeywords: ['graphic design', 'portfolio', 'branding', 'art'],
+      contactEmail: 'admin@example.com',
       logoUrl: '',
       faviconUrl: '',
       primaryColor: '#000000',
       secondaryColor: '#ffffff',
-      footerText: '© 2024 by TribecaConcepts. All rights reserved.',
+      footerText: '© ' + new Date().getFullYear() + ' All rights reserved.',
       enableAnalytics: false,
       analyticsId: '',
       socialMedia: {

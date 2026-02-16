@@ -12,9 +12,9 @@ import { AnalyticsService } from './services/analytics.service';
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  protected readonly title = signal('tribeca-concepts-clone');
+  protected readonly title = signal('');
   mobileMenuOpen = false;
-  siteName = signal<string>('tribecaconcepts');
+  siteName = signal<string>('');
   private destroyRef = inject(DestroyRef);
 
   constructor(

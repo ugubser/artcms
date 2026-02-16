@@ -94,17 +94,17 @@ export class PortfolioComponent implements OnInit {
       case 'art':
         return {
           title: 'Art',
-          subtitle: 'Contemporary abstract art pieces inspired by Japanese minimalism and Swiss precision.'
+          subtitle: 'Art collection'
         };
       case 'graphic-design':
         return {
           title: 'Design',
-          subtitle: 'Graphic design solutions that combine Swiss typography principles with modern aesthetics.'
+          subtitle: 'Design portfolio'
         };
       default:
         return {
           title: 'Portfolio',
-          subtitle: 'A collection of our finest work in graphic design, art, and branding.'
+          subtitle: 'Portfolio collection'
         };
     }
   }

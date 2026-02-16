@@ -58,15 +58,13 @@ export class ContactService extends BaseFirestoreService<ContactInfo> {
   getSampleContactData(): ContactInfo {
     return {
       id: 'contact-1',
-      email: 'hello@tribecaconcepts.com',
-      phone: '+41 44 123 45 67',
-      address: `Tribeca Concepts Studio
-Bahnhofstrasse 123
-8001 Zurich, Switzerland`,
+      email: 'hello@example.com',
+      phone: '',
+      address: '',
       socialMedia: {
-        instagram: 'https://instagram.com/tribecaconcepts',
-        linkedin: 'https://linkedin.com/company/tribecaconcepts',
-        behance: 'https://behance.net/tribecaconcepts'
+        instagram: '',
+        linkedin: '',
+        behance: ''
       }
     };
   }

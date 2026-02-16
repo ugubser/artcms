@@ -44,7 +44,7 @@ export interface ContactInfo {
         <form [formGroup]="form" class="contact-form">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email</mat-label>
-            <input matInput type="email" formControlName="email" placeholder="contact@tribecaconcepts.com">
+            <input matInput type="email" formControlName="email" placeholder="contact@example.com">
             <mat-error *ngIf="form.get('email')?.hasError('required')">
               Email is required
             </mat-error>
@@ -69,19 +69,19 @@ export interface ContactInfo {
             
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Instagram</mat-label>
-              <input matInput formControlName="instagram" placeholder="@tribecaconcepts">
+              <input matInput formControlName="instagram" placeholder="@yourbrand">
               <mat-hint>Enter username (with or without &#64;)</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>LinkedIn</mat-label>
-              <input matInput formControlName="linkedin" placeholder="tribeca-concepts">
+              <input matInput formControlName="linkedin" placeholder="your-company">
               <mat-hint>Enter LinkedIn profile or company name</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Twitter</mat-label>
-              <input matInput formControlName="twitter" placeholder="@tribecaconcepts">
+              <input matInput formControlName="twitter" placeholder="@yourbrand">
               <mat-hint>Enter username (with or without &#64;)</mat-hint>
             </mat-form-field>
           </div>

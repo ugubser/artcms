@@ -49,20 +49,18 @@ export class AboutService extends BaseFirestoreService<AboutSection> {
     return [
       {
         id: 'about-1',
-        title: 'About Tribeca Concepts',
-        content: `Tribeca Concepts is a Swiss-American-Japanese graphic design studio based in Zurich, Switzerland.
+        title: 'Our Studio',
+        content: `Welcome to our design studio.
 
-We specialize in creating exceptional design solutions that combine the precision of Swiss typography, the innovation of American creativity, and the minimalism of Japanese aesthetics.
+We specialize in creating exceptional design solutions that combine precision, creativity, and minimalism.
 
-Our approach is rooted in the International Typographic Style, emphasizing clean lines, systematic grids, and thoughtful use of white space. Every project is crafted with meticulous attention to detail and a deep understanding of both form and function.`,
+Our approach emphasizes clean lines, systematic grids, and thoughtful use of white space. Every project is crafted with meticulous attention to detail and a deep understanding of both form and function.`,
         order: 1
       },
       {
         id: 'about-2',
         title: 'Design Philosophy',
         content: `We believe that great design is invisible design. Our work focuses on clarity, functionality, and timeless aesthetic appeal.
-
-Drawing inspiration from the Bauhaus movement and Swiss design pioneers like Josef Müller-Brockmann and Armin Hofmann, we create solutions that communicate effectively while maintaining visual elegance.
 
 Our process involves thorough research, systematic exploration, and iterative refinement to ensure each project meets the highest standards of design excellence.`,
         order: 2
